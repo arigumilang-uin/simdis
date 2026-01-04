@@ -1,8 +1,13 @@
 @extends('layouts.app')
 
 @section('title', 'Tambah Aturan Baru')
-@section('subtitle', 'Buat aturan kedisiplinan baru.')
-@section('page-header', true)
+
+@section('page-header')
+    <x-page-header 
+        title="Tambah Aturan Baru" 
+        subtitle="Buat aturan kedisiplinan baru."
+    />
+@endsection
 
 @section('content')
 <div class="max-w-2xl">

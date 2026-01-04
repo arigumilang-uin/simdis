@@ -268,6 +268,36 @@ body {
     border-radius: 999px;
 }
 
+/* Sidebar Submenu */
+.sidebar-submenu {
+    margin-left: 1.5rem;
+    margin-top: 0.25rem;
+    padding-left: 0.75rem;
+    border-left: 1px solid var(--color-gray-200);
+}
+
+.sidebar-submenu-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.625rem;
+    font-size: 0.8125rem;
+    color: var(--color-gray-500);
+    border-radius: 6px;
+    transition: all 0.15s ease;
+    text-decoration: none;
+}
+
+.sidebar-submenu-link:hover {
+    color: var(--color-gray-700);
+    background: var(--color-gray-100);
+}
+
+.sidebar-submenu-link.active {
+    color: var(--color-primary-600);
+    font-weight: 500;
+}
+
 /* ============================================
    MAIN CONTENT AREA
    ============================================ */
@@ -285,10 +315,11 @@ body {
    TOP NAVBAR
    ============================================ */
 .navbar {
-    background: rgba(255, 255, 255, 0.85); /* Glassy Background */
+    background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.04); /* Subtler border */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.08);
     padding: 0 1.5rem;
     height: 64px;
     display: flex;
@@ -449,6 +480,143 @@ body {
 
 .page-actions .btn {
     white-space: nowrap;
+}
+
+/* ============================================
+   STYLISH PAGE HEADER (MINIMALIST TEXT VARIANT)
+   ============================================ */
+.page-header-stylish {
+    display: flex;
+    align-items: flex-end; /* Align text bottom with stats */
+    justify-content: space-between; /* Space betwen title and stats */
+    gap: 2rem;
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid oklch(0.96 0.01 250);
+}
+
+.page-header-stylish::after {
+    display: none;
+}
+
+.page-header-icon {
+    width: 52px; /* Sedikit lebih kecil agar proporsional */
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    flex-shrink: 0;
+    background: white;
+    border: 1px solid oklch(0.95 0.01 250);
+    box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.02),
+        0 2px 4px -1px rgba(0, 0, 0, 0.02);
+}
+
+/* Icon Soft Variants - No changes needed here */
+.page-header-icon.primary {
+    color: var(--color-primary-600);
+    background: var(--color-primary-50);
+    border-color: var(--color-primary-100);
+}
+/* ... (variants lain sama) ... */
+.page-header-icon.danger {
+    color: #dc2626;
+    background: #fef2f2;
+    border-color: #fee2e2;
+}
+
+.page-header-icon.warning {
+    color: #d97706;
+    background: #fffbeb;
+    border-color: #fef3c7;
+}
+
+.page-header-icon.success {
+    color: #16a34a;
+    background: #f0fdf4;
+    border-color: #dcfce7;
+}
+
+.page-header-icon.info {
+    color: #2563eb;
+    background: #eff6ff;
+    border-color: #dbeafe;
+}
+
+.page-header-icon.purple {
+    color: #7c3aed;
+    background: #f5f3ff;
+    border-color: #ede9fe;
+}
+
+.page-header-icon.indigo {
+    color: #4f46e5;
+    background: #eef2ff;
+    border-color: #e0e7ff;
+}
+
+.page-header-icon.pink {
+    color: #db2777;
+    background: #fdf2f8;
+    border-color: #fce7f3;
+}
+
+.page-header-icon.teal {
+    color: #0d9488;
+    background: #f0fdfa;
+    border-color: #ccfbf1;
+}
+
+.page-header-icon.slate {
+    color: #475569;
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+
+.page-header-text {
+    min-width: 0;
+    flex: 1;
+}
+
+.page-header-title {
+    font-size: 1.75rem; /* Dikurangi dari 2rem */
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+}
+
+.page-header-subtitle {
+    font-size: 0.9375rem;
+    color: #64748b;
+    margin-top: 0.375rem;
+    line-height: 1.5;
+    font-weight: 400;
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+    .page-header-stylish {
+        padding: 1rem 1.25rem;
+    }
+    
+    .page-header-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+    }
+    
+    .page-header-title {
+        font-size: 1.125rem;
+    }
+    
+    .page-header-subtitle {
+        font-size: 0.75rem;
+    }
 }
 
 /* ============================================
@@ -1793,5 +1961,34 @@ body {
 @keyframes fadeOut {
     to {
         opacity: 0;
+    }
+}
+
+/* Minimalist Header Text-Only Override */
+.page-header-stylish {
+}.page-header-stats {
+    font-weight: 600;
+    color: var(--color-primary-700);
+    background: var(--color-primary-50);
+    border: 1px solid var(--color-primary-100);
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.page-header-stats .count {
+    font-weight: 700;
+    color: var(--color-primary-600);
+}
+
+@media (max-width: 640px) {
+    .page-header-stats {
+        align-self: flex-start;
+        padding: 0.375rem 0.75rem;
+        font-size: 0.8125rem;
     }
 }

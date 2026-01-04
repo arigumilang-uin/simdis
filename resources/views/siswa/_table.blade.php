@@ -1,3 +1,5 @@
+{{-- Dispatch total count to header --}}
+<div x-data x-init="$dispatch('update-total-data', { total: {{ $siswa->total() }} })"></div>
 
     {{-- Data Table --}}
     <div class="table-container">

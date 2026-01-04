@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Dashboard')
-@section('page-header', true)
+@section('page-header', false)
 
 @section('content')
 <div class="flex items-center justify-center min-h-[400px]">

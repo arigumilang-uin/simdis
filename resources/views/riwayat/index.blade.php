@@ -1,8 +1,21 @@
 @extends('layouts.app')
 
 @section('title', 'Log Pelanggaran')
-@section('subtitle', 'Riwayat pencatatan pelanggaran siswa.')
-@section('page-header', true)
+
+@section('page-header')
+    <div class="page-header-stylish">
+        <div class="page-header-text">
+            <h1 class="page-header-title">Log Pelanggaran</h1>
+            <p class="page-header-subtitle">Riwayat pencatatan pelanggaran siswa</p>
+        </div>
+        <div class="page-header-stats" 
+             x-data="{ total: {{ $riwayat->total() }} }" 
+             @update-total-data.window="total = $event.detail.total">
+            <x-ui.icon name="database" size="16" />
+            <span>Total: <span class="count" x-text="total">{{ $riwayat->total() }}</span> data</span>
+        </div>
+    </div>
+@endsection
 
 @section('content')
 @php
@@ -54,6 +67,7 @@
                     {{-- Search --}}
                     <div class="form-group md:col-span-4">
                         <x-forms.input 
+                            id="search_filter"
                             name="search" 
                             label="Cari" 
                             x-model.debounce.500ms="filters.search"
@@ -67,6 +81,7 @@
                     {{-- Dari Tanggal --}}
                     <div class="form-group">
                         <x-forms.input 
+                            id="start_date"
                             type="date"
                             name="start_date"
                             label="Dari Tanggal"
@@ -78,6 +93,7 @@
                     {{-- Sampai Tanggal --}}
                     <div class="form-group">
                         <x-forms.input 
+                            id="end_date"
                             type="date"
                             name="end_date"
                             label="Sampai Tanggal"
@@ -89,6 +105,7 @@
                     {{-- Jurusan Dropdown --}}
                     <div class="form-group">
                         <x-forms.select 
+                            id="jurusan_id"
                             name="jurusan_id" 
                             label="Jurusan"
                             x-model="filters.jurusan_id"
@@ -103,7 +120,7 @@
                     {{-- Kelas Dropdown (Dynamic with x-for because options change dynamically) --}}
                     <div class="form-group">
                         <label for="kelas_id" class="form-label">Kelas</label>
-                        <select id="kelas_id" name="kelas_id" x-model="filters.kelas_id" class="form-input form-select w-full" :disabled="loadingKelas">
+                        <select id="kelas_id" name="kelas_id" x-model="filters.kelas_id" @change="fetchData()" class="form-input form-select w-full" :disabled="loadingKelas">
                             <option value="">Semua Kelas</option>
                             <template x-for="kelas in kelasList" :key="kelas.id">
                                 <option :value="kelas.id" x-text="kelas.nama_kelas"></option>

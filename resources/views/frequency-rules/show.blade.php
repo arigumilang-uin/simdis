@@ -1,10 +1,17 @@
 @extends('layouts.app')
 
 @section('title', 'Kelola Frequency Rules')
-@section('subtitle', $jenisPelanggaran->nama_pelanggaran ?? 'Atur Rules')
-@section('page-header', true)
 
-@section('actions')
+@section('page-header')
+    <x-page-header 
+        title="Kelola Frequency Rules" 
+        :subtitle="$jenisPelanggaran->nama_pelanggaran ?? 'Atur Rules'"
+    />
+@endsection
+
+@section('content')
+{{-- Action Buttons --}}
+<div class="flex flex-wrap justify-end gap-2 mb-6">
     <button type="button" onclick="history.back()" class="btn btn-secondary">
         <x-ui.icon name="chevron-left" size="18" />
         <span>Kembali</span>
@@ -13,9 +20,8 @@
         <x-ui.icon name="edit" size="18" />
         <span>Edit Info</span>
     </a>
-@endsection
+</div>
 
-@section('content')
 <div class="space-y-6" x-data="frequencyRulesManager()">
     {{-- Pelanggaran Info --}}
     <div class="card p-4">

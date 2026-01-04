@@ -1,17 +1,23 @@
 @extends('layouts.app')
 
 @section('title', 'Detail Konsentrasi')
-@section('subtitle', $konsentrasi->nama_konsentrasi)
-@section('page-header', true)
 
-@section('actions')
+@section('page-header')
+    <x-page-header 
+        title="Detail Konsentrasi" 
+        :subtitle="$konsentrasi->nama_konsentrasi"
+    />
+@endsection
+
+@section('content')
+{{-- Action Buttons --}}
+<div class="flex flex-wrap justify-end gap-2 mb-6">
     <a href="{{ route('konsentrasi.edit', $konsentrasi->id) }}" class="btn btn-primary">
         <x-ui.icon name="edit" size="18" />
         <span>Edit</span>
     </a>
-@endsection
+</div>
 
-@section('content')
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     {{-- Info Card --}}
     <div class="lg:col-span-1">

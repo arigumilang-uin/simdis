@@ -1,24 +1,13 @@
 @extends('layouts.app')
 
 @section('title', 'Data Siswa')
-@section('subtitle', 'Kelola data seluruh siswa di sekolah Anda.')
-@section('page-header', true)
 
-@section('actions')
-    @can('create', App\Models\Siswa::class)
-        <a href="{{ route('siswa.deleted') }}" class="btn btn-secondary">
-            <x-ui.icon name="archive" size="18" />
-            <span>Arsip Siswa</span>
-        </a>
-        <a href="{{ route('siswa.bulk-create') }}" class="btn btn-secondary">
-            <x-ui.icon name="upload" size="18" />
-            <span>Import Excel</span>
-        </a>
-        <a href="{{ route('siswa.create') }}" class="btn btn-primary">
-            <x-ui.icon name="plus" size="18" />
-            <span>Tambah Siswa</span>
-        </a>
-    @endcan
+@section('page-header')
+    <x-page-header 
+        title="Data Siswa" 
+        subtitle="Kelola data seluruh siswa di sekolah Anda."
+        :total="$siswa->total()"
+    />
 @endsection
 
 @section('content')
@@ -36,6 +25,16 @@
 
 <div class="space-y-6" x-data='dataTable(@json($tableConfig))' 
      @enter-selection.window="selectionMode = true; if (!selected.includes($event.detail.id)) selected.push($event.detail.id); if (navigator.vibrate) navigator.vibrate(50)">
+    {{-- Action Button --}}
+    @can('create', App\Models\Siswa::class)
+    <div class="flex justify-end">
+        <a href="{{ route('siswa.create') }}" class="btn btn-primary">
+            <x-ui.icon name="plus" size="18" />
+            <span>Tambah Siswa</span>
+        </a>
+    </div>
+    @endcan
+    
     {{-- Filter Card --}}
     <div class="card" x-data="{ expanded: {{ request()->hasAny(['search', 'jurusan_id', 'kelas_id']) ? 'true' : 'false' }} }">
         <div class="card-header cursor-pointer" @click="expanded = !expanded">

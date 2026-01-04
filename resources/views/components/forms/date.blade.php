@@ -1,5 +1,6 @@
 @props([
     'name',
+    'id' => null,
     'label' => null,
     'value' => null,
     'required' => false,
@@ -8,14 +9,15 @@
 ])
 
 @php
+    $inputId = $id ?? $name;
     $hasError = $errors->has($name);
     $errorClass = $hasError ? 'error' : '';
     $inputClasses = "form-input {$errorClass}";
 @endphp
 
-<div {{ $attributes->merge(['class' => 'form-group']) }}>
+<div {{ $attributes->only('class')->merge(['class' => 'form-group']) }}>
     @if($label)
-        <label for="{{ $name }}" class="form-label {{ $required ? 'form-label-required' : '' }}">
+        <label for="{{ $inputId }}" class="form-label {{ $required ? 'form-label-required' : '' }}">
             {{ $label }}
         </label>
     @endif
@@ -23,13 +25,13 @@
     <div class="relative">
         <input 
             type="date"
-            id="{{ $name }}"
+            id="{{ $inputId }}"
             name="{{ $name }}"
             value="{{ old($name, $value) }}"
             class="{{ $inputClasses }}"
             @if($required) required @endif
             @if($disabled) disabled @endif
-            {{ $attributes->except('class') }}
+            {{ $attributes->except(['class', 'id']) }}
         >
     </div>
 

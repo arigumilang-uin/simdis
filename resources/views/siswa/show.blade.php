@@ -1,10 +1,17 @@
 @extends('layouts.app')
 
 @section('title', 'Detail Siswa')
-@section('subtitle', $siswa->nama_siswa)
-@section('page-header', true)
 
-@section('actions')
+@section('page-header')
+    <x-page-header 
+        title="Detail Siswa" 
+        :subtitle="$siswa->nama_siswa"
+    />
+@endsection
+
+@section('content')
+{{-- Action Buttons --}}
+<div class="flex flex-wrap justify-end gap-2 mb-6">
     <button type="button" onclick="history.back()" class="btn btn-secondary">
         <x-ui.icon name="chevron-left" size="18" />
         <span>Kembali</span>
@@ -15,9 +22,8 @@
         <span>Edit</span>
     </a>
     @endcan
-@endsection
+</div>
 
-@section('content')
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     {{-- Profile Card --}}
     <div class="lg:col-span-1 space-y-6">

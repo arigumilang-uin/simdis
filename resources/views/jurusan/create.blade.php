@@ -1,8 +1,13 @@
 @extends('layouts.app')
 
 @section('title', isset($jurusan) ? 'Edit Jurusan' : 'Tambah Jurusan')
-@section('subtitle', isset($jurusan) ? 'Perbarui data jurusan.' : 'Tambahkan jurusan baru.')
-@section('page-header', true)
+
+@section('page-header')
+    <x-page-header 
+        :title="isset($jurusan) ? 'Edit Jurusan' : 'Tambah Jurusan'" 
+        :subtitle="isset($jurusan) ? 'Perbarui data jurusan.' : 'Tambahkan jurusan baru.'"
+    />
+@endsection
 
 @section('content')
 <div class="max-w-2xl">

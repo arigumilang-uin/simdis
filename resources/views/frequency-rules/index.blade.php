@@ -1,8 +1,15 @@
 @extends('layouts.app')
 
 @section('title', 'Kelola Aturan Pelanggaran')
-@section('subtitle', 'Atur jenis pelanggaran, poin, sanksi, dan frequency rules.')
-@section('page-header', true)
+
+@section('page-header')
+    <x-page-header 
+        title="Kelola Aturan Pelanggaran" 
+        subtitle="Atur jenis pelanggaran, poin, sanksi, dan frequency rules."
+        :total="$jenisPelanggaran->count()"
+        totalLabel="aturan"
+    />
+@endsection
 
 @section('content')
 @php

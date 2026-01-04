@@ -2,7 +2,7 @@
 
 @section('title', 'Developer Console')
 @section('subtitle', 'Development tools and debugging.')
-@section('page-header', true)
+@section('page-header', false)
 
 @section('content')
 <div class="space-y-6">

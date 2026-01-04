@@ -1,3 +1,5 @@
+{{-- Dispatch total count to header --}}
+<div x-data x-init="$dispatch('update-total-data', { total: {{ $users->total() }} })"></div>
 
     {{-- Bulk Action Toolbar --}}
     <div x-show="selected.length > 0" x-transition x-cloak class="bg-indigo-50 p-3 flex flex-col sm:flex-row justify-between items-center gap-3 mb-4 rounded-xl border border-indigo-100 shadow-sm">

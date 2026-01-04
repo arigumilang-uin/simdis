@@ -1,17 +1,24 @@
 @extends('layouts.app')
 
 @section('title', 'Arsip Siswa')
-@section('subtitle', 'Siswa yang telah dihapus (soft-delete). Dapat di-restore atau dihapus permanen.')
-@section('page-header', true)
 
-@section('actions')
+@section('page-header')
+    <x-page-header 
+        title="Arsip Siswa" 
+        subtitle="Siswa yang telah dihapus. Dapat di-restore atau dihapus permanen."
+        :total="$deletedSiswa->total()"
+    />
+@endsection
+
+@section('content')
+{{-- Action Buttons --}}
+<div class="flex flex-wrap justify-end gap-2 mb-6">
     <a href="{{ route('siswa.index') }}" class="btn btn-secondary">
         <x-ui.icon name="chevron-left" size="18" />
         <span>Kembali ke Data Siswa</span>
     </a>
-@endsection
+</div>
 
-@section('content')
 @php
     $tableConfig = [
         'endpoint' => route('siswa.deleted'),

@@ -1,8 +1,14 @@
 @extends('layouts.app')
 
 @section('title', 'Manajemen Kelas')
-@section('subtitle', 'Kelola data rombongan belajar sekolah.')
-@section('page-header', true)
+
+@section('page-header')
+    <x-page-header 
+        title="Manajemen Kelas" 
+        subtitle="Kelola data rombongan belajar sekolah."
+        :total="$kelasList->count()"
+    />
+@endsection
 
 @section('content')
 <div class="space-y-6" x-data="{ selectionMode: false, selected: [], selectAll: false }">

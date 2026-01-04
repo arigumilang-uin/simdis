@@ -1,8 +1,15 @@
 @extends('layouts.app')
 
 @section('title', 'Manajemen User')
-@section('subtitle', 'Kelola akun pengguna sistem.')
-@section('page-header', true)
+
+@section('page-header')
+    <x-page-header 
+        title="Manajemen User" 
+        subtitle="Kelola akun pengguna sistem."
+        :total="$users->total()"
+        icon="users"
+    />
+@endsection
 
 @section('content')
 @php

@@ -1,8 +1,13 @@
 @extends('layouts.app')
 
 @section('title', 'Profil Saya')
-@section('subtitle', 'Kelola informasi akun dan keamanan Anda.')
-@section('page-header', true)
+
+@section('page-header')
+    <x-page-header 
+        title="Profil Saya" 
+        subtitle="Kelola informasi akun dan keamanan Anda."
+    />
+@endsection
 
 @section('content')
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">

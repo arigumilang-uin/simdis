@@ -1,10 +1,5 @@
 {{-- Riwayat Table Partial --}}
-{{-- Stats --}}
-<div class="flex justify-between items-center mb-4">
-    <span class="text-sm text-gray-500">
-        Total: <b class="text-blue-600">{{ $riwayat->total() }}</b> data
-    </span>
-</div>
+<div x-data x-init="$dispatch('update-total-data', { total: {{ $riwayat->total() }} })"></div>
 
 {{-- Bulk Action Toolbar --}}
 <div x-show="selected.length > 0" x-cloak x-transition 
@@ -45,7 +40,7 @@
                         </template>
                         <template x-if="selectionMode">
                             <div class="flex items-center justify-center gap-1">
-                                <input type="checkbox" x-model="selectAll" 
+                                <input type="checkbox" id="riwayat_select_all" name="select_all" x-model="selectAll" 
                                     @change="selectAll ? selected = ['{{ $riwayat->pluck('id')->implode("','") }}'] : selected = []" 
                                     @click.stop class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer" title="Pilih Semua">
                                 <button type="button" @click.stop="selectionMode = false" class="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors" title="Batalkan Pilih">
@@ -137,7 +132,7 @@
                     <td class="text-center relative">
                         {{-- Selection Mode --}}
                         <div x-show="selectionMode" style="display: none;">
-                            <input type="checkbox" value="{{ $r->id }}" x-model="selected" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer">
+                            <input type="checkbox" id="riwayat_select_{{ $r->id }}" name="selected_ids[]" value="{{ $r->id }}" x-model="selected" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer">
                         </div>
 
                         {{-- Normal Mode --}}

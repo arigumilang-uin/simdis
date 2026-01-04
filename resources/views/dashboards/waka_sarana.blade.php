@@ -2,7 +2,7 @@
 
 @section('title', 'Dashboard Waka Sarana')
 @section('subtitle', 'Monitoring kedisiplinan dan fasilitas.')
-@section('page-header', true)
+@section('page-header', false)
 
 @section('content')
 @php

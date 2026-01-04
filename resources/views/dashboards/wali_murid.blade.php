@@ -2,7 +2,7 @@
 
 @section('title', 'Dashboard Wali Murid')
 @section('subtitle', 'Pantau perkembangan kedisiplinan anak Anda.')
-@section('page-header', true)
+@section('page-header', false)
 
 @section('content')
 <div class="space-y-6">

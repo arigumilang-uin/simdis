@@ -1,22 +1,29 @@
 @extends('layouts.app')
 
 @section('title', 'Manajemen Jurusan')
-@section('subtitle', 'Kelola data jurusan/kompetensi keahlian.')
-@section('page-header', true)
 
-@section('actions')
-    <a href="{{ route('konsentrasi.index') }}" class="btn btn-secondary">
-        <x-ui.icon name="layers" size="18" />
-        <span>Kelola Konsentrasi</span>
-    </a>
-    <a href="{{ route('jurusan.create') }}" class="btn btn-primary">
-        <x-ui.icon name="plus" size="18" />
-        <span>Tambah Jurusan</span>
-    </a>
+@section('page-header')
+    <x-page-header 
+        title="Manajemen Jurusan" 
+        subtitle="Kelola data jurusan/kompetensi keahlian."
+        :total="$jurusanList->count()"
+    />
 @endsection
 
 @section('content')
 <div x-data="{ selectionMode: false, selected: [], selectAll: false }">
+    {{-- Action Buttons --}}
+    <div class="flex flex-wrap justify-end gap-2 mb-6">
+        <a href="{{ route('konsentrasi.index') }}" class="btn btn-secondary">
+            <x-ui.icon name="layers" size="18" />
+            <span>Kelola Konsentrasi</span>
+        </a>
+        <a href="{{ route('jurusan.create') }}" class="btn btn-primary">
+            <x-ui.icon name="plus" size="18" />
+            <span>Tambah Jurusan</span>
+        </a>
+    </div>
+    
     {{-- Bulk Action Toolbar --}}
     <div x-show="selected.length > 0" x-transition x-cloak class="bg-indigo-50 p-3 flex flex-col sm:flex-row justify-between items-center gap-3 mb-4 rounded-xl border border-indigo-100 shadow-sm">
         <div class="flex items-center gap-2">

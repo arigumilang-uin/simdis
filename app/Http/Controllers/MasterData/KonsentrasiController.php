@@ -48,6 +48,11 @@ class KonsentrasiController extends Controller
                                  ->paginate(15)
                                  ->withQueryString();
 
+        // Return partial view for AJAX requests
+        if ($request->ajax() || $request->has('render_partial')) {
+            return view('konsentrasi._table', compact('konsentrasiList'));
+        }
+
         $jurusanList = Jurusan::orderBy('nama_jurusan')->get();
 
         return view('konsentrasi.index', compact('konsentrasiList', 'jurusanList'));

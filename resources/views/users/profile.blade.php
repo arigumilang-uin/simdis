@@ -1,8 +1,13 @@
 @extends('layouts.app')
 
 @section('title', 'Profil Pengguna')
-@section('subtitle', 'Kelola data diri dan keamanan akun Anda.')
-@section('page-header', true)
+
+@section('page-header')
+    <x-page-header 
+        title="Profil Pengguna" 
+        subtitle="Kelola data diri dan keamanan akun Anda."
+    />
+@endsection
 
 @section('content')
 @php

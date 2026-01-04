@@ -1,8 +1,15 @@
 @extends('layouts.app')
 
 @section('title', 'Aturan Pembinaan Internal')
-@section('subtitle', 'Threshold pembinaan berdasarkan akumulasi poin siswa.')
-@section('page-header', true)
+
+@section('page-header')
+    <x-page-header 
+        title="Aturan Pembinaan Internal" 
+        subtitle="Threshold pembinaan berdasarkan akumulasi poin siswa."
+        :total="$rules->count()"
+        totalLabel="aturan"
+    />
+@endsection
 
 @section('content')
 <div class="space-y-6" x-data="pembinaanRulesPage()">

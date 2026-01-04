@@ -1,21 +1,27 @@
 @extends('layouts.app')
 
 @section('title', 'Detail Jurusan')
-@section('subtitle', $jurusan->nama_jurusan)
-@section('page-header', true)
 
-@section('actions')
-    <a href="{{ route('jurusan.edit', $jurusan->id) }}" class="btn btn-primary">
-        <x-ui.icon name="edit" size="18" />
-        <span>Edit Jurusan</span>
-    </a>
+@section('page-header')
+    <x-page-header 
+        title="Detail Jurusan" 
+        :subtitle="$jurusan->nama_jurusan"
+    />
+@endsection
+
+@section('content')
+{{-- Action Buttons --}}
+<div class="flex flex-wrap justify-end gap-2 mb-6">
     <button type="button" onclick="history.back()" class="btn btn-secondary">
         <x-ui.icon name="chevron-left" size="18" />
         <span>Kembali</span>
     </button>
-@endsection
+    <a href="{{ route('jurusan.edit', $jurusan->id) }}" class="btn btn-primary">
+        <x-ui.icon name="edit" size="18" />
+        <span>Edit Jurusan</span>
+    </a>
+</div>
 
-@section('content')
 <div class="space-y-6">
     {{-- Info Jurusan --}}
     <div class="card">

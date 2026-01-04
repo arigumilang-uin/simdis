@@ -1,17 +1,23 @@
 @extends('layouts.app')
 
 @section('title', 'Detail Log Aktivitas')
-@section('subtitle', 'Audit Trail')
-@section('page-header', true)
 
-@section('actions')
+@section('page-header')
+    <x-page-header 
+        title="Detail Log Aktivitas" 
+        subtitle="Audit Trail"
+    />
+@endsection
+
+@section('content')
+{{-- Action Buttons --}}
+<div class="flex flex-wrap justify-end gap-2 mb-6">
     <button type="button" onclick="history.back()" class="btn btn-secondary">
         <x-ui.icon name="arrow-left" size="18" />
         <span>Kembali</span>
     </button>
-@endsection
+</div>
 
-@section('content')
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
     
     {{-- Left Column: Main Info --}}

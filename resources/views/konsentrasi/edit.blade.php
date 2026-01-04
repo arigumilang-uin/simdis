@@ -1,8 +1,13 @@
 @extends('layouts.app')
 
 @section('title', 'Edit Konsentrasi')
-@section('subtitle', 'Perbarui data konsentrasi keahlian.')
-@section('page-header', true)
+
+@section('page-header')
+    <x-page-header 
+        title="Edit Konsentrasi" 
+        subtitle="Perbarui data konsentrasi keahlian."
+    />
+@endsection
 
 @section('content')
 <div class="max-w-2xl">

@@ -1,18 +1,25 @@
 @extends('layouts.app')
 
 @section('title', 'Riwayat Saya')
-@section('subtitle', 'Pelanggaran yang dicatat oleh Anda.')
-@section('page-header', true)
 
-@section('actions')
-    <a href="{{ route('riwayat.create') }}" class="btn btn-primary">
-        <x-ui.icon name="plus" size="18" />
-        <span>Catat Pelanggaran</span>
-    </a>
+@section('page-header')
+    <x-page-header 
+        title="Riwayat Saya" 
+        subtitle="Pelanggaran yang dicatat oleh Anda."
+        :total="$riwayat->total()"
+    />
 @endsection
 
 @section('content')
 <div class="space-y-6">
+    {{-- Action Buttons --}}
+    <div class="flex flex-wrap justify-end gap-2">
+        <a href="{{ route('riwayat.create') }}" class="btn btn-primary">
+            <x-ui.icon name="plus" size="18" />
+            <span>Catat Pelanggaran</span>
+        </a>
+    </div>
+    
     {{-- Data Table --}}
     <div class="table-container">
         <table class="table">

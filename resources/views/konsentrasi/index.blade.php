@@ -1,144 +1,93 @@
 @extends('layouts.app')
 
 @section('title', 'Manajemen Konsentrasi Keahlian')
-@section('subtitle', 'Kelola data konsentrasi keahlian per jurusan.')
-@section('page-header', true)
 
-@section('actions')
-    <a href="{{ route('konsentrasi.create') }}" class="btn btn-primary">
-        <x-ui.icon name="plus" size="18" />
-        <span>Tambah Konsentrasi</span>
-    </a>
+@section('page-header')
+    <x-page-header 
+        title="Manajemen Konsentrasi" 
+        subtitle="Kelola data konsentrasi keahlian per jurusan."
+        :total="$konsentrasiList->total()"
+    />
 @endsection
 
 @section('content')
-{{-- Filters --}}
-<div class="card mb-6">
-    <div class="card-body py-3">
-        <form method="GET" action="{{ route('konsentrasi.index') }}" class="flex flex-wrap items-end gap-4">
-            <div class="form-group mb-0 flex-1 min-w-[200px]">
-                <label class="form-label text-xs">Cari</label>
-                <input type="text" name="search" value="{{ request('search') }}" class="form-input" placeholder="Nama/Kode konsentrasi...">
+@php
+    $tableConfig = [
+        'endpoint' => route('konsentrasi.index'),
+        'filters' => [
+            'search' => request('search'),
+            'jurusan_id' => request('jurusan_id')
+        ],
+        'containerId' => 'konsentrasi-table-container'
+    ];
+@endphp
+
+<div class="space-y-6" x-data='dataTable(@json($tableConfig))'>
+    {{-- Action Button --}}
+    <div class="flex justify-end">
+        <a href="{{ route('konsentrasi.create') }}" class="btn btn-primary">
+            <x-ui.icon name="plus" size="18" />
+            <span>Tambah Konsentrasi</span>
+        </a>
+    </div>
+
+    {{-- Filter Card --}}
+    <div class="card" x-data="{ expanded: {{ request()->hasAny(['search', 'jurusan_id']) ? 'true' : 'false' }} }">
+        <div class="card-header cursor-pointer" @click="expanded = !expanded">
+            <div class="flex items-center gap-2">
+                <x-ui.icon name="filter" class="text-gray-400" size="18" />
+                <span class="card-title">Filter Data</span>
             </div>
-            <div class="form-group mb-0 w-48">
-                <label class="form-label text-xs">Jurusan</label>
-                <select name="jurusan_id" class="form-input form-select">
-                    <option value="">Semua Jurusan</option>
-                    @foreach($jurusanList ?? [] as $j)
-                        <option value="{{ $j->id }}" {{ request('jurusan_id') == $j->id ? 'selected' : '' }}>
-                            {{ $j->nama_jurusan }}
-                        </option>
-                    @endforeach
-                </select>
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-gray-500" x-show="isLoading">Memuat...</span>
+                <x-ui.icon name="chevron-down" size="20" class="text-gray-400 transition-transform" ::class="{ 'rotate-180': expanded }" />
             </div>
-            <div class="flex gap-2">
-                <button type="submit" class="btn btn-primary">Filter</button>
-                <a href="{{ route('konsentrasi.index') }}" class="btn btn-secondary">Reset</a>
+        </div>
+        
+        <div x-show="expanded" x-collapse.duration.300ms x-cloak>
+            <div class="card-body border-t border-gray-100">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {{-- Search --}}
+                    <div class="form-group">
+                        <x-forms.input
+                            name="search"
+                            label="Cari"
+                            x-model.debounce.500ms="filters.search"
+                            placeholder="Nama/Kode konsentrasi..."
+                        />
+                    </div>
+                    
+                    {{-- Jurusan --}}
+                    <div class="form-group">
+                        <x-forms.select
+                            name="jurusan_id" 
+                            label="Jurusan"
+                            x-model="filters.jurusan_id"
+                            :options="$jurusanList"
+                            optionValue="id"
+                            optionLabel="nama_jurusan"
+                            placeholder="Semua Jurusan"
+                        />
+                    </div>
+                    
+                    {{-- Empty space for alignment --}}
+                    <div class="hidden md:block"></div>
+                    
+                    {{-- Actions --}}
+                    <div class="md:col-span-3 flex justify-end">
+                        <button type="button" @click="resetFilters()" class="btn btn-secondary text-xs">
+                            <x-ui.icon name="refresh-cw" size="14" />
+                            <span>Reset Filter</span>
+                        </button>
+                    </div>
+                </div>
             </div>
-        </form>
+        </div>
+    </div>
+
+    {{-- Table Container for AJAX --}}
+    <div id="konsentrasi-table-container">
+        @include('konsentrasi._table')
     </div>
 </div>
-
-{{-- Table --}}
-<div class="table-container">
-    <table class="table">
-        <thead>
-            <tr>
-                <th class="w-12">No</th>
-                <th>Kode</th>
-                <th>Nama Konsentrasi</th>
-                <th>Jurusan</th>
-                <th class="text-center">Kelas</th>
-                <th class="text-center">Status</th>
-                <th class="w-32 text-center">Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($konsentrasiList ?? [] as $index => $k)
-                <tr>
-                    <td class="text-gray-500">{{ $konsentrasiList->firstItem() + $index }}</td>
-                    <td><span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded-md">{{ $k->kode_konsentrasi ?? '-' }}</span></td>
-                    <td class="font-medium text-gray-800">{{ $k->nama_konsentrasi }}</td>
-                    <td class="text-gray-500">{{ $k->jurusan->nama_jurusan ?? '-' }}</td>
-                    <td class="text-center"><span class="badge badge-primary">{{ $k->kelas_count ?? 0 }}</span></td>
-                    <td class="text-center">
-                        @if($k->is_active)
-                            <span class="badge badge-success">Aktif</span>
-                        @else
-                            <span class="badge badge-secondary">Nonaktif</span>
-                        @endif
-                    </td>
-                    <td>
-                        {{-- Desktop: Icon buttons --}}
-                        <div class="action-buttons-desktop">
-                            <a href="{{ route('konsentrasi.show', $k->id) }}" class="btn btn-icon btn-outline" title="Detail">
-                                <x-ui.icon name="eye" size="16" />
-                            </a>
-                            <a href="{{ route('konsentrasi.edit', $k->id) }}" class="btn btn-icon btn-outline" title="Edit">
-                                <x-ui.icon name="edit" size="16" />
-                            </a>
-                            <form action="{{ route('konsentrasi.destroy', $k->id) }}" method="POST" class="inline" onsubmit="return confirm('Hapus konsentrasi ini?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-icon btn-outline text-red-500 hover:bg-red-50" title="Hapus">
-                                    <x-ui.icon name="trash" size="16" />
-                                </button>
-                            </form>
-                        </div>
-                        
-                        {{-- Mobile: Dropdown --}}
-                        <div class="action-dropdown-mobile" x-data="{ open: false }">
-                            <button @click="open = !open" @click.away="open = false" class="action-dropdown-trigger">
-                                <x-ui.icon name="more-horizontal" size="18" />
-                            </button>
-                            <div x-show="open" x-transition class="action-dropdown-menu">
-                                <a href="{{ route('konsentrasi.show', $k->id) }}" class="action-dropdown-item">
-                                    <x-ui.icon name="eye" size="16" />
-                                    Detail
-                                </a>
-                                <a href="{{ route('konsentrasi.edit', $k->id) }}" class="action-dropdown-item action-dropdown-item--edit">
-                                    <x-ui.icon name="edit" size="16" />
-                                    Edit
-                                </a>
-                                <div class="action-dropdown-divider"></div>
-                                <form action="{{ route('konsentrasi.destroy', $k->id) }}" method="POST" onsubmit="return confirm('Hapus konsentrasi ini?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="action-dropdown-item action-dropdown-item--delete">
-                                        <x-ui.icon name="trash" size="16" />
-                                        Hapus
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="7">
-                        <x-ui.empty-state 
-                            icon="layers" 
-                            title="Tidak Ada Data" 
-                            description="Belum ada konsentrasi yang terdaftar." 
-                        >
-                            <x-slot:action>
-                                <a href="{{ route('konsentrasi.create') }}" class="btn btn-primary">
-                                    <x-ui.icon name="plus" size="18" />
-                                    <span>Tambah Konsentrasi</span>
-                                </a>
-                            </x-slot:action>
-                        </x-ui.empty-state>
-                    </td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
-</div>
-
-{{-- Pagination --}}
-@if($konsentrasiList->hasPages())
-    <div class="mt-4">
-        {{ $konsentrasiList->links() }}
-    </div>
-@endif
 @endsection

@@ -1,8 +1,13 @@
 @extends('layouts.app')
 
 @section('title', 'Edit Aturan')
-@section('subtitle', $jenisPelanggaran->nama_pelanggaran ?? 'Edit Jenis Pelanggaran')
-@section('page-header', true)
+
+@section('page-header')
+    <x-page-header 
+        title="Edit Aturan" 
+        :subtitle="$jenisPelanggaran->nama_pelanggaran ?? 'Edit Jenis Pelanggaran'"
+    />
+@endsection
 
 @section('content')
 <div class="max-w-2xl">

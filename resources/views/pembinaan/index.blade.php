@@ -1,8 +1,15 @@
 @extends('layouts.app')
 
 @section('title', 'Pembinaan Internal')
-@section('subtitle', 'Monitoring dan tracking status pembinaan internal siswa.')
-@section('page-header', true)
+
+@section('page-header')
+    <x-page-header 
+        title="Pembinaan Internal" 
+        subtitle="Monitoring dan tracking status pembinaan internal siswa."
+        :total="$stats['total'] ?? 0"
+        totalLabel="siswa"
+    />
+@endsection
 
 @section('content')
 <div class="space-y-6" x-data="pembinaanPage()">

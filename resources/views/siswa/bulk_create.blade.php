@@ -1,17 +1,23 @@
 @extends('layouts.app')
 
 @section('title', 'Import Siswa')
-@section('subtitle', 'Import data siswa secara massal dari file CSV/Excel atau input manual.')
-@section('page-header', true)
 
-@section('actions')
+@section('page-header')
+    <x-page-header 
+        title="Import Siswa" 
+        subtitle="Import data siswa secara massal dari file CSV/Excel atau input manual."
+    />
+@endsection
+
+@section('content')
+{{-- Action Buttons --}}
+<div class="flex flex-wrap justify-end gap-2 mb-6">
     <a href="{{ route('siswa.index') }}" class="btn btn-secondary">
         <x-ui.icon name="chevron-left" size="18" />
         <span>Kembali</span>
     </a>
-@endsection
+</div>
 
-@section('content')
 <div class="max-w-4xl space-y-6">
     {{-- Info Banner --}}
     <div class="p-4 bg-blue-50 border border-blue-100 rounded-xl">

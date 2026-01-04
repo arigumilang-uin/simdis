@@ -80,34 +80,59 @@
     
     {{-- User Dropdown --}}
     <div x-data="dropdown" class="dropdown relative">
-        <button type="button" class="navbar-user" @click="toggle()">
-            <div class="navbar-user-avatar">
-                {{ strtoupper(substr(Auth::user()->username ?? 'U', 0, 1)) }}
+        {{-- Desktop Trigger --}}
+        <button type="button" class="hidden sm:flex group items-center gap-3 pl-4 pr-3 py-1.5 rounded-full border border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 transition-all duration-200" @click="toggle()">
+            <div class="flex flex-col items-end leading-none">
+                <span class="text-sm font-semibold text-gray-700 tracking-tight group-hover:text-gray-900">
+                    {{ Str::limit(Auth::user()->username ?? 'User', 15) }}
+                </span>
+                <span class="text-[10px] uppercase tracking-wider font-medium text-gray-400 mt-0.5 group-hover:text-primary-600">
+                    {{ Auth::user()->effectiveRoleName() ?? 'User' }}
+                </span>
             </div>
-            <span class="navbar-user-name hidden sm:block">{{ Str::limit(Auth::user()->username ?? 'User', 12) }}</span>
-            <x-ui.icon name="chevron-down" size="16" class="text-gray-400 hidden sm:block" />
+            
+            <div class="h-8 w-px bg-gray-200 mx-1"></div>
+            
+            <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-primary-50 group-hover:text-primary-600 transition-colors">
+                <x-ui.icon name="chevron-down" size="16" class="transition-transform duration-200" ::class="{ 'rotate-180': open }" />
+            </div>
+        </button>
+
+        {{-- Mobile Trigger --}}
+        <button type="button" class="sm:hidden flex items-center justify-center w-10 h-10 rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-gray-50" @click="toggle()">
+             <x-ui.icon name="user" size="20" />
         </button>
         
-        <div class="dropdown-menu" @click.away="close()" x-show="open" x-transition x-cloak>
-            <div class="px-4 py-3 border-b border-gray-100">
-                <p class="font-medium text-gray-800">{{ Auth::user()->username ?? 'User' }}</p>
-                <p class="text-xs text-gray-500">{{ Auth::user()->effectiveRoleName() ?? Auth::user()->role?->nama_role ?? 'User' }}</p>
+        <div class="dropdown-menu mt-2 w-56 transform origin-top-right right-0 z-50" @click.away="close()" x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95" x-cloak>
+            <div class="px-4 py-3 bg-gray-50 border-b border-gray-100 rounded-t-lg">
+                <p class="font-semibold text-gray-800">{{ Auth::user()->username ?? 'User' }}</p>
+                <div class="flex items-center gap-1.5 mt-1">
+                    <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                    <p class="text-xs text-gray-500">{{ Auth::user()->effectiveRoleName() ?? 'User' }}</p>
+                </div>
             </div>
             
-            <a href="{{ route('account.edit') }}" class="dropdown-item">
-                <x-ui.icon name="user" size="16" />
-                <span>Profil Saya</span>
-            </a>
+            <div class="p-1.5">
+                <a href="{{ route('account.edit') }}" class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-primary-600 transition-colors">
+                    <x-ui.icon name="user" size="16" />
+                    <span>Profil Saya</span>
+                </a>
+            </div>
             
-            <div class="dropdown-divider"></div>
+            <div class="h-px bg-gray-100 my-0.5 mx-1.5"></div>
             
-            <form action="{{ route('logout') }}" method="POST">
-                @csrf
-                <button type="submit" class="dropdown-item danger w-full" onclick="return confirm('Keluar dari sistem?')">
+            <div class="p-1.5">
+                {{-- Logout Button using Native Form Attribute --}}
+                <button type="submit" form="logout-form-navbar" class="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 rounded-md hover:bg-red-50 hover:text-red-700 transition-colors cursor-pointer" onclick="return confirm('Apakah Anda yakin ingin keluar?')">
                     <x-ui.icon name="log-out" size="16" />
                     <span>Keluar</span>
                 </button>
-            </form>
+            </div>
         </div>
     </div>
+    
+    {{-- Hidden Logout Form --}}
+    <form id="logout-form-navbar" action="{{ route('logout') }}" method="POST" class="hidden" style="display: none;">
+        @csrf
+    </form>
 </div>

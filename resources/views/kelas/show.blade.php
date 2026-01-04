@@ -1,10 +1,17 @@
 @extends('layouts.app')
 
 @section('title', 'Detail Kelas')
-@section('subtitle', $kelas->nama_kelas ?? 'Detail Kelas')
-@section('page-header', true)
 
-@section('actions')
+@section('page-header')
+    <x-page-header 
+        title="Detail Kelas" 
+        :subtitle="$kelas->nama_kelas ?? 'Detail Kelas'"
+    />
+@endsection
+
+@section('content')
+{{-- Action Buttons --}}
+<div class="flex flex-wrap justify-end gap-2 mb-6">
     <button type="button" onclick="history.back()" class="btn btn-secondary">
         <x-ui.icon name="chevron-left" size="18" />
         <span>Kembali</span>
@@ -15,9 +22,8 @@
         <span>Edit Kelas</span>
     </a>
     @endcan
-@endsection
+</div>
 
-@section('content')
 <div class="space-y-6">
     {{-- Summary Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">

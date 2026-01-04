@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page-header', true)
+@section('page-header', false)
 
 @section('content')
 <div class="space-y-6">

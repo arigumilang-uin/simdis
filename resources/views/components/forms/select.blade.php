@@ -1,5 +1,6 @@
 @props([
     'name',
+    'id' => null,
     'label' => null,
     'options' => [], // Array of options or Collection
     'value' => null, // Selected value
@@ -13,26 +14,27 @@
 ])
 
 @php
+    $inputId = $id ?? $name;
     $hasError = $errors->has($name);
     $errorClass = $hasError ? 'error' : '';
     $inputClasses = "form-input form-select {$errorClass}";
     $selectedValue = old($name, $value);
 @endphp
 
-<div {{ $attributes->merge(['class' => 'form-group']) }}>
+<div {{ $attributes->only('class')->merge(['class' => 'form-group']) }}>
     @if($label)
-        <label for="{{ $name }}" class="form-label {{ $required ? 'form-label-required' : '' }}">
+        <label for="{{ $inputId }}" class="form-label {{ $required ? 'form-label-required' : '' }}">
             {{ $label }}
         </label>
     @endif
 
     <select 
-        id="{{ $name }}"
+        id="{{ $inputId }}"
         name="{{ $name }}"
         class="{{ $inputClasses }}"
         @if($required) required @endif
         @if($disabled) disabled @endif
-        {{ $attributes->except('class') }}
+        {{ $attributes->except(['class', 'id']) }}
     >
         @if($placeholder)
             <option value="">{{ $placeholder }}</option>

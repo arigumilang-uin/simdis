@@ -49,6 +49,15 @@ Alpine.data("sidebar", () => ({
     },
 }));
 
+// Global Layout Store
+Alpine.store("layout", {
+    focusMode: false,
+    
+    toggleFocusMode() {
+        this.focusMode = !this.focusMode;
+    }
+});
+
 // Dropdown Component
 Alpine.data("dropdown", () => ({
     open: false,
