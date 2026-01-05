@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
-    <title>@yield('title', 'Dashboard') | {{ config('app.name', 'SIMDIS') }}</title>
+    <title>@yield('title', 'Dashboard') | {{ config('app.name', 'IDEAL') }}</title>
     <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
     
     <!-- Fonts -->
@@ -69,7 +69,14 @@
                     @include('components.navbar')
                 </header>
                 
-                <!-- Page Header Segment (Collapsible) -->
+                {{-- Page Header Segment - Check if has content --}}
+                @php
+                    $pageHeaderContent = trim(View::yieldContent('page-header') ?? '');
+                    $hasPageHeader = !empty($pageHeaderContent) && $pageHeaderContent !== 'false' && $pageHeaderContent !== '0';
+                @endphp
+                
+                @if($hasPageHeader)
+                {{-- Page Header Segment (Collapsible) --}}
                 <div class="relative z-10 cursor-pointer hover:bg-gray-50/30 transition-colors"
                      :class="$store.layout.focusMode ? 'pointer-events-none' : 'bg-[#f8fafc]/95 backdrop-blur-md shadow-sm border-b border-gray-200/50'"
                      @click="$store.layout.toggleFocusMode()"
@@ -85,11 +92,9 @@
                             @include('components.alerts')
                             
                             <!-- Page Header -->
-                            @hasSection('page-header')
-                                <div>
-                                    @yield('page-header')
-                                </div>
-                            @endif
+                            <div>
+                                @yield('page-header')
+                            </div>
                         </div>
 
                          <!-- Visual Handle (Restored) -->
@@ -112,6 +117,14 @@
                         <x-ui.icon name="chevron-down" size="14" class="text-gray-400 group-hover:text-primary-500" />
                     </button>
                 </div>
+                @else
+                {{-- Dashboard mode: No header, just flash messages if any --}}
+                @if(session()->has('success') || session()->has('error') || session()->has('warning') || session()->has('info') || $errors->any())
+                <div class="px-0 md:px-6 pt-2 pb-1">
+                    @include('components.alerts')
+                </div>
+                @endif
+                @endif
             </div>
             
             <!-- Page Content (Scrollable Body) -->
@@ -126,7 +139,7 @@
             
             <!-- Footer -->
             <footer class="px-6 py-4 text-center text-sm text-gray-500 border-t border-gray-100">
-                <p>&copy; {{ date('Y') }} {{ config('app.name', 'SIMDIS') }}. Sistem Informasi Manajemen Disiplin Siswa.</p>
+                <p>&copy; {{ date('Y') }} {{ config('app.name', 'IDEAL') }}. Integrated Discipline & Educational Achievement Log.</p>
             </footer>
         </main>
     </div>

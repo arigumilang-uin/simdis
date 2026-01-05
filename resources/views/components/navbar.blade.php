@@ -15,7 +15,7 @@
                  loading="eager">
         </picture>
         <div class="leading-tight">
-            <div class="font-semibold text-gray-800 text-sm">SIMDIS</div>
+            <div class="font-semibold text-gray-800 text-sm">IDEAL</div>
             <div class="text-[10px] text-gray-500">SMKN 1 Lubuk Dalam</div>
         </div>
     </div>

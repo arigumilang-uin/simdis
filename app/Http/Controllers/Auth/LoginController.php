@@ -127,7 +127,7 @@ class LoginController extends Controller
 
         // --- GAGAL LOGIN ---
         return back()->withErrors([
-            'username' => 'Login gagal. Periksa kembali username/email/NIP/NUPTK/No.HP dan password Anda.',
+            'username' => 'Login gagal. Periksa kembali username dan password Anda.',
         ])->onlyInput('username');
     }
 

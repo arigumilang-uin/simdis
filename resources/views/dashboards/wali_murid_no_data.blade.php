@@ -1,6 +1,5 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard Wali Murid')
 @section('page-header', false)
 
 @section('content')

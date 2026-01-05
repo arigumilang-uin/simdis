@@ -4,7 +4,6 @@ namespace App\Notifications;
 
 use App\Models\TindakLanjut;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -15,10 +14,12 @@ use Illuminate\Notifications\Notification;
  * - Surat 3 atau Surat 4 dibuat (status: Menunggu Persetujuan)
  * 
  * Channels:
- * - Email: Immediate notification
  * - Database: For in-app badge counter
+ * 
+ * NOTE: ShouldQueue removed for development compatibility.
+ * For production, add back: implements ShouldQueue and run: php artisan queue:table && php artisan migrate
  */
-class KasusButuhApprovalNotification extends Notification implements ShouldQueue
+class KasusButuhApprovalNotification extends Notification
 {
     use Queueable;
 
@@ -42,7 +43,8 @@ class KasusButuhApprovalNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        // Only database channel for now. Add 'mail' when SMTP is configured.
+        return ['database'];
     }
 
     /**

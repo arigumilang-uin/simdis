@@ -111,6 +111,12 @@ Route::middleware(['auth', 'profile.completed'])->group(function () {
 
             Route::get('/statistics', [\App\Http\Controllers\Report\ApprovalController::class, 'statistics'])
                 ->name('statistics');
+
+            // Detail dan Process Approval
+            Route::get('/{tindakLanjut}', [\App\Http\Controllers\Report\ApprovalController::class, 'show'])
+                ->name('show');
+            Route::post('/{tindakLanjut}/process', [\App\Http\Controllers\Report\ApprovalController::class, 'process'])
+                ->name('process');
         });
 
         // Reports
@@ -154,6 +160,12 @@ Route::middleware(['auth', 'profile.completed'])->group(function () {
                 ->name('kelas');
             Route::get('/kelas/{kelas}', [\App\Http\Controllers\MasterData\KelasController::class, 'showForMonitoring'])
                 ->name('kelas.show');
+
+            // Data Siswa (Monitoring Only)
+            Route::get('/siswa', [\App\Http\Controllers\KepalaSekolah\SiswaMonitoringController::class, 'index'])
+                ->name('siswa');
+            Route::get('/siswa/{siswa}', [\App\Http\Controllers\KepalaSekolah\SiswaMonitoringController::class, 'show'])
+                ->name('siswa.show');
         });
     });
 

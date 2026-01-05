@@ -88,6 +88,19 @@ class TindakLanjutController extends Controller
     }
 
     /**
+     * Tampilkan daftar tindak lanjut yang menunggu persetujuan.
+     * 
+     * Shortcut untuk akses cepat approval.
+     */
+    public function pendingApproval(Request $request): View
+    {
+        // Force filter pending_approval = true
+        $request->merge(['pending_approval' => true]);
+        
+        return $this->index($request);
+    }
+
+    /**
      * Tampilkan form create tindak lanjut.
      * 
      * ALUR:

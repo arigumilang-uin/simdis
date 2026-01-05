@@ -70,8 +70,10 @@ Route::middleware(['auth', 'profile.completed'])->group(function () {
         $user = auth()->user();
         
         // Role-based dashboard redirect
-        if ($user->hasAnyRole(['Waka Kesiswaan', 'Operator Sekolah'])) {
+        if ($user->hasRole('Operator Sekolah')) {
             return redirect('/dashboard/admin');
+        } elseif ($user->hasRole('Waka Kesiswaan')) {
+            return redirect('/dashboard/waka');
         } elseif ($user->hasRole('Kepala Sekolah')) {
             return redirect('/dashboard/kepsek');
         } elseif ($user->hasRole('Kaprodi')) {
@@ -95,6 +97,9 @@ Route::middleware(['auth', 'profile.completed'])->group(function () {
     // Role-specific dashboards with REAL controllers & statistics
     Route::get('/dashboard/admin', [\App\Http\Controllers\Dashboard\AdminDashboardController::class, 'index'])
         ->name('dashboard.admin');
+
+    Route::get('/dashboard/waka', [\App\Http\Controllers\Dashboard\AdminDashboardController::class, 'index'])
+        ->name('dashboard.waka');
 
     Route::get('/dashboard/kepsek', [\App\Http\Controllers\Dashboard\KepsekDashboardController::class, 'index'])
         ->name('dashboard.kepsek');

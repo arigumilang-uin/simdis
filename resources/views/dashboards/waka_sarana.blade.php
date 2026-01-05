@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard Waka Sarana')
-@section('subtitle', 'Monitoring kedisiplinan dan fasilitas.')
 @section('page-header', false)
 
 @section('content')
@@ -63,98 +61,87 @@
             ]
         ]
     ];
+    $jsonData = json_encode($initData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
 @endphp
 
-<div class="space-y-6" x-data="analyticsDashboard(@json($initData))">
-    {{-- Statistics Cards (With Loading State) --}}
-    <div id="stats-container" class="grid grid-cols-2 md:grid-cols-4 gap-4" :class="{ 'opacity-50': isLoading }">
-        <div class="stat-card">
-                <x-ui.icon name="users" size="24" />
-            <div class="stat-card-content">
-                <p class="stat-card-label">Total Siswa</p>
-                <p class="stat-card-value">{{ number_format($totalSiswa ?? 0) }}</p>
-            </div>
-        </div>
+<div class="space-y-6" x-data="analyticsDashboard({{ $jsonData }})">
+    {{-- Banner --}}
+    <x-dashboard.banner 
+        variant="amber" 
+        title="Halo, {{ auth()->user()->username ?? 'Waka Sarana' }}! 👋" 
+        subtitle="Monitoring kedisiplinan dan fasilitas sekolah."
+        badge="Waka Sarana Panel"
+        showDate="true"
+    />
+
+    {{-- Statistics Cards --}}
+    <div id="stats-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 transition-opacity duration-200" :class="{ 'opacity-50': isLoading }">
+        <x-dashboard.stat-card 
+            label="Total Siswa" 
+            value="{{ number_format($totalSiswa ?? 0) }}" 
+            icon="users"
+            color="blue"
+        />
         
-        <div class="stat-card">
-                <x-ui.icon name="alert-circle" size="24" />
-            <div class="stat-card-content">
-                <p class="stat-card-label">Pelanggaran</p>
-                <p class="stat-card-value">{{ number_format($totalPelanggaran ?? 0) }}</p>
-                <p class="text-xs text-gray-500 mt-1">Periode ini</p>
-            </div>
-        </div>
+        <x-dashboard.stat-card 
+            label="Pelanggaran" 
+            value="{{ number_format($totalPelanggaran ?? 0) }}" 
+            icon="alert-circle"
+            color="rose"
+            trend="up"
+            trendValue="Periode Ini"
+        />
         
-        <div class="stat-card">
-                <x-ui.icon name="clipboard" size="24" />
-            <div class="stat-card-content">
-                <p class="stat-card-label">Kasus Aktif</p>
-                <p class="stat-card-value">{{ number_format($kasusAktif ?? 0) }}</p>
-            </div>
-        </div>
+        <x-dashboard.stat-card 
+            label="Kasus Aktif" 
+            value="{{ number_format($kasusAktif ?? 0) }}" 
+            icon="clipboard"
+            color="amber"
+        />
         
-        <div class="stat-card">
-                <x-ui.icon name="check-circle" size="24" />
-            <div class="stat-card-content">
-                <p class="stat-card-label">Total Kasus</p>
-                <p class="stat-card-value">{{ number_format($totalKasus ?? 0) }}</p>
-            </div>
-        </div>
+        <x-dashboard.stat-card 
+            label="Total Kasus" 
+            value="{{ number_format($totalKasus ?? 0) }}" 
+            icon="check-circle"
+            color="emerald"
+        />
     </div>
     
     {{-- Filter & Charts Container --}}
     <div class="grid grid-cols-1 gap-6">
         {{-- Filter --}}
-        <div class="card" x-data="{ expanded: {{ request()->hasAny(['start_date', 'end_date']) ? 'true' : 'false' }} }">
-             <div class="card-header cursor-pointer select-none" @click="expanded = !expanded">
-                <div class="flex items-center gap-2">
-                    <x-ui.icon name="filter" size="16" class="text-gray-400" />
-                    <h3 class="card-title">Filter Data</h3>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-xs text-gray-500" x-show="isLoading">Memuat Data...</span>
-                     <x-ui.icon name="chevron-down" size="20" class="text-gray-400 transition-transform" ::class="{ 'rotate-180': expanded }" />
-                </div>
+        <x-dashboard.filter-card title="Filter Data" columns="3">
+            <x-forms.date 
+                name="start_date" 
+                label="Dari Tanggal" 
+                x-model="filters.start_date" 
+            />
+            
+            <x-forms.date 
+                name="end_date" 
+                label="Sampai" 
+                x-model="filters.end_date" 
+            />
+            
+            <div class="form-group">
+                <button type="button" @click="resetFilters()" class="btn btn-secondary w-full">
+                     <x-ui.icon name="refresh-cw" :size="14" />
+                     <span>Reset</span>
+                </button>
             </div>
-            <div class="card-body" x-show="expanded" x-collapse>
-                <div class="flex flex-wrap gap-4 items-end">
-                    <div class="form-group flex-1 min-w-[150px]">
-                        <label class="form-label">Dari Tanggal</label>
-                        <input type="date" x-model="filters.start_date" class="form-input">
-                    </div>
-                    <div class="form-group flex-1 min-w-[150px]">
-                        <label class="form-label">Sampai</label>
-                        <input type="date" x-model="filters.end_date" class="form-input">
-                    </div>
-                    <div class="form-group">
-                        <button type="button" @click="resetFilters()" class="btn btn-secondary">
-                             <x-ui.icon name="refresh-cw" size="14" />
-                             reset
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </x-dashboard.filter-card>
         
         {{-- Charts --}}
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" :class="{ 'opacity-50': isLoading }">
-            <div class="card h-full flex flex-col">
-                <div class="card-header border-b border-gray-100">
-                    <h3 class="card-title">Top 10 Pelanggaran</h3>
-                </div>
-                <div class="card-body flex-1 min-h-[300px] relative">
-                    <canvas id="chartPelanggaran"></canvas>
-                </div>
-            </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 transition-opacity duration-200" :class="{ 'opacity-50': isLoading }">
+            <x-dashboard.chart-card 
+                title="Top 10 Pelanggaran" 
+                chartId="chartPelanggaran"
+            />
             
-            <div class="card h-full flex flex-col">
-                <div class="card-header border-b border-gray-100">
-                    <h3 class="card-title">Top 10 Kelas</h3>
-                </div>
-                <div class="card-body flex-1 min-h-[300px] relative">
-                    <canvas id="chartKelas"></canvas>
-                </div>
-            </div>
+            <x-dashboard.chart-card 
+                title="Top 10 Kelas" 
+                chartId="chartKelas"
+            />
         </div>
         
         {{-- Kasus Terbaru --}}
@@ -187,8 +174,9 @@
                                             'Disetujui' => 'badge-success',
                                             'Ditangani' => 'badge-primary',
                                         ];
+                                        $statusValue = $kasus->status->value ?? $kasus->status;
                                     @endphp
-                                    <span class="badge {{ $statusColors[$kasus->status] ?? 'badge-neutral' }}">{{ $kasus->status }}</span>
+                                    <span class="badge {{ $statusColors[$statusValue] ?? 'badge-neutral' }}">{{ $statusValue }}</span>
                                 </td>
                                 <td class="text-gray-500 text-sm">{{ $kasus->created_at->format('d M Y') }}</td>
                                 <td>

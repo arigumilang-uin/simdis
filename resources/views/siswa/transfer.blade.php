@@ -20,19 +20,7 @@
 
 <div class="max-w-6xl space-y-6" x-data="transferPage()">
     
-    {{-- Info Banner --}}
-    <div class="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-xl">
-        <div class="flex items-start gap-3">
-            <x-ui.icon name="info" size="20" class="text-blue-500 shrink-0 mt-0.5" />
-            <div>
-                <p class="text-sm text-blue-800 font-medium">Fitur Kenaikan / Pindah Kelas</p>
-                <p class="text-sm text-blue-700 mt-1">
-                    Gunakan fitur ini untuk memindahkan siswa ke kelas lain saat kenaikan kelas, pindah konsentrasi, atau perubahan lainnya.
-                    <strong>Semua data riwayat pelanggaran, pembinaan, dan wali murid akan tetap terjaga.</strong>
-                </p>
-            </div>
-        </div>
-    </div>
+
 
     {{-- Step 1: Pilih Kelas Asal --}}
     <div class="card">

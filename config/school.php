@@ -60,8 +60,8 @@ return [
     */
 
     'sistem' => [
-        'nama' => 'SIMDIS',
-        'nama_lengkap' => 'Sistem Informasi Manajemen Kedisiplinan',
+        'nama' => 'IDEAL',
+        'nama_lengkap' => 'Integrated Discipline & Educational Achievement Log',
         'versi' => '1.0.0',
     ],
 

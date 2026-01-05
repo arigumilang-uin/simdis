@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard Kaprodi')
-@section('subtitle', 'Monitoring siswa jurusan {{ $jurusan->nama_jurusan ?? "" }}')
 @section('page-header', false)
 
 @section('content')
@@ -42,9 +40,10 @@
             ]
         ]
     ];
+    $jsonData = json_encode($initData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
 @endphp
 
-<div class="space-y-6" x-data='analyticsDashboard(@json($initData))'>
+<div class="space-y-6" x-data="analyticsDashboard({{ $jsonData }})">
     {{-- Jurusan Info Banner --}}
     <x-dashboard.banner 
         variant="violet" 

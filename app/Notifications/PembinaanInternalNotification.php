@@ -4,7 +4,6 @@ namespace App\Notifications;
 
 use App\Models\Siswa;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -15,8 +14,11 @@ use Illuminate\Notifications\Notification;
  * mencapai threshold poin tertentu yang memerlukan pembinaan internal.
  * 
  * Clean Architecture: Notification Layer
+ * 
+ * NOTE: ShouldQueue removed for development compatibility.
+ * For production, add back: implements ShouldQueue and run: php artisan queue:table && php artisan migrate
  */
-class PembinaanInternalNotification extends Notification implements ShouldQueue
+class PembinaanInternalNotification extends Notification
 {
     use Queueable;
 
@@ -38,7 +40,8 @@ class PembinaanInternalNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        // Only database channel for now. Add 'mail' when SMTP is configured.
+        return ['database'];
     }
 
     /**

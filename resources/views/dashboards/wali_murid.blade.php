@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard Wali Murid')
-@section('subtitle', 'Pantau perkembangan kedisiplinan anak Anda.')
 @section('page-header', false)
 
 @section('content')
@@ -107,8 +105,9 @@
                                         'Ditangani' => 'badge-primary',
                                         'Selesai' => 'badge-neutral',
                                     ];
+                                    $statusValue = $k->status->value ?? $k->status;
                                 @endphp
-                                <span class="badge {{ $statusColors[$k->status] ?? 'badge-neutral' }}">{{ $k->status }}</span>
+                                <span class="badge {{ $statusColors[$statusValue] ?? 'badge-neutral' }}">{{ $statusValue }}</span>
                             </div>
                             <p class="text-sm text-gray-500">{{ $k->created_at->format('d M Y') }}</p>
                             @if($k->catatan)

@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-@section('title', 'Developer Console')
-@section('subtitle', 'Development tools and debugging.')
 @section('page-header', false)
 
 @section('content')

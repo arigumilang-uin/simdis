@@ -36,9 +36,10 @@
                                         'Selesai' => 'badge-neutral',
                                         'Ditolak' => 'badge-danger',
                                     ];
+                                    $statusValue = $kasus->status->value ?? $kasus->status;
                                 @endphp
-                                <span class="badge {{ $statusColors[$kasus->status] ?? 'badge-neutral' }}">
-                                    {{ $kasus->status }}
+                                <span class="badge {{ $statusColors[$statusValue] ?? 'badge-neutral' }}">
+                                    {{ $statusValue }}
                                 </span>
                             </td>
                             <td class="text-gray-600 text-sm">{{ $kasus->created_at->format('d M Y') }}</td>

@@ -74,9 +74,19 @@ class SuratPanggilanService
 
         switch ($role) {
             case 'Wali Kelas':
+                // Null safety: check kelas exists first
+                if (!$siswa->kelas) {
+                    \Log::warning("Siswa {$siswa->id} tidak memiliki kelas, tidak bisa ambil Wali Kelas");
+                    return null;
+                }
                 return $siswa->kelas->waliKelas ?? null;
 
             case 'Kaprodi':
+                // Null safety: check kelas and jurusan exist
+                if (!$siswa->kelas || !$siswa->kelas->jurusan) {
+                    \Log::warning("Siswa {$siswa->id} tidak memiliki kelas/jurusan, tidak bisa ambil Kaprodi");
+                    return null;
+                }
                 return $siswa->kelas->jurusan->kaprodi ?? null;
 
             case 'Waka Kesiswaan':

@@ -18,7 +18,7 @@
         </picture>
     </div>
     <div class="sidebar-brand-text">
-        <div>SIMDIS</div>
+        <div>IDEAL</div>
         <div class="text-xs font-normal opacity-70">SMKN 1 Lubuk Dalam</div>
     </div>
 </div>
@@ -157,7 +157,7 @@
                 </li>
             @endif
             
-            @if(in_array($role, ['Wali Kelas', 'Kaprodi', 'Waka Kesiswaan', 'Kepala Sekolah']) || $isDeveloper)
+            @if(in_array($role, ['Wali Kelas', 'Kaprodi', 'Waka Kesiswaan']) || $isDeveloper)
                 <li class="sidebar-menu-item">
                     <a href="{{ route('pembinaan.index') }}" class="sidebar-menu-link {{ Request::routeIs('pembinaan.*') ? 'active' : '' }}">
                         <x-ui.icon name="user-check" class="sidebar-menu-icon" />
@@ -275,6 +275,12 @@
         @endphp
         <div class="sidebar-section">Kepala Sekolah</div>
         <ul class="sidebar-menu">
+            <li class="sidebar-menu-item">
+                <a href="{{ route('kepala-sekolah.data.siswa') }}" class="sidebar-menu-link {{ Request::routeIs('kepala-sekolah.data.siswa*') ? 'active' : '' }}">
+                    <x-ui.icon name="users" class="sidebar-menu-icon" />
+                    <span>Data Siswa</span>
+                </a>
+            </li>
             <li class="sidebar-menu-item">
                 <a href="{{ route('kepala-sekolah.approvals.index') }}" class="sidebar-menu-link {{ Request::routeIs('kepala-sekolah.approvals.*') ? 'active' : '' }}">
                     <x-ui.icon name="check-square" class="sidebar-menu-icon" />
