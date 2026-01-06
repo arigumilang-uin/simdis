@@ -10,14 +10,6 @@
 @endsection
 
 @section('content')
-{{-- Action Buttons --}}
-<div class="flex flex-wrap justify-end gap-2 mb-6">
-    <a href="{{ route('siswa.index') }}" class="btn btn-secondary">
-        <x-ui.icon name="arrow-left" size="18" />
-        <span>Kembali ke Data Siswa</span>
-    </a>
-</div>
-
 <div class="max-w-6xl space-y-6" x-data="transferPage()">
     
 

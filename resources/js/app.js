@@ -13,8 +13,8 @@ window.Alpine = Alpine;
 // ============================================
 // DASHBOARD COMPONENTS (Centralized Logic)
 // ============================================
-import analyticsDashboard from './components/analytics-dashboard';
-import dataTable from './components/data-table';
+import analyticsDashboard from "./components/analytics-dashboard";
+import dataTable from "./components/data-table";
 
 // ============================================
 // ALPINE GLOBAL COMPONENTS
@@ -52,10 +52,10 @@ Alpine.data("sidebar", () => ({
 // Global Layout Store
 Alpine.store("layout", {
     focusMode: false,
-    
+
     toggleFocusMode() {
         this.focusMode = !this.focusMode;
-    }
+    },
 });
 
 // Dropdown Component
@@ -93,6 +93,84 @@ Alpine.data("modal", (initialState = false) => ({
         }
     },
 }));
+
+// Slide-over Drawer Component
+Alpine.data("slideOver", (config = {}) => ({
+    open: false,
+    loading: false,
+    title: config.title || "",
+    size: config.size || "md", // sm, md, lg, xl, full
+
+    show(options = {}) {
+        if (options.title) this.title = options.title;
+        if (options.size) this.size = options.size;
+        this.open = true;
+        document.body.style.overflow = "hidden";
+
+        // Focus first input after animation
+        this.$nextTick(() => {
+            const firstInput = this.$el.querySelector(
+                'input:not([type="hidden"]), select, textarea'
+            );
+            if (firstInput) firstInput.focus();
+        });
+    },
+
+    hide() {
+        this.open = false;
+        document.body.style.overflow = "";
+        this.$dispatch("slide-over-closed");
+    },
+
+    toggle() {
+        if (this.open) {
+            this.hide();
+        } else {
+            this.show();
+        }
+    },
+
+    // Handle escape key
+    handleEscape(e) {
+        if (e.key === "Escape" && this.open) {
+            this.hide();
+        }
+    },
+
+    // Get width class based on size
+    getWidthClass() {
+        const sizes = {
+            sm: "max-w-sm",
+            md: "max-w-md",
+            lg: "max-w-lg",
+            xl: "max-w-xl",
+            "2xl": "max-w-2xl",
+            full: "max-w-full",
+        };
+        return sizes[this.size] || "max-w-md";
+    },
+}));
+
+// Global Slide-over Store for triggering from anywhere
+Alpine.store("slideOver", {
+    component: null,
+
+    register(component) {
+        this.component = component;
+    },
+
+    show(options) {
+        if (this.component) {
+            this.component.show(options);
+        }
+    },
+
+    hide() {
+        if (this.component) {
+            this.component.hide();
+        }
+    },
+});
 
 // Alert/Toast Component
 Alpine.data("alert", (autoClose = true, duration = 5000) => ({
@@ -357,8 +435,8 @@ window.copyToClipboard = async (text) => {
 };
 
 // Register Dashboard Components
-Alpine.data('analyticsDashboard', analyticsDashboard);
-Alpine.data('dataTable', dataTable);
+Alpine.data("analyticsDashboard", analyticsDashboard);
+Alpine.data("dataTable", dataTable);
 
 // ============================================
 // START ALPINE

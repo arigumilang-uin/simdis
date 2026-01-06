@@ -14,14 +14,14 @@
 <div x-data="{ selectionMode: false, selected: [], selectAll: false }">
     {{-- Action Buttons --}}
     <div class="flex flex-wrap justify-end gap-2 mb-6">
-        <a href="{{ route('konsentrasi.index') }}" class="btn btn-secondary">
-            <x-ui.icon name="layers" size="18" />
-            <span>Kelola Konsentrasi</span>
-        </a>
-        <a href="{{ route('jurusan.create') }}" class="btn btn-primary">
+        <button 
+            type="button" 
+            @click="$dispatch('open-jurusan-form', { title: 'Tambah Jurusan Baru' })"
+            class="btn btn-primary"
+        >
             <x-ui.icon name="plus" size="18" />
             <span>Tambah Jurusan</span>
-        </a>
+        </button>
     </div>
     
     {{-- Bulk Action Toolbar --}}
@@ -203,10 +203,14 @@
                                 icon="hexagon"
                             >
                                 <x-slot:action>
-                                    <a href="{{ route('jurusan.create') }}" class="btn btn-primary">
+                                    <button 
+                                        type="button" 
+                                        @click="$dispatch('open-jurusan-form', { title: 'Tambah Jurusan Baru' })"
+                                        class="btn btn-primary"
+                                    >
                                         <x-ui.icon name="plus" size="18" />
                                         <span>Tambah Jurusan</span>
-                                    </a>
+                                    </button>
                                 </x-slot:action>
                             </x-ui.empty-state>
                         </td>
@@ -216,4 +220,81 @@
         </table>
     </div>
 </div>
+
+{{-- Slide-over Form Drawer --}}
+<x-ui.slide-over 
+    id="jurusan-form" 
+    title="Tambah Jurusan" 
+    size="lg"
+    icon="layers"
+>
+    <form 
+        action="{{ route('jurusan.store') }}" 
+        method="POST" 
+        class="space-y-5"
+        x-data="{ submitting: false, isEdit: false, editId: null }"
+        @submit="submitting = true"
+        x-on:open-jurusan-form.window="
+            isEdit = $event.detail?.id ? true : false;
+            editId = $event.detail?.id || null;
+            if (isEdit) {
+                $el.action = '{{ url('jurusan') }}/' + editId;
+            } else {
+                $el.action = '{{ route('jurusan.store') }}';
+            }
+        "
+    >
+        @csrf
+        <input type="hidden" name="_method" x-bind:value="isEdit ? 'PUT' : 'POST'">
+        
+        <div class="form-section">
+            <div class="form-section-title">
+                <x-ui.icon name="info" size="14" />
+                Informasi Jurusan
+            </div>
+            
+            <x-forms.grid :cols="2">
+                <x-forms.input 
+                    name="kode_jurusan" 
+                    label="Kode Jurusan" 
+                    placeholder="Contoh: TKJ" 
+                    required 
+                    help="Maks. 10 karakter"
+                />
+                
+                <x-forms.select 
+                    name="kaprodi_user_id" 
+                    label="Kepala Prodi" 
+                    :options="$kaprodiList ?? []"
+                    optionValue="id"
+                    optionLabel="username"
+                    placeholder="-- Pilih Kaprodi --"
+                />
+            </x-forms.grid>
+            
+            <x-forms.input 
+                name="nama_jurusan" 
+                label="Nama Jurusan" 
+                placeholder="Contoh: Teknik Komputer dan Jaringan" 
+                required 
+            />
+        </div>
+    </form>
+    
+    <x-slot:footer>
+        <button type="button" @click="$dispatch('close-jurusan-form')" class="btn btn-secondary">
+            Batal
+        </button>
+        <button 
+            type="submit" 
+            form="jurusan-form-form"
+            class="btn btn-primary"
+            onclick="this.closest('.slide-over-panel').querySelector('form').submit()"
+        >
+            <x-ui.icon name="save" size="18" />
+            <span>Simpan Jurusan</span>
+        </button>
+    </x-slot:footer>
+</x-ui.slide-over>
 @endsection
+

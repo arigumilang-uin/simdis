@@ -40,15 +40,22 @@ class JurusanController extends Controller
     {
         $jurusanList = $this->jurusanService->getAllJurusan();
         
-        return view('jurusan.index', compact('jurusanList'));
+        // Get kaprodi list for drawer form dropdown
+        $kaprodiList = \App\Models\User::whereHas('role', function ($q) {
+            $q->whereIn('nama_role', ['Kaprodi', 'Guru', 'Developer']);
+        })->orderBy('username')->get();
+        
+        return view('jurusan.index', compact('jurusanList', 'kaprodiList'));
     }
 
     /**
      * Show the form for creating a new jurusan
+     * DEPRECATED: Form is now inside slide-over drawer on index page
+     * Redirect to index for backwards compatibility
      */
     public function create()
     {
-        return view('jurusan.create');
+        return redirect()->route('jurusan.index');
     }
 
     /**
@@ -80,10 +87,12 @@ class JurusanController extends Controller
 
     /**
      * Show the form for editing the specified jurusan
+     * DEPRECATED: Form is now inside slide-over drawer on index page
+     * Redirect to index for backwards compatibility
      */
     public function edit(Jurusan $jurusan)
     {
-        return view('jurusan.edit', compact('jurusan'));
+        return redirect()->route('jurusan.index')->with('edit_id', $jurusan->id);
     }
 
     /**

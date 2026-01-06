@@ -11,14 +11,6 @@
 @endsection
 
 @section('content')
-{{-- Action Buttons --}}
-<div class="flex flex-wrap justify-end gap-2 mb-6">
-    <a href="{{ route('siswa.index') }}" class="btn btn-secondary">
-        <x-ui.icon name="chevron-left" size="18" />
-        <span>Kembali ke Data Siswa</span>
-    </a>
-</div>
-
 @php
     $tableConfig = [
         'endpoint' => route('siswa.deleted'),

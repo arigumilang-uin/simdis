@@ -10,14 +10,6 @@
 @endsection
 
 @section('content')
-{{-- Action Buttons --}}
-<div class="flex flex-wrap justify-end gap-2 mb-6">
-    <a href="{{ route('siswa.index') }}" class="btn btn-secondary">
-        <x-ui.icon name="chevron-left" size="18" />
-        <span>Kembali</span>
-    </a>
-</div>
-
 <div class="max-w-4xl space-y-6">
     {{-- Info Banner --}}
     <div class="p-4 bg-blue-50 border border-blue-100 rounded-xl">
