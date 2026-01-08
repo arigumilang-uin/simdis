@@ -27,6 +27,8 @@ class TindakLanjutFilterData extends Data
         public int $perPage = 20,
         public string $sortBy = 'created_at',
         public string $sortDirection = 'desc',
+        // NEW: Filter berdasarkan pembina yang ditugaskan (e.g., 'Wali Kelas', 'Kaprodi', 'Waka Kesiswaan')
+        public ?string $pembina_role = null,
     ) {}
 
     /**
@@ -45,7 +47,8 @@ class TindakLanjutFilterData extends Data
             || $this->tanggal_sampai !== null
             || $this->pending_approval_only
             || $this->active_only
-            || $this->completed_only;
+            || $this->completed_only
+            || $this->pembina_role !== null;
     }
 
     /**

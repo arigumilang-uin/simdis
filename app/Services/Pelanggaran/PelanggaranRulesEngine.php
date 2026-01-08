@@ -6,7 +6,7 @@ use App\Models\JenisPelanggaran;
 use App\Models\RiwayatPelanggaran;
 use App\Models\Siswa;
 use App\Models\TindakLanjut;
-use App\Notifications\TindakLanjutNotificationService;
+use App\Services\TindakLanjut\TindakLanjutNotificationService;
 
 /**
  * Service untuk Rules Engine Pelanggaran (v2.0 - Frequency-Based)

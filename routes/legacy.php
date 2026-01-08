@@ -47,37 +47,41 @@ Route::middleware(['auth', 'profile.completed'])->group(function () {
     /**
      * Legacy route: kasus.edit
      * Views expect: route('kasus.edit', $id)
-     * Maps to: TindakLanjutController@edit
+     * Maps to: TindakLanjut\TindakLanjutController@edit
      * 
-     * Note: "kasus" was old terminology, now it's "tindak-lanjut"
-     */
-    Route::get('/kasus/{tindakLanjut}/edit', [\App\Http\Controllers\Pelanggaran\TindakLanjutController::class, 'edit'])
+     * MIGRATED: Now uses Clean Architecture controller
+     */ 
+    Route::get('/kasus/{tindakLanjut}/edit', [TindakLanjutController::class, 'edit'])
         ->name('kasus.edit');
 
     /**
      * Legacy route: kasus.update
      * Views expect: route('kasus.update', $id)
-     * Maps to: TindakLanjutController@update
+     * Maps to: TindakLanjut\TindakLanjutController@update
+     * 
+     * MIGRATED: Now uses Clean Architecture controller
      */
-    Route::put('/kasus/{tindakLanjut}', [\App\Http\Controllers\Pelanggaran\TindakLanjutController::class, 'update'])
+    Route::put('/kasus/{tindakLanjut}', [TindakLanjutController::class, 'update'])
         ->name('kasus.update');
 
     /**
      * Legacy route: kasus.show
      * Views expect: route('kasus.show', $id)
-     * Maps to: TindakLanjutController@show
+     * Maps to: TindakLanjut\TindakLanjutController@show
+     * 
+     * MIGRATED: Now uses Clean Architecture controller
      */
-    Route::get('/kasus/{tindakLanjut}', [\App\Http\Controllers\Pelanggaran\TindakLanjutController::class, 'show'])
+    Route::get('/kasus/{tindakLanjut}', [TindakLanjutController::class, 'show'])
         ->name('kasus.show');
 
     /**
      * Legacy route: kasus.cetak
      * Views expect: route('kasus.cetak', $id)
-     * Maps to: Tind akLanjutController@cetakSurat
+     * Maps to: TindakLanjut\TindakLanjutController@cetakSurat
      * 
-     * Note: This generates surat panggilan PDF
+     * MIGRATED: Now uses Clean Architecture controller
      */
-    Route::get('/kasus/{id}/cetak', [\App\Http\Controllers\Pelanggaran\TindakLanjutController::class, 'cetakSurat'])
+    Route::get('/kasus/{id}/cetak', [TindakLanjutController::class, 'cetakSurat'])
         ->name('kasus.cetak');
 
     // ===================================================================

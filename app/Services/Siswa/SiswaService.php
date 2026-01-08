@@ -820,4 +820,197 @@ DB::beginTransaction();
         
         return $query->get();
     }
+
+    // =====================================================================
+    // BULK OPERATIONS - PARSING & VALIDATION
+    // =====================================================================
+
+    /**
+     * Parse bulk data from file or manual input.
+     * 
+     * CLEAN ARCHITECTURE: Parsing logic moved from Controller to Service.
+     * Controller only handles file upload, this service handles parsing.
+     * 
+     * @param string $type 'csv' or 'manual'
+     * @param mixed $data File path for CSV, string for manual
+     * @return array Array of parsed rows
+     * @throws BusinessValidationException
+     */
+    public function parseBulkData(string $type, mixed $data): array
+    {
+        if ($type === 'csv' && is_string($data) && file_exists($data)) {
+            return $this->parseCsvFile($data);
+        } elseif ($type === 'manual' && is_string($data)) {
+            return $this->parseManualData($data);
+        }
+        
+        throw new BusinessValidationException('Invalid bulk data type or missing data');
+    }
+
+    /**
+     * Parse CSV file for bulk import.
+     * 
+     * @param string $filePath
+     * @return array
+     */
+    private function parseCsvFile(string $filePath): array
+    {
+        $rows = [];
+        $handle = fopen($filePath, 'r');
+        
+        if (!$handle) {
+            throw new BusinessValidationException('Cannot open file for reading');
+        }
+        
+        // Skip header
+        $header = fgetcsv($handle);
+        
+        while (($data = fgetcsv($handle)) !== false) {
+            if (count($data) >= 2) {
+                $rows[] = [
+                    'nisn' => trim($data[0] ?? ''),
+                    'nama' => trim($data[1] ?? ''),
+                    'nomor_hp_wali_murid' => trim($data[2] ?? ''),
+                ];
+            }
+        }
+        
+        fclose($handle);
+        return $rows;
+    }
+
+    /**
+     * Parse manual input (textarea) for bulk import.
+     * Supports comma, semicolon, and tab delimiters.
+     * 
+     * @param string $data
+     * @return array
+     */
+    private function parseManualData(string $data): array
+    {
+        $rows = [];
+        $lines = explode("\n", $data);
+        $isFirstLine = true;
+        
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+            
+            // Support comma, semicolon, and tab delimiter
+            $parts = preg_split('/[,;\t]/', $line);
+            
+            // Skip header line if it looks like a header (contains 'nisn')
+            if ($isFirstLine && stripos($parts[0], 'nisn') !== false) {
+                $isFirstLine = false;
+                continue;
+            }
+            $isFirstLine = false;
+            
+            if (count($parts) >= 2) {
+                $rows[] = [
+                    'nisn' => trim($parts[0] ?? ''),
+                    'nama' => trim($parts[1] ?? ''),
+                    'nomor_hp_wali_murid' => trim($parts[2] ?? ''),
+                ];
+            }
+        }
+        
+        return $rows;
+    }
+
+    /**
+     * Validate bulk import rows and return validated rows with errors.
+     * 
+     * CLEAN ARCHITECTURE: Validation logic moved from Controller to Service.
+     * 
+     * @param array $rows Raw parsed rows
+     * @return array ['valid_rows' => array, 'errors' => array]
+     */
+    public function validateBulkRows(array $rows): array
+    {
+        $validRows = [];
+        $errors = [];
+        $seenNisns = []; // Track NISNs in current batch
+        
+        foreach ($rows as $index => $row) {
+            $lineNumber = $index + 1;
+            
+            // Validate NISN and Nama (required)
+            if (empty($row['nisn']) || empty($row['nama'])) {
+                $errors[] = "Baris {$lineNumber}: NISN dan Nama harus diisi";
+                continue;
+            }
+            
+            // Validate NISN format (10 digits)
+            if (!preg_match('/^\d{10}$/', $row['nisn'])) {
+                $errors[] = "Baris {$lineNumber}: NISN harus 10 digit angka";
+                continue;
+            }
+            
+            // Check duplicate NISN in current batch
+            if (isset($seenNisns[$row['nisn']])) {
+                $errors[] = "Baris {$lineNumber}: NISN {$row['nisn']} duplicate dengan baris {$seenNisns[$row['nisn']]}";
+                continue;
+            }
+            
+            // Check duplicate NISN in database
+            if (\App\Models\Siswa::where('nisn', $row['nisn'])->exists()) {
+                $errors[] = "Baris {$lineNumber}: NISN {$row['nisn']} sudah terdaftar di database";
+                continue;
+            }
+            
+            // Mark this NISN as seen
+            $seenNisns[$row['nisn']] = $lineNumber;
+            
+            $validRows[] = $row;
+        }
+        
+        return [
+            'valid_rows' => $validRows,
+            'errors' => $errors,
+        ];
+    }
+
+    /**
+     * Process complete bulk create workflow.
+     * 
+     * CLEAN ARCHITECTURE: Single entry point for bulk create.
+     * Controller should only call this method.
+     * 
+     * @param string $dataType 'csv' or 'manual'
+     * @param mixed $data File path or manual string
+     * @param int $kelasId
+     * @param bool $createWaliAll
+     * @return array Complete result with success count, errors, credentials
+     * @throws BusinessValidationException
+     */
+    public function processBulkCreate(string $dataType, mixed $data, int $kelasId, bool $createWaliAll = false): array
+    {
+        // Step 1: Parse data
+        $rows = $this->parseBulkData($dataType, $data);
+        
+        if (empty($rows)) {
+            throw new BusinessValidationException('Tidak ada data yang dapat diproses');
+        }
+        
+        // Step 2: Validate rows
+        $validation = $this->validateBulkRows($rows);
+        
+        if (empty($validation['valid_rows'])) {
+            return [
+                'success_count' => 0,
+                'wali_credentials' => [],
+                'skipped_wali_count' => 0,
+                'errors' => $validation['errors'],
+            ];
+        }
+        
+        // Step 3: Create siswa
+        $result = $this->bulkCreateSiswa($validation['valid_rows'], $kelasId, $createWaliAll);
+        
+        // Combine with validation errors
+        $result['errors'] = $validation['errors'];
+        
+        return $result;
+    }
 }

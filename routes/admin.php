@@ -187,10 +187,26 @@ Route::middleware(['auth', 'profile.completed'])->group(function () {
         })->name('index');
     });
 
-    // my-riwayat → riwayat/my (alias)
+    // my-riwayat → Riwayat Pelanggaran yang dibuat oleh user (pelapor)
+    // Consolidated from legacy.php - allows users to view/edit/delete their own records
     Route::prefix('my-riwayat')->name('my-riwayat.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Pelanggaran\RiwayatPelanggaranController::class, 'myIndex'])
             ->name('index');
+        
+        Route::get('/create', [\App\Http\Controllers\Pelanggaran\RiwayatPelanggaranController::class, 'create'])
+            ->name('create');
+        
+        Route::post('/', [\App\Http\Controllers\Pelanggaran\RiwayatPelanggaranController::class, 'store'])
+            ->name('store');
+        
+        Route::get('/{riwayat}/edit', [\App\Http\Controllers\Pelanggaran\RiwayatPelanggaranController::class, 'edit'])
+            ->name('edit');
+        
+        Route::match(['PUT', 'PATCH'], '/{riwayat}', [\App\Http\Controllers\Pelanggaran\RiwayatPelanggaranController::class, 'update'])
+            ->name('update');
+        
+        Route::delete('/{riwayat}', [\App\Http\Controllers\Pelanggaran\RiwayatPelanggaranController::class, 'destroy'])
+            ->name('destroy');
     });
 
     // pelanggaran.create → riwayat.create (alias for menu compatibility)

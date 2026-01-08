@@ -162,6 +162,11 @@ class TindakLanjutRepository extends BaseRepository implements TindakLanjutRepos
             $query->where('status', StatusTindakLanjut::SELESAI);
         }
 
+        // Apply pembina_role filter (CRITICAL: Filter kasus yang melibatkan pembina tertentu)
+        if ($filters->pembina_role) {
+            $query->whereJsonContains('pembina_roles', $filters->pembina_role);
+        }
+
         // Apply sorting
         $sortBy = $filters->sortBy ?: 'created_at';
         $sortDirection = $filters->getSortDirection();

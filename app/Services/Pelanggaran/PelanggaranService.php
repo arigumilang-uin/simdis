@@ -41,7 +41,7 @@ class PelanggaranService
         private JenisPelanggaranRepositoryInterface $jenisRepo,
         private SiswaRepositoryInterface $siswaRepo,
         private PelanggaranRulesEngine $rulesEngine,
-        private \App\Notifications\TindakLanjutNotificationService $notificationService
+        private \App\Services\TindakLanjut\TindakLanjutNotificationService $notificationService
     ) {}
 
     /**

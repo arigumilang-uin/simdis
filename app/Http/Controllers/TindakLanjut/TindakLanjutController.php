@@ -42,9 +42,11 @@ class TindakLanjutController extends Controller
      * Tampilkan daftar tindak lanjut dengan filter.
      * 
      * ROLE-BASED ACCESS:
-     * - Wali Kelas: hanya kasus siswa di kelasnya
-     * - Kaprodi: hanya kasus siswa di jurusannya
-     * - Waka Kesiswaan, Kepala Sekolah, Operator Sekolah: full access
+     * - Wali Kelas: hanya kasus siswa di kelasnya DAN melibatkan Wali Kelas sebagai pembina
+     * - Kaprodi: hanya kasus siswa di jurusannya DAN melibatkan Kaprodi sebagai pembina
+     * - Waka Kesiswaan: hanya kasus yang melibatkan Waka Kesiswaan sebagai pembina
+     * - Kepala Sekolah: hanya kasus yang melibatkan Kepala Sekolah sebagai pembina
+     * - Operator Sekolah, Developer: full access (tidak ada filter pembina)
      */
     public function index(Request $request): View
     {
@@ -54,22 +56,42 @@ class TindakLanjutController extends Controller
         // Auto-apply role-based filter
         $kelasId = $request->input('kelas_id');
         $jurusanId = $request->input('jurusan_id');
+        $pembinaRole = null; // NEW: Filter by pembina role
         
-        // Wali Kelas: hanya kasus siswa di kelasnya
+        // Wali Kelas: siswa di kelasnya + kasus yang melibatkan Wali Kelas
         if ($role === 'Wali Kelas') {
             $kelasBinaan = $user->kelasDiampu;
             if ($kelasBinaan) {
                 $kelasId = $kelasBinaan->id;
             }
+            $pembinaRole = 'Wali Kelas';
         }
         
-        // Kaprodi: hanya kasus siswa di jurusannya
+        // Kaprodi: siswa di jurusannya + kasus yang melibatkan Kaprodi
         if ($role === 'Kaprodi') {
             $jurusanBinaan = $user->jurusanDiampu;
             if ($jurusanBinaan) {
                 $jurusanId = $jurusanBinaan->id;
             }
+            $pembinaRole = 'Kaprodi';
         }
+        
+        // Waka Kesiswaan: kasus yang melibatkan Waka Kesiswaan
+        if ($role === 'Waka Kesiswaan') {
+            $pembinaRole = 'Waka Kesiswaan';
+        }
+        
+        // Waka Sarana: kasus yang melibatkan Waka Sarana
+        if ($role === 'Waka Sarana') {
+            $pembinaRole = 'Waka Sarana';
+        }
+        
+        // Kepala Sekolah: kasus yang melibatkan Kepala Sekolah
+        if ($role === 'Kepala Sekolah') {
+            $pembinaRole = 'Kepala Sekolah';
+        }
+        
+        // Operator Sekolah & Developer: full access (no pembina filter)
         
         // Build filter data
         $filters = TindakLanjutFilterData::from([
@@ -80,6 +102,7 @@ class TindakLanjutController extends Controller
             'pending_approval_only' => $request->boolean('pending_approval'),
             'active_only' => $request->boolean('active_only'),
             'perPage' => $request->input('perPage', 20),
+            'pembina_role' => $pembinaRole, // NEW: Apply pembina filter
         ]);
 
         $tindakLanjut = $this->tindakLanjutService->getFilteredTindakLanjut($filters);

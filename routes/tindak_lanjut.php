@@ -98,4 +98,24 @@ Route::middleware(['auth', 'profile.completed'])->group(function () {
         Route::put('/selesaikan', [TindakLanjutController::class, 'selesaikan'])
             ->name('selesaikan');
     });
+
+    // ===================================================================
+    // LEGACY ROUTE ALIASES (Backward Compatibility)
+    // ===================================================================
+    // Migrated from legacy.php - maps old "kasus.*" routes to clean controllers
+    // Can be removed once all views are updated to use "tindak-lanjut.*" routes
+    
+    Route::prefix('kasus')->name('kasus.')->group(function () {
+        Route::get('/{tindakLanjut}/edit', [TindakLanjutController::class, 'edit'])
+            ->name('edit');
+        
+        Route::put('/{tindakLanjut}', [TindakLanjutController::class, 'update'])
+            ->name('update');
+        
+        Route::get('/{tindakLanjut}', [TindakLanjutController::class, 'show'])
+            ->name('show');
+        
+        Route::get('/{id}/cetak', [TindakLanjutController::class, 'cetakSurat'])
+            ->name('cetak');
+    });
 });

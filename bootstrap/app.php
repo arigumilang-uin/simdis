@@ -39,9 +39,6 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->group(base_path('routes/admin.php'));
 
             Route::middleware('web')
-                ->group(base_path('routes/legacy.php'));
-
-            Route::middleware('web')
                 ->group(base_path('routes/pembinaan.php'));
         },
     )

@@ -320,12 +320,10 @@ class SiswaController extends Controller
     /**
      * Bulk delete siswa per kelas.
      * 
-     * ALUR:
-     * 1. Validasi input (kelas_id, alasan_keluar, confirm)
-     * 2. Ambil semua siswa di kelas tersebut
-     * 3. Soft delete semua siswa dengan alasan keluar
-     * 4. Opsional: Hapus akun wali murid yang orphaned (tidak punya siswa aktif)
-     * 5. Return dengan success message
+     * CLEAN ARCHITECTURE: Controller hanya sebagai kurir.
+     * - Validasi input dasar
+     * - Delegate ke service untuk delete + cleanup
+     * - Return response
      */
     public function bulkDelete(Request $request): RedirectResponse
     {
@@ -339,59 +337,25 @@ class SiswaController extends Controller
         ]);
 
         try {
-            // Ambil semua siswa di kelas
-            $siswaList = \App\Models\Siswa::where('kelas_id', $validated['kelas_id'])->get();
-            
-            if ($siswaList->isEmpty()) {
+            // Delegate ALL processing to service
+            $result = $this->siswaService->bulkDeleteByKelas(
+                $validated['kelas_id'],
+                [
+                    'deleteOrphanedWali' => $request->boolean('delete_orphaned_wali'),
+                    'alasanKeluar' => $validated['alasan_keluar'],
+                    'keteranganKeluar' => $validated['keterangan_keluar'] ?? null,
+                ]
+            );
+
+            // Check if any siswa were deleted
+            if ($result['count'] === 0) {
                 return back()->with('error', 'Tidak ada siswa aktif di kelas ini.');
             }
 
-            $deletedCount = 0;
-            $waliIds = [];
-
-            // Soft delete setiap siswa
-            foreach ($siswaList as $siswa) {
-                // Simpan wali_murid_id untuk cek orphaned nanti
-                if ($siswa->wali_murid_id) {
-                    $waliIds[] = $siswa->wali_murid_id;
-                }
-
-                // Set alasan & keterangan keluar (deleted_at akan di-set otomatis oleh delete())
-                $siswa->alasan_keluar = $validated['alasan_keluar'];
-                $siswa->keterangan_keluar = $validated['keterangan_keluar'] ?? null;
-                $siswa->save();
-
-                // Soft delete (deleted_at akan di-set ke now() otomatis)
-                $siswa->delete();
-                $deletedCount++;
-            }
-
-            // Opsional: Hapus wali murid yang orphaned
-            $deletedWaliCount = 0;
-            if ($request->input('delete_orphaned_wali')) {
-                $waliIds = array_unique($waliIds);
-                
-                foreach ($waliIds as $waliId) {
-                    // Cek apakah wali ini masih punya siswa aktif
-                    $hasActiveSiswa = \App\Models\Siswa::where('wali_murid_id', $waliId)
-                        ->whereNull('deleted_at')
-                        ->exists();
-                    
-                    if (!$hasActiveSiswa) {
-                        // Tidak ada siswa aktif, hapus akun wali
-                        $wali = \App\Models\User::find($waliId);
-                        if ($wali) {
-                            $wali->delete(); // Soft delete
-                            $deletedWaliCount++;
-                        }
-                    }
-                }
-            }
-
-            // Success message
-            $message = "Berhasil menghapus {$deletedCount} siswa dengan alasan: {$validated['alasan_keluar']}.";
-            if ($deletedWaliCount > 0) {
-                $message .= " {$deletedWaliCount} akun wali murid yang tidak lagi memiliki siswa aktif juga telah dihapus.";
+            // Build success message
+            $message = "Berhasil menghapus {$result['count']} siswa dengan alasan: {$validated['alasan_keluar']}.";
+            if ($result['orphaned_wali_deleted'] > 0) {
+                $message .= " {$result['orphaned_wali_deleted']} akun wali murid yang tidak lagi memiliki siswa aktif juga telah dihapus.";
             }
 
             return redirect()
@@ -425,113 +389,59 @@ class SiswaController extends Controller
     /**
      * Proses bulk create siswa dari CSV/Excel.
      * 
-     * ALUR:
-     * 1. Validasi kelas_id dan input type
-     * 2. Parse data dari file (CSV/XLSX) atau manual table
-     * 3. Validasi setiap baris
-     * 4. Panggil service untuk bulk insert
-     * 5. Return hasil (success/errors)
+     * CLEAN ARCHITECTURE: Controller hanya sebagai kurir.
+     * - Validasi input dasar (FormRequest style)
+     * - Handle file upload
+     * - Delegate ke service untuk parsing, validasi, dan create
+     * - Return response
      */
     public function bulkStore(\Illuminate\Http\Request $request): RedirectResponse
     {
+        // Validasi input dasar
+        $request->validate([
+            'kelas_id' => 'required|exists:kelas,id',
+            'bulk_file' => 'nullable|file|mimes:csv,txt|max:2048',
+            'bulk_data' => 'nullable|string',
+        ]);
+
+        // Determine data type and prepare data for service
+        $dataType = null;
+        $data = null;
+        
+        if ($request->hasFile('bulk_file')) {
+            $dataType = 'csv';
+            $data = $request->file('bulk_file')->getRealPath();
+        } elseif ($request->filled('bulk_data')) {
+            $dataType = 'manual';
+            $data = $request->input('bulk_data');
+        } else {
+            return redirect()
+                ->back()
+                ->with('error', 'Silakan upload file atau isi tabel manual.');
+        }
+
         try {
-            // Validasi input dasar
-            $request->validate([
-                'kelas_id' => 'required|exists:kelas,id',
-                'bulk_file' => 'nullable|file|mimes:csv,txt,xlsx|max:2048',
-                'bulk_data' => 'nullable|string',
-            ]);
+            // Delegate ALL processing to service (parsing, validation, creation)
+            $result = $this->siswaService->processBulkCreate(
+                $dataType,
+                $data,
+                $request->input('kelas_id'),
+                $request->boolean('create_wali_all')
+            );
 
-            $kelasId = $request->input('kelas_id');
-            $createWaliAll = $request->boolean('create_wali_all');
-            $rows = [];
-
-            // Parse data dari file atau manual input
-            if ($request->hasFile('bulk_file')) {
-                $rows = $this->parseFileUpload($request->file('bulk_file'));
-            } elseif ($request->filled('bulk_data')) {
-                $rows = $this->parseManualData($request->input('bulk_data'));
-            } else {
-                return redirect()
-                    ->back()
-                    ->with('error', 'Silakan upload file atau isi tabel manual.');
-            }
-
-            // Validasi dan filter rows yang valid
-            $validRows = [];
-            $errors = [];
-            $seenNisns = []; // Track NISNs in current batch
-            
-            foreach ($rows as $index => $row) {
-                $lineNumber = $index + 1;
-                
-                // Validasi NISN dan Nama (required)
-                if (empty($row['nisn']) || empty($row['nama'])) {
-                    $errors[] = "Baris {$lineNumber}: NISN dan Nama harus diisi";
-                    continue;
-                }
-                
-                // Validate NISN format (10 digits)
-                if (!preg_match('/^\d{10}$/', $row['nisn'])) {
-                    $errors[] = "Baris {$lineNumber}: NISN harus 10 digit angka";
-                    continue;
-                }
-                
-                // Check duplicate NISN in current batch
-                if (isset($seenNisns[$row['nisn']])) {
-                    $errors[] = "Baris {$lineNumber}: NISN {$row['nisn']} duplicate dengan baris {$seenNisns[$row['nisn']]}";
-                    continue;
-                }
-                
-                // Check duplicate NISN in database
-                if (\App\Models\Siswa::where('nisn', $row['nisn'])->exists()) {
-                    $errors[] = "Baris {$lineNumber}: NISN {$row['nisn']} sudah terdaftar di database";
-                    continue;
-                }
-                
-                // Mark this NISN as seen
-                $seenNisns[$row['nisn']] = $lineNumber;
-                
-                $validRows[] = $row;
-            }
-
-            // Jika tidak ada row yang valid
-            if (empty($validRows)) {
-                return redirect()
-                    ->back()
-                    ->with('error', 'Tidak ada data siswa yang valid untuk diproses.')
-                    ->with('bulk_errors', $errors);
-            }
-
-            // Proses bulk create via service
-            $result = $this->siswaService->bulkCreateSiswa($validRows, $kelasId, $createWaliAll);
-
-            // Prepare success message
-            $successCount = $result['success_count'];
-            $skippedWaliCount = $result['skipped_wali_count'] ?? 0;
-            $message = "Berhasil menambahkan {$successCount} siswa.";
-            
-            // Info tentang wali yang dibuat
-            if ($createWaliAll) {
-                $connectedCount = $successCount - $skippedWaliCount;
-                if ($connectedCount > 0) {
-                    $newWaliCount = count($result['wali_credentials'] ?? []);
-                    $message .= " {$connectedCount} siswa terhubung ke akun wali murid ({$newWaliCount} akun baru dibuat).";
-                }
-                if ($skippedWaliCount > 0) {
-                    $message .= " {$skippedWaliCount} siswa tidak terhubung ke wali (nomor HP kosong).";
-                }
-            }
-            
-            if (!empty($errors)) {
-                $message .= " Beberapa baris dilewati karena error.";
-            }
+            // Build success message
+            $message = $this->buildBulkCreateMessage($result, $request->boolean('create_wali_all'));
 
             return redirect()
                 ->route('siswa.index')
                 ->with('success', $message)
-                ->with('bulk_errors', $errors)
+                ->with('bulk_errors', $result['errors'] ?? [])
                 ->with('wali_credentials', $result['wali_credentials'] ?? []);
+                
+        } catch (\App\Exceptions\BusinessValidationException $e) {
+            return redirect()
+                ->back()
+                ->with('error', $e->getMessage());
                 
         } catch (\Exception $e) {
             \Log::error('Bulk create siswa error: ' . $e->getMessage());
@@ -543,69 +453,31 @@ class SiswaController extends Controller
     }
 
     /**
-     * Parse uploaded CSV/XLSX file.
+     * Build success message for bulk create result.
+     * Helper method to keep controller clean.
      */
-    private function parseFileUpload($file): array
+    private function buildBulkCreateMessage(array $result, bool $createWaliAll): string
     {
-        $rows = [];
-        $extension = $file->getClientOriginalExtension();
+        $successCount = $result['success_count'];
+        $skippedWaliCount = $result['skipped_wali_count'] ?? 0;
+        $message = "Berhasil menambahkan {$successCount} siswa.";
         
-        if ($extension === 'csv' || $extension === 'txt') {
-            // Parse CSV
-            $handle = fopen($file->getRealPath(), 'r');
-            $header = fgetcsv($handle); // Skip header
-            
-            while (($data = fgetcsv($handle)) !== false) {
-                if (count($data) >= 2) {
-                    $rows[] = [
-                        'nisn' => trim($data[0] ?? ''),
-                        'nama' => trim($data[1] ?? ''),
-                        'nomor_hp_wali_murid' => trim($data[2] ?? ''),
-                    ];
-                }
+        if ($createWaliAll) {
+            $connectedCount = $successCount - $skippedWaliCount;
+            if ($connectedCount > 0) {
+                $newWaliCount = count($result['wali_credentials'] ?? []);
+                $message .= " {$connectedCount} siswa terhubung ke akun wali murid ({$newWaliCount} akun baru dibuat).";
             }
-            fclose($handle);
-        } elseif ($extension === 'xlsx') {
-            // For XLSX, we need a library. For now, show error message
-            throw new \Exception('Format XLSX memerlukan library tambahan. Gunakan format CSV atau input manual.');
-        }
-        
-        return $rows;
-    }
-
-    /**
-     * Parse manual table data from textarea.
-     */
-    private function parseManualData(string $data): array
-    {
-        $rows = [];
-        $lines = explode("\n", $data);
-        $isFirstLine = true;
-        
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if (empty($line)) continue;
-            
-            // Support comma, semicolon, and tab delimiter
-            $parts = preg_split('/[,;\t]/', $line);
-            
-            // Skip header line if it looks like a header (contains 'nisn')
-            if ($isFirstLine && stripos($parts[0], 'nisn') !== false) {
-                $isFirstLine = false;
-                continue;
-            }
-            $isFirstLine = false;
-            
-            if (count($parts) >= 2) {
-                $rows[] = [
-                    'nisn' => trim($parts[0] ?? ''),
-                    'nama' => trim($parts[1] ?? ''),
-                    'nomor_hp_wali_murid' => trim($parts[2] ?? ''),
-                ];
+            if ($skippedWaliCount > 0) {
+                $message .= " {$skippedWaliCount} siswa tidak terhubung ke wali (nomor HP kosong).";
             }
         }
         
-        return $rows;
+        if (!empty($result['errors'])) {
+            $message .= " Beberapa baris dilewati karena error.";
+        }
+        
+        return $message;
     }
 
      /**

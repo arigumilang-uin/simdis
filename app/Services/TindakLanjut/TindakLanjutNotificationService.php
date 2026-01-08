@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Notifications;
+namespace App\Services\TindakLanjut;
 
 use App\Models\TindakLanjut;
 use App\Models\User;

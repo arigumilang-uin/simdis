@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\User;
 
+use App\Http\Controllers\Controller;
 use App\Services\User\UserService;
 use App\Data\User\UserData;
 use App\Http\Requests\User\CreateUserRequest;
