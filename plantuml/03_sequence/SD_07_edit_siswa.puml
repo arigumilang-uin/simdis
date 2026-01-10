@@ -1,0 +1,118 @@
+@startuml SD_07_Edit_Siswa
+' ============================================================================
+' SEQUENCE DIAGRAM - EDIT SISWA
+' ============================================================================
+' Use Case: Kelola Siswa
+' Aktor: Operator Sekolah (full), Wali Kelas (partial - hanya HP wali)
+' Deskripsi: Mengubah data siswa
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-07: Edit Siswa**
+
+actor "Operator /\nWali Kelas" as USER
+
+box "Application Layer" #E8F5E9
+    participant "SiswaController" as SC
+    participant "SiswaService" as SS
+    participant "SiswaPolicy" as SP
+end box
+
+box "Data Layer" #FFF3E0
+    participant "Siswa Model" as SM
+    participant "Kelas Model" as KM
+    database "MySQL" as DB
+end box
+
+== Tampilkan Form Edit ==
+
+USER -> SC : GET /siswa/{id}/edit
+activate SC
+
+SC -> SP : authorize('update', siswa)
+activate SP
+SP --> SC : Allowed (Operator atau Wali Kelas siswa)
+deactivate SP
+
+SC -> SM : findOrFail(id)
+activate SM
+SM -> DB : SELECT * FROM siswa WHERE id = ?
+DB --> SM : Siswa data
+SM --> SC : Siswa object
+deactivate SM
+
+SC -> KM : all()
+activate KM
+KM -> DB : SELECT * FROM kelas
+DB --> KM : Kelas data
+KM --> SC : Daftar Kelas
+deactivate KM
+
+SC --> USER : Form edit siswa:\n- Operator: semua field\n- Wali Kelas: hanya HP wali
+deactivate SC
+
+== Proses Update (Operator) ==
+
+USER -> SC : PUT /siswa/{id}\n(nama, kelas_id, nomor_hp_wali, ...)
+activate SC
+
+SC -> SP : authorize('update', siswa)
+activate SP
+SP --> SC : Allowed
+deactivate SP
+
+SC -> SC : Check role
+
+alt Role = Operator
+    SC -> SC : validate(all fields)
+    SC -> SS : updateSiswa(id, data, isWaliKelas=false)
+    activate SS
+    
+    SS -> SM : findOrFail(id)->update(data)
+    activate SM
+    SM -> DB : UPDATE siswa SET\nnama = ?, kelas_id = ?,\nnomor_hp_wali_murid = ?
+    DB --> SM : Updated
+    SM --> SS : Success
+    deactivate SM
+    
+    SS --> SC : Success
+    deactivate SS
+else Role = Wali Kelas
+    SC -> SC : validate(only nomor_hp_wali)
+    SC -> SS : updateSiswa(id, data, isWaliKelas=true)
+    activate SS
+    
+    SS -> SM : update only nomor_hp_wali_murid
+    activate SM
+    SM -> DB : UPDATE siswa SET\nnomor_hp_wali_murid = ?
+    DB --> SM : Updated
+    SM --> SS : Success
+    deactivate SM
+    
+    SS --> SC : Success
+    deactivate SS
+end
+
+SC --> USER : Redirect /siswa\nFlash: "Data siswa berhasil diperbarui"
+deactivate SC
+
+@enduml

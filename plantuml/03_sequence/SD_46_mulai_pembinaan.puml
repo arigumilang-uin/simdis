@@ -1,0 +1,106 @@
+@startuml SD_46_Mulai_Pembinaan
+' ============================================================================
+' SEQUENCE DIAGRAM - MULAI PEMBINAAN
+' ============================================================================
+' Use Case: Kelola Pembinaan
+' Aktor: Wali Kelas, Kaprodi, Waka Kesiswaan
+' Deskripsi: Hanya bisa mulai jika role ada di pembina_roles
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-46: Mulai Pembinaan**
+
+actor "Wali Kelas / Kaprodi /\nWaka Kesiswaan" as USER
+
+box "Application Layer" #E8F5E9
+    participant "PembinaanStatus\nController" as PC
+    participant "ActivityLog" as AL
+end box
+
+box "Data Layer" #FFF3E0
+    participant "PembinaanStatus" as PS
+    database "MySQL" as DB
+end box
+
+== Proses Mulai ==
+
+USER -> PC : PUT /pembinaan/id/mulai\n(?catatan)
+activate PC
+
+PC -> PS : findOrFail(id)
+activate PS
+PS -> DB : SELECT * FROM pembinaan_status WHERE id = ?
+DB --> PS : PembinaanStatus data
+PS --> PC : PembinaanStatus object
+deactivate PS
+
+PC -> PC : Get user role
+
+PC -> PC : Check authorization\n(user.role IN pembinaan.pembina_roles)
+
+alt User role NOT IN pembina_roles
+    PC --> USER : Error: "Anda tidak memiliki akses\nuntuk membina siswa ini"
+else User role IN pembina_roles
+    PC -> PC : Check status
+    
+    alt Status bukan PERLU_PEMBINAAN
+        PC --> USER : Error: "Tidak dapat memulai pembinaan.\nStatus saat ini bukan Perlu Pembinaan"
+    else Status = PERLU_PEMBINAAN
+        PC -> PS : mulaiPembinaan(user.id)
+        activate PS
+        PS -> DB : UPDATE pembinaan_status SET\nstatus = 'Sedang Dibina',\ndibina_oleh_user_id = auth.id,\ndibina_at = NOW()
+        DB --> PS : Updated
+        PS --> PC : Success
+        deactivate PS
+        
+        opt Catatan diisi
+            PC -> PS : update catatan_pembinaan
+            activate PS
+            PS -> DB : UPDATE pembinaan_status SET catatan
+            DB --> PS : Updated
+            PS --> PC : Success
+            deactivate PS
+        end
+        
+        PC -> AL : log('Memulai pembinaan internal')
+        activate AL
+        AL -> DB : INSERT INTO activity_log
+        DB --> AL : Created
+        AL --> PC : Success
+        deactivate AL
+        
+        PC --> USER : Redirect back\nFlash: "Pembinaan berhasil dimulai!"
+    end
+end
+deactivate PC
+
+note right of USER
+  **AKSES BERDASARKAN RULE:**
+  Jika PembinaanInternalRule menentukan:
+  - 1-10 poin: pembina = [Wali Kelas]
+  - 11-25 poin: pembina = [Kaprodi]
+  - 26+ poin: pembina = [Waka Kesiswaan]
+  
+  Maka hanya role tersebut yang bisa mulai
+end note
+
+@enduml

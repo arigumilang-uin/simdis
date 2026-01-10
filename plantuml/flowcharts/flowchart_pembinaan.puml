@@ -1,0 +1,99 @@
+@startuml Flowchart_Pembinaan_Internal
+' ============================================================================
+' FLOWCHART: ALUR PROSES PEMBINAAN INTERNAL SISWA
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+skinparam ActivityBackgroundColor #E8F5E9
+skinparam ActivityBorderColor #388E3C
+skinparam ActivityDiamondBackgroundColor #FFF8E1
+skinparam ActivityDiamondBorderColor #FF8F00
+
+title **FLOWCHART: PEMBINAAN INTERNAL SISWA**\n//Pembina: Wali Kelas, Kaprodi, Waka Kesiswaan, Waka Sarana, Kepala Sekolah//
+
+start
+
+:PEMBINA menerima notifikasi
+siswa perlu pembinaan;
+
+:Buka menu
+Siswa Perlu Pembinaan;
+
+:Sistem menampilkan daftar
+siswa sesuai role pembina;
+
+:Pilih siswa untuk
+mulai pembinaan;
+
+:Sistem menampilkan detail:
+- Riwayat pelanggaran
+- Total poin akumulasi
+- Range pembinaan;
+
+if (Siap memulai pembinaan?) then (Ya)
+  :Klik "Mulai Pembinaan";
+else (Tidak)
+  :Tunda untuk waktu lain;
+  stop
+endif
+
+:Update status = SEDANG_DIBINA;
+:Set dibina_oleh_user_id;
+:Set dibina_at = now();
+
+:Panggil siswa
+untuk sesi pembinaan;
+
+:Lakukan pembinaan:
+- Dialog dengan siswa
+- Identifikasi akar masalah
+- Berikan arahan & motivasi;
+
+:Input catatan pembinaan:
+- Kronologi sesi
+- Respon siswa
+- Kesepakatan;
+
+:Input hasil pembinaan:
+- Kesimpulan
+- Rekomendasi
+- Komitmen siswa;
+
+:Klik "Selesaikan Pembinaan";
+
+:Update status = SELESAI;
+:Set diselesaikan_oleh_user_id;
+:Set selesai_at = now();
+:Simpan hasil_pembinaan;
+:Log aktivitas ke activity_log;
+
+#C8E6C9:Tampilkan pesan
+"Pembinaan berhasil diselesaikan";
+
+:Lakukan monitoring berkala
+terhadap siswa;
+
+stop
+
+legend right
+  **STATUS FLOW:**
+  PERLU_PEMBINAAN
+  → SEDANG_DIBINA
+  → SELESAI
+  ----
+  **PEMBINA (5 Role):**
+  • Wali Kelas
+  • Kaprodi
+  • Waka Kesiswaan
+  • Waka Sarana
+  • Kepala Sekolah
+  ----
+  **TRIGGER:**
+  Otomatis dari Rules Engine
+  berdasarkan akumulasi poin
+endlegend
+
+@enduml

@@ -18,6 +18,7 @@ class KelasData extends Data
         public int $jurusan_id,
         public ?int $konsentrasi_id,
         public ?int $wali_kelas_user_id,
+        public ?string $rombel, // Manual rombel inputs (optional)
         public ?string $nama_kelas, // Can be auto-generated or manual
         
         // Additional flag for auto-creating wali kelas user

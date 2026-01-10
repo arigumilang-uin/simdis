@@ -1,0 +1,85 @@
+@startuml COMP_04_Services
+' ============================================================================
+' COMPONENT DIAGRAM - SERVICES & BUSINESS LOGIC
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 11
+skinparam linetype polyline
+
+skinparam component {
+    BackgroundColor #FFFFFF
+    BorderColor #37474F
+    FontColor #212121
+}
+
+skinparam package {
+    BackgroundColor #FAFAFA
+    BorderColor #9E9E9E
+    FontColor #424242
+}
+
+title **COMP-04: Services & Business Logic**
+
+package "Services (17)" as SVC #E8F5E9 {
+    [MasterData (5)] as S_MD
+    [Pelanggaran (4)] as S_PLG
+    [Siswa (3)] as S_SSW
+    [TindakLanjut (1)] as S_TL
+    [User (3)] as S_USER
+    [Statistics (1)] as S_STAT
+}
+
+package "Rules Engine" as RE #FFF3E0 {
+    [FrequencyRulesEngine] as FRE
+    [PembinaanRulesEngine] as PRE
+}
+
+package "DTOs (11)" as DTO #E3F2FD {
+    [Data Transfer Objects] as DTOS
+}
+
+package "Repositories (9)" as REPO #E8EAF6 {
+    [Repository Classes] as REPOS
+}
+
+' Services -> Rules Engine
+S_PLG -right-> FRE : trigger frequency
+S_PLG -right-> PRE : trigger pembinaan
+S_TL -right-> FRE : get pembina
+
+' All Services -> DTOs
+S_MD -down-> DTOS
+S_PLG -down-> DTOS
+S_SSW -down-> DTOS
+S_TL -down-> DTOS
+S_USER -down-> DTOS
+
+' All Services -> Repositories
+S_MD -down-> REPOS
+S_PLG -down-> REPOS
+S_SSW -down-> REPOS
+S_TL -down-> REPOS
+S_USER -down-> REPOS
+S_STAT -down-> REPOS
+
+note bottom of RE
+  **Rules Engine:**
+  Menentukan tindak lanjut
+  dan pembinaan otomatis
+  berdasarkan aturan sistem
+end note
+
+note bottom of DTOS
+  **Spatie Laravel-Data:**
+  Type-safe data transfer
+end note
+
+note bottom of REPOS
+  **Repository Pattern:**
+  Abstraksi akses database
+end note
+
+@enduml

@@ -22,26 +22,45 @@
                 foreach($jurusanList ?? [] as $j) {
                     $jurusanMap[$j->id] = $j->kode_jurusan ?? strtoupper(substr($j->nama_jurusan, 0, 3));
                 }
+                
+                // Build Konsentrasi Map (kode) for auto-naming
+                $konsentrasiMap = [];
+                if(isset($konsentrasiList)) {
+                    foreach($konsentrasiList as $k) {
+                        $konsentrasiMap[$k->id] = $k->kode_konsentrasi ?? strtoupper(substr($k->nama_konsentrasi, 0, 3));
+                    }
+                }
                 // Extract rombel from nama_kelas (last number)
                 preg_match('/(\d+)$/', $kelas->nama_kelas ?? '', $matches);
-                $currentRombel = $matches[1] ?? '1';
+                $currentRombel = isset($matches[1]) ? $matches[1] : 'none';
             @endphp
             
             <form action="{{ route('kelas.update', $kelas->id) }}" method="POST" class="space-y-6"
                   x-data="{ 
                       tingkat: '{{ old('tingkat', $kelas->tingkat ?? 'X') }}',
                       jurusanId: '{{ old('jurusan_id', $kelas->jurusan_id) }}',
+                      initialJurusanId: '{{ $kelas->jurusan_id }}',
                       rombel: '{{ old('rombel', $currentRombel) }}',
                       jurusanMap: {{ json_encode($jurusanMap) }},
+                      konsentrasiMap: {{ json_encode($konsentrasiMap) }},
+                      konsentrasiId: '{{ old('konsentrasi_id', $kelas->konsentrasi_id) }}',
                       
                       getKodeJurusan() {
                           return this.jurusanMap[this.jurusanId] || '';
                       },
                       generateNamaKelas() {
                           if (!this.tingkat || !this.jurusanId) return '';
-                          const kode = this.getKodeJurusan();
-                          const rombelNum = this.rombel || '1';
-                          return this.tingkat + ' ' + kode + ' ' + rombelNum;
+                          
+                          // Determine Kode: Konsentrasi (Priority) OR Jurusan
+                          let kode = '';
+                          if (this.konsentrasiId && this.konsentrasiMap[this.konsentrasiId]) {
+                              kode = this.konsentrasiMap[this.konsentrasiId];
+                          } else {
+                              kode = this.getKodeJurusan();
+                          }
+                          
+                          const rombelSuffix = (this.rombel && this.rombel !== 'none') ? (' ' + this.rombel) : '';
+                          return this.tingkat + ' ' + kode + rombelSuffix;
                       }
                   }"
             >
@@ -89,7 +108,7 @@
                     :options="$jurusanList"
                     optionValue="id"
                     optionLabel="nama_jurusan"
-                    :selected="$kelas->jurusan_id"
+                    :value="$kelas->jurusan_id"
                     placeholder="-- Pilih Jurusan --"
                 />
                 
@@ -97,14 +116,35 @@
                 <x-forms.select 
                     name="rombel" 
                     label="Nomor Rombel" 
-                    required 
                     x-model="rombel"
-                    help="Nomor urut rombongan belajar (1, 2, 3...)"
+                    help="Nomor urut rombongan belajar. Pilih 'Tanpa Nomor' untuk default (e.g. X TKJ)."
                 >
+                    <option value="none" {{ (string)old('rombel', $currentRombel) === 'none' ? 'selected' : '' }}>Tanpa Nomor</option>
                     @for($i = 1; $i <= 10; $i++)
-                        <option value="{{ $i }}" {{ old('rombel', $currentRombel) == $i ? 'selected' : '' }}>{{ $i }}</option>
+                        <option value="{{ $i }}" {{ (string)old('rombel', $currentRombel) === (string)$i ? 'selected' : '' }}>{{ $i }}</option>
                     @endfor
                 </x-forms.select>
+
+                {{-- Konsentrasi Selection (Added Fix) --}}
+                @if(isset($konsentrasiList) && count($konsentrasiList) > 0)
+                <div x-show="jurusanId == initialJurusanId" x-transition>
+                    <x-forms.select 
+                        name="konsentrasi_id" 
+                        label="Konsentrasi Keahlian" 
+                        :options="$konsentrasiList"
+                        optionValue="id"
+                        optionLabel="nama_konsentrasi"
+                        :value="$kelas->konsentrasi_id"
+                        x-model="konsentrasiId"
+                        placeholder="-- Pilih Konsentrasi (Opsional) --"
+                        help="Spesifikasi konsentrasi dari jurusan ini."
+                    />
+                </div>
+                <div x-show="jurusanId != initialJurusanId" class="p-3 mb-4 bg-amber-50 text-amber-700 text-sm rounded-lg flex gap-2 items-center" style="display: none;">
+                    <x-ui.icon name="info" size="18" /> 
+                    <span>Simpan perubahan Jurusan terlebih dahulu untuk memilih Konsentrasi baru.</span>
+                </div>
+                @endif
                 
                 {{-- Preview Nama Kelas --}}
                 <div class="p-4 bg-blue-50 rounded-xl border border-blue-100"
@@ -129,7 +169,7 @@
                     :options="$waliList"
                     optionValue="id"
                     optionLabel="username"
-                    :selected="$kelas->wali_kelas_user_id"
+                    :value="$kelas->wali_kelas_user_id"
                     placeholder="-- Belum ditentukan --"
                     help="Guru yang ditugaskan sebagai wali kelas ini."
                 />

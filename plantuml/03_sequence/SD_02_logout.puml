@@ -1,0 +1,63 @@
+@startuml SD_02_Logout
+' ============================================================================
+' SEQUENCE DIAGRAM - LOGOUT
+' ============================================================================
+' Use Case: Logout
+' Aktor: Semua pengguna
+' Deskripsi: Proses keluar dari sistem
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-02: Logout**
+
+actor "Pengguna" as USER
+
+box "Application Layer" #E8F5E9
+    participant "LoginController" as LC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "Session" as SS
+    database "MySQL" as DB
+end box
+
+== Proses Logout ==
+
+USER -> LC : POST /logout\n(dengan CSRF token)
+activate LC
+
+LC -> SS : invalidate()
+activate SS
+SS -> DB : DELETE FROM sessions\nWHERE id = ?
+DB --> SS : Session deleted
+SS --> LC : Invalidated
+deactivate SS
+
+LC -> SS : regenerateToken()
+activate SS
+SS --> LC : New CSRF token
+deactivate SS
+
+LC --> USER : Redirect /login\nFlash: "Anda telah keluar"
+deactivate LC
+
+@enduml

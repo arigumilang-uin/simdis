@@ -1,0 +1,77 @@
+@startuml SD_15_Hapus_Kelas
+' ============================================================================
+' SEQUENCE DIAGRAM - HAPUS KELAS
+' ============================================================================
+' Use Case: Kelola Kelas
+' Aktor: Operator Sekolah
+' Deskripsi: Menghapus kelas dengan validasi tidak ada siswa
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-15: Hapus Kelas**
+
+actor "Operator\nSekolah" as OPERATOR
+
+box "Application Layer" #E8F5E9
+    participant "KelasController" as KC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "Kelas Model" as KM
+    participant "Siswa Model" as SM
+    database "MySQL" as DB
+end box
+
+== Proses Hapus ==
+
+OPERATOR -> KC : DELETE /kelas/{id}
+activate KC
+
+KC -> KM : findOrFail(id)
+activate KM
+KM -> DB : SELECT * FROM kelas WHERE id = ?
+DB --> KM : Kelas data
+KM --> KC : Kelas object
+deactivate KM
+
+KC -> SM : where('kelas_id', id)->count()
+activate SM
+SM -> DB : SELECT COUNT(*) FROM siswa\nWHERE kelas_id = ?
+DB --> SM : count value
+SM --> KC : siswa count
+deactivate SM
+
+alt Ada siswa di kelas
+    KC --> OPERATOR : Error: "Tidak bisa hapus kelas,\nmasih ada siswa aktif.\nPindahkan siswa terlebih dahulu."
+else Tidak ada siswa
+    KC -> KM : delete()
+    activate KM
+    KM -> DB : DELETE FROM kelas WHERE id = ?
+    DB --> KM : Deleted
+    KM --> KC : Success
+    deactivate KM
+    
+    KC --> OPERATOR : Redirect /kelas\nFlash: "Kelas berhasil dihapus"
+end
+deactivate KC
+
+@enduml

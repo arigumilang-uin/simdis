@@ -1,0 +1,73 @@
+@startuml STD_03_Siswa
+' ============================================================================
+' STATE DIAGRAM - SISWA
+' ============================================================================
+' Entity: Siswa
+' Deskripsi: Siklus hidup data siswa dalam sistem
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam state {
+    BackgroundColor #FFFFFF
+    BorderColor #37474F
+    FontColor #212121
+    ArrowColor #455A64
+    StartColor #4CAF50
+    EndColor #F44336
+}
+
+title **STD-03: Siklus Status Siswa**
+
+[*] --> Aktif : Operator menambahkan\nsiswa baru
+
+state Aktif #E8F5E9 {
+    Aktif : Siswa terdaftar di sistem
+    Aktif : Muncul di daftar siswa
+    Aktif : Dapat dicatat pelanggaran
+    Aktif : Dapat mengikuti pembinaan
+}
+
+Aktif --> Aktif : Data diperbarui /\nPindah kelas / Naik kelas
+
+Aktif --> TidakAktif : Operator menghapus\n(keluar/pindah/lulus)
+
+state TidakAktif #FFEBEE {
+    TidakAktif : Siswa tidak aktif
+    TidakAktif : Tidak muncul di daftar
+    TidakAktif : Riwayat tetap tersimpan
+    TidakAktif : Alasan keluar tercatat
+}
+
+TidakAktif --> Aktif : Operator memulihkan\ndata siswa
+
+TidakAktif --> [*] : Data dihapus\npermanen (jarang)
+
+note bottom of Aktif
+  **Aksi yang dapat dilakukan:**
+  - Mencatat pelanggaran
+  - Mengikuti pembinaan
+  - Melihat riwayat
+end note
+
+note bottom of TidakAktif
+  **Alasan Keluar:**
+  - Alumni (Lulus)
+  - Mutasi
+  - Dikeluarkan
+  - Lainnya
+end note
+
+legend right
+  **Alur Status:**
+  AKTIF ↔ TIDAK AKTIF → DIHAPUS PERMANEN
+  
+  Data siswa tidak aktif tetap
+  tersimpan untuk keperluan
+  riwayat dan audit
+endlegend
+
+@enduml

@@ -59,6 +59,18 @@ abstract class BaseRepository implements BaseRepositoryInterface
     }
 
     /**
+     * Find a record by its ID with loaded relations.
+     *
+     * @param int $id
+     * @param array $relations
+     * @return Model|null
+     */
+    public function findWithRelations(int $id, array $relations = []): ?Model
+    {
+        return $this->model->with($relations)->find($id);
+    }
+
+    /**
      * Get all records.
      *
      * @param array<string> $columns

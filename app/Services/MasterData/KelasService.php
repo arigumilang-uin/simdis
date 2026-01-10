@@ -52,6 +52,7 @@ class KelasService
         return [
             'kelas' => $kelas,
             'jurusanList' => Jurusan::orderBy('nama_jurusan')->get(),
+            'konsentrasiList' => $kelas->jurusan ? $kelas->jurusan->konsentrasi()->orderBy('nama_konsentrasi')->get() : [],
             'waliList' => $this->kelasRepository->getAvailableWaliKelas(),
         ];
     }
@@ -89,11 +90,25 @@ class KelasService
         // STEP 3: Generate base nama_kelas
         $base = $data->tingkat . ' ' . $kode;
         
-        // STEP 4: Find next sequential number
-        $next = $this->findNextSequentialNumber($jurusan->id, $base, $data->konsentrasi_id);
+        // Determine Rombel Number
+        $rombelSuffix = '';
+        
+        if ($data->rombel !== null) {
+            // Manual rombel supplied (e.g. "none" for no number, "1" for 1)
+            if ($data->rombel === 'none') {
+                $rombelSuffix = '';
+            } else {
+                $rombelSuffix = $data->rombel !== '' ? ' ' . $data->rombel : '';
+            }
+        } else {
+            // No rombel supplied (e.g. from bulk import or legacy call) -> Auto Number
+            // STEP 4: Find next sequential number
+            $next = $this->findNextSequentialNumber($jurusan->id, $base, $data->konsentrasi_id);
+            $rombelSuffix = ' ' . $next;
+        }
         
         // STEP 5: Set auto-generated nama_kelas
-        $namaKelas = $base . ' ' . $next;
+        $namaKelas = $base . $rombelSuffix;
         
         // STEP 6: Disconnect wali kelas from other class if already assigned
         if ($data->wali_kelas_user_id) {
@@ -140,14 +155,31 @@ class KelasService
             $jurusan = $this->kelasRepository->getJurusan($data->jurusan_id);
             $kode = $this->determineJurusanKode($jurusan);
             
-            // Extract current number from old nama_kelas
-            $currentNumber = 1;
-            if (preg_match('/\s(\d+)$/', $kelas->nama_kelas, $m)) {
-                $currentNumber = intval($m[1]);
+            // Determine Rombel Number
+            $rombelSuffix = '';
+            
+            // Priority 1: Use explicit rombel input from DTO if provided (including empty string)
+            if ($data->rombel !== null) {
+                // If rombel is "none", suffix is empty (X TKJ)
+                if ($data->rombel === 'none') {
+                    $rombelSuffix = '';
+                } else {
+                    $rombelSuffix = $data->rombel !== '' ? ' ' . $data->rombel : '';
+                }
+            } 
+            // Priority 2: Fallback to extracting from existing name (Legacy behavior)
+            else {
+                if (preg_match('/\s(\d+)$/', $kelas->nama_kelas, $m)) {
+                    $rombelSuffix = ' ' . $m[1];
+                } else {
+                    // If no number found in old name, default to 1 (legacy safety) or empty?
+                    // Let's keep legacy safety of ' 1' if extraction fails but logic implies numbering
+                    $rombelSuffix = ' 1';
+                }
             }
             
-        // Generate new nama_kelas with same number but new tingkat/kode
-            $namaKelas = $data->tingkat . ' ' . $kode . ' ' . $currentNumber;
+            // Generate new nama_kelas
+            $namaKelas = $data->tingkat . ' ' . $kode . $rombelSuffix;
         }
         
         // STEP 2: Disconnect wali kelas from other class if changing to a different wali
@@ -156,13 +188,25 @@ class KelasService
         }
         
         // STEP 3: Update kelas
-        $this->kelasRepository->update($kelas, [
-            'nama_kelas' => $namaKelas, // Use auto-generated if tingkat/jurusan changed
+        
+        // Prepare data
+        $updateData = [
+            'nama_kelas' => $namaKelas,
             'tingkat' => $data->tingkat,
             'jurusan_id' => $data->jurusan_id,
-            'konsentrasi_id' => $data->konsentrasi_id,
             'wali_kelas_user_id' => $data->wali_kelas_user_id,
-        ]);
+        ];
+        
+        // Smart Logic for Konsentrasi:
+        // Prevent accidental loss of konsentrasi if user forgot to select it while editing other fields
+        // Only reset konsentrasi if Jurusan changed OR if user explicitly selected a new one
+        if ($data->jurusan_id === $kelas->jurusan_id && $data->konsentrasi_id === null) {
+            $updateData['konsentrasi_id'] = $kelas->konsentrasi_id;
+        } else {
+            $updateData['konsentrasi_id'] = $data->konsentrasi_id;
+        }
+        
+        $this->kelasRepository->update($kelas->id, $updateData);
         
         // Nama wali kelas dihandle otomatis oleh KelasObserver
         // saat wali_kelas_user_id atau nama_kelas berubah
@@ -180,7 +224,14 @@ class KelasService
      */
     public function deleteKelas(Kelas $kelas): void
     {
-        $this->kelasRepository->delete($kelas);
+        // Validate: Cannot delete if has siswa
+        if ($kelas->siswa()->exists()) {
+            throw new \Exception("Gagal menghapus kelas. Masih terdapat " . $kelas->siswa()->count() . " siswa di kelas ini.");
+        }
+
+        // Logic demotion wali kelas handled by KelasObserver::deleted
+        
+        $this->kelasRepository->delete($kelas->id);
     }
     
     /**

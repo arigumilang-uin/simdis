@@ -1,0 +1,58 @@
+@startuml SD_03_Lihat_Profil
+' ============================================================================
+' SEQUENCE DIAGRAM - LIHAT PROFIL
+' ============================================================================
+' Use Case: Kelola Profil
+' Aktor: Semua pengguna
+' Deskripsi: Melihat profil diri sendiri
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-03: Lihat Profil**
+
+actor "Pengguna" as USER
+
+box "Application Layer" #E8F5E9
+    participant "UserController" as UC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "User Model" as UM
+    database "MySQL" as DB
+end box
+
+== Lihat Profil ==
+
+USER -> UC : GET /profile
+activate UC
+
+UC -> UM : Auth::user()->load('role')
+activate UM
+UM -> DB : SELECT users.*, roles.nama_role\nFROM users JOIN roles\nWHERE users.id = ?
+DB --> UM : User + Role data
+UM --> UC : User object with role
+deactivate UM
+
+UC --> USER : Tampilkan halaman profil:\n- Nama, Username, Email\n- No. HP, Role\n- Terakhir Login\n- Status Akun
+deactivate UC
+
+@enduml

@@ -1,0 +1,87 @@
+@startuml SD_08_Hapus_Siswa
+' ============================================================================
+' SEQUENCE DIAGRAM - HAPUS SISWA
+' ============================================================================
+' Use Case: Kelola Siswa
+' Aktor: Operator Sekolah
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-08: Hapus Siswa**
+
+actor "Operator\nSekolah" as OPERATOR
+
+box "Application Layer" #E8F5E9
+    participant "SiswaController" as SC
+    participant "SiswaService" as SS
+end box
+
+box "Data Layer" #FFF3E0
+    participant "Siswa Model" as SM
+    database "MySQL" as DB
+end box
+
+== Konfirmasi Hapus ==
+
+OPERATOR -> SC : Klik tombol Hapus pada siswa
+activate SC
+SC --> OPERATOR : Modal konfirmasi:\n- Pilih alasan keluar\n- Keterangan tambahan
+deactivate SC
+
+== Proses Hapus ==
+
+OPERATOR -> SC : DELETE /siswa/id\n(alasan_keluar, keterangan_keluar)
+activate SC
+
+SC -> SC : validate(alasan_keluar)
+
+SC -> SM : findOrFail(id)
+activate SM
+SM -> DB : SELECT * FROM siswa WHERE id = ?
+DB --> SM : Siswa data
+SM --> SC : Siswa object
+deactivate SM
+
+SC -> SM : update alasan_keluar
+activate SM
+SM -> DB : UPDATE siswa SET\nalasan_keluar = ?,\nketerangan_keluar = ?
+DB --> SM : Updated
+SM --> SC : Success
+deactivate SM
+
+SC -> SS : deleteSiswa(id)
+activate SS
+
+SS -> SM : delete()
+activate SM
+SM -> DB : UPDATE siswa SET\ndeleted_at = NOW()
+DB --> SM : Soft deleted
+SM --> SS : Success
+deactivate SM
+
+SS --> SC : Success
+deactivate SS
+
+SC --> OPERATOR : Redirect /siswa\nFlash: "Siswa dihapus: Alumni"
+deactivate SC
+
+@enduml

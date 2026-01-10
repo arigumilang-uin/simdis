@@ -163,13 +163,15 @@
                                 };
                             @endphp
                             <span class="badge {{ $statusClass }}">{{ $status }}</span>
+                            @if($item->dibina_at)
+                                <span class="block text-[9px] text-gray-400 mt-1">{{ $item->dibina_at->format('d M Y H:i') }}</span>
+                            @endif
                         </td>
                         
                         {{-- Dibina Oleh --}}
                         <td class="">
                             @if($item->dibinaOleh)
-                                <span class="font-medium text-gray-700">{{ $item->dibinaOleh->nama ?? $item->dibinaOleh->username }}</span>
-                                <span class="block text-[9px] text-gray-400">{{ $item->dibina_at?->format('d M Y') }}</span>
+                                <span class="font-medium text-gray-700">{{ $item->dibinaOleh->username }}</span>
                             @else
                                 <span class="text-gray-400 italic text-xs">-</span>
                             @endif

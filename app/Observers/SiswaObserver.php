@@ -3,7 +3,9 @@
 namespace App\Observers;
 
 use App\Models\Siswa;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use App\Observers\UserNameSyncObserver;
 
 class SiswaObserver
 {
@@ -21,17 +23,17 @@ class SiswaObserver
             
             // Sync old wali (if exists)
             if ($oldWaliId) {
-                $oldWali = \App\Models\User::find($oldWaliId);
+                $oldWali = User::find($oldWaliId);
                 if ($oldWali) {
-                    app(\App\Observers\UserNameSyncObserver::class)->syncUserName($oldWali);
+                    app(UserNameSyncObserver::class)->syncUserName($oldWali);
                 }
             }
             
             // Sync new wali (if exists)
             if ($newWaliId) {
-                $newWali = \App\Models\User::find($newWaliId);
+                $newWali = User::find($newWaliId);
                 if ($newWali) {
-                    app(\App\Observers\UserNameSyncObserver::class)->syncUserName($newWali);
+                    app(UserNameSyncObserver::class)->syncUserName($newWali);
                 }
             }
         }
@@ -39,19 +41,10 @@ class SiswaObserver
     
     /**
      * Handle the Siswa "deleting" event.
-     * (Fired when Siswa::delete() is called; includes soft-deletes.)
-     * Cascade soft-delete ke relations: riwayat_pelanggaran, tindak_lanjut.
-     * Track wali_murid_user_ids untuk potential deletion.
+     * (Fired BEFORE Siswa is soft-deleted/deleted.)
      */
     public function deleting(Siswa $siswa): void
     {
-        // Track wali_murid_user_id jika ada
-        if ($siswa->wali_murid_user_id) {
-            $waliIds = session('wali_ids_for_deletion', []);
-            $waliIds[] = $siswa->wali_murid_user_id;
-            session(['wali_ids_for_deletion' => array_unique($waliIds)]);
-        }
-
         // Soft-delete all riwayat pelanggaran terkait siswa ini
         $siswa->riwayatPelanggaran()->each(function ($riwayat) {
             $riwayat->delete();
@@ -64,62 +57,95 @@ class SiswaObserver
     }
 
     /**
+     * Handle the Siswa "deleted" event.
+     * (Fired AFTER Siswa is soft-deleted.)
+     */
+    public function deleted(Siswa $siswa): void
+    {
+        if ($siswa->wali_murid_user_id) {
+            $wali = User::find($siswa->wali_murid_user_id);
+            if ($wali) {
+                // 1. Sync Nama (akan ambil next available ACTIVE sibling karena deleted_at not null)
+                app(UserNameSyncObserver::class)->syncUserName($wali);
+                
+                // 2. Check Orphans (Soft Delete Logic: Nonaktifkan akun)
+                // We count only ACTIVE siswa. If 0 active siswa left, deactivate wali.
+                $activeSiblingsCount = \App\Models\Siswa::where('wali_murid_user_id', $wali->id)->count();
+                
+                if ($activeSiblingsCount === 0) {
+                     $wali->updateQuietly(['is_active' => false]);
+                     \Log::info("Wali Murid {$wali->username} deactivated because all connected siswa are deleted/archived.");
+                }
+            }
+        }
+    }
+
+    /**
      * Handle the Siswa "restoring" event.
-     * (Fired when Siswa::restore() is called.)
-     * Restore related records if needed.
      */
     public function restoring(Siswa $siswa): void
     {
-        // Optionally restore relations (if you want cascade restore)
-        // For now, we keep relations as soft-deleted unless explicitly restored
-        // This prevents accidental cascade-restore of historical data
+        // Logic: Keep relations deleted? Or restore them?
+        // Usually we keep them deleted to avoid confusion, unless needed.
+    }
+
+    /**
+     * Handle the Siswa "restored" event.
+     * (Fired AFTER Siswa is restored.)
+     */
+    public function restored(Siswa $siswa): void
+    {
+        if ($siswa->wali_murid_user_id) {
+            $wali = User::find($siswa->wali_murid_user_id);
+            if ($wali) {
+                // 1. Activate Wali if inactive
+                if (!$wali->is_active) {
+                    $wali->updateQuietly(['is_active' => true]);
+                    \Log::info("Wali Murid {$wali->username} reactivated because a connected siswa was restored.");
+                }
+                
+                // 2. Sync Nama (Ensure name is up to date, e.g. if this is now the first child)
+                app(UserNameSyncObserver::class)->syncUserName($wali);
+            }
+        }
     }
 
     /**
      * Handle the Siswa "force deleting" event.
-     * (Fired when Siswa::forceDelete() is called.)
-     * Perform hard-delete of relations; cleanup storage files if needed.
+     * (Fired BEFORE Siswa is force-deleted.)
      */
     public function forceDeleting(Siswa $siswa): void
     {
-        // Track wali_murid_user_id untuk deletion check
-        if ($siswa->wali_murid_user_id) {
-            $waliIds = session('wali_ids_for_deletion', []);
-            $waliIds[] = $siswa->wali_murid_user_id;
-            session(['wali_ids_for_deletion' => array_unique($waliIds)]);
-        }
-
         // Hard-delete all riwayat pelanggaran
         $siswa->riwayatPelanggaran()->forceDelete();
 
-        // Hard-delete all tindak lanjut (and via cascade, surat_panggilan)
+        // Hard-delete all tindak lanjut
         $siswa->tindakLanjut()->forceDelete();
-
-        // Optionally delete file storage (bukti_foto, file_path_pdf)
-        // This requires additional logic to track and delete from storage
     }
 
     /**
-     * Helper: Check which wali accounts are now orphaned (no more siswa relations)
+     * Handle the Siswa "force deleted" event.
+     * (Fired AFTER Siswa is force-deleted.)
      */
-    public static function getOrphanedWaliAccounts(array $waliIds): array
+    public function forceDeleted(Siswa $siswa): void
     {
-        if (empty($waliIds)) {
-            return [];
-        }
-
-        $orphaned = [];
-        foreach ($waliIds as $waliId) {
-            $count = DB::table('siswa')
-                ->where('wali_murid_user_id', $waliId)
-                ->where('deleted_at', null) // Only count non-deleted siswa
-                ->count();
-
-            if ($count === 0) {
-                $orphaned[] = $waliId;
+        if ($siswa->wali_murid_user_id) {
+            $wali = User::find($siswa->wali_murid_user_id);
+            if ($wali) {
+                // Check if any children exist (Active OR Soft Deleted)
+                // If NO children at all -> Force Delete Wali Account
+                $anyChild = \App\Models\Siswa::withTrashed()
+                         ->where('wali_murid_user_id', $wali->id)
+                         ->exists();
+                         
+                if (!$anyChild) {
+                     $wali->forceDelete();
+                     \Log::info("Wali Murid {$wali->username} force deleted because no connected siswa remain.");
+                } else {
+                     // Still has children (maybe soft deleted ones). Sync Name.
+                     app(UserNameSyncObserver::class)->syncUserName($wali);
+                }
             }
         }
-
-        return $orphaned;
     }
 }

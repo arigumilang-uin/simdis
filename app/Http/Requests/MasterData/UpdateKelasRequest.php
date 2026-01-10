@@ -35,6 +35,7 @@ class UpdateKelasRequest extends FormRequest
             'jurusan_id' => ['required', 'integer', 'exists:jurusan,id'],
             'konsentrasi_id' => ['nullable', 'integer', 'exists:konsentrasi,id'],
             'wali_kelas_user_id' => ['nullable', 'integer'],
+            'rombel' => ['nullable', 'string', 'max:10'],
         ];
     }
 

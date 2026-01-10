@@ -1,0 +1,66 @@
+@startuml AD_20_Lihat_Laporan
+' ============================================================================
+' ACTIVITY DIAGRAM - LIHAT LAPORAN (DASHBOARD)
+' ============================================================================
+' Use Case: Lihat Laporan
+' Aktor: Kepala Sekolah, Waka Kesiswaan, Operator
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+    DiamondBackgroundColor #FFF8E1
+    DiamondBorderColor #FF8F00
+    ArrowColor #455A64
+}
+
+title **AD-20: Lihat Laporan (Dashboard)**
+
+|#E8F5E9|Pengguna|
+start
+
+:Membuka menu Laporan;
+
+|#E3F2FD|Sistem|
+
+fork
+    :Menghitung statistik pelanggaran;
+fork again
+    :Menghitung statistik tindak lanjut;
+fork again
+    :Menghitung statistik pembinaan;
+fork again
+    :Mengambil 10 siswa dengan\npoin tertinggi;
+fork again
+    :Mengambil 10 jenis pelanggaran\npaling sering;
+fork again
+    :Menyusun data grafik bulanan;
+end fork
+
+:Menampilkan dashboard laporan;
+
+|Pengguna|
+
+:Melihat ringkasan:\n- Total pelanggaran dan poin\n- Grafik status tindak lanjut\n- Grafik status pembinaan\n- Daftar siswa teratas\n- Daftar pelanggaran teratas\n- Tren bulanan;
+
+:Menerapkan filter (opsional):\n- Periode waktu\n- Kelas\n- Jurusan;
+
+|Sistem|
+
+:Menghitung ulang statistik\nsesuai filter;
+
+:Memperbarui tampilan dashboard;
+
+|Pengguna|
+
+:Melihat hasil yang terfilter;
+
+stop
+
+@enduml

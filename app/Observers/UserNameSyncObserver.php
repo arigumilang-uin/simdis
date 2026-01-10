@@ -153,31 +153,8 @@ class UserNameSyncObserver
                     // Update nama berdasarkan nama siswa pertama
                     $newName = "Wali dari {$siswa->nama_siswa}";
                     
-                    // IMPORTANT: Hanya update username jika BELUM pernah diubah manual oleh user
-                    // Jika user sudah mengubah username sendiri (hasChangedUsername = true), kita hormati keputusan mereka
-                    if (!$user->hasChangedUsername()) {
-                        $nisnClean = preg_replace('/\D+/', '', $siswa->nisn ?? '');
-                        if ($nisnClean !== '') {
-                            $baseUsername = 'wali.' . $nisnClean;
-                            
-                            // Check if username needs to change
-                            if ($user->username !== $baseUsername) {
-                                // Check if new username is available
-                                $usernameToUse = $baseUsername;
-                                $counter = 1;
-                                
-                                while (User::where('username', $usernameToUse)
-                                    ->where('id', '!=', $user->id)
-                                    ->exists()) {
-                                    $counter++;
-                                    $usernameToUse = $baseUsername . $counter;
-                                }
-                                
-                                $newUsername = $usernameToUse;
-                                // Email: TIDAK di-update otomatis (biarkan null atau yang sudah ada)
-                            }
-                        }
-                    }
+                    // Username tidak di-update otomatis (sesuai request user)
+                    // Username hanya digenerate saat creation.
                 } else {
                     // No siswa connected - keep generic name
                     $newName = "Wali Murid";

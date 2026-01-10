@@ -1,0 +1,97 @@
+@startuml SD_37_Lihat_Daftar_Tindak_Lanjut
+' ============================================================================
+' SEQUENCE DIAGRAM - LIHAT DAFTAR TINDAK LANJUT
+' ============================================================================
+' Use Case: Kelola Tindak Lanjut
+' Aktor: Wali Kelas, Kaprodi, Waka Kesiswaan, Kepsek
+' Deskripsi: Setiap role hanya melihat tindak lanjut yang melibatkan mereka
+'            berdasarkan pembina_roles pada frequency rule
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-37: Lihat Daftar Tindak Lanjut**
+
+actor "Wali Kelas / Kaprodi /\nWaka Kesiswaan /\nKepsek" as USER
+
+box "Application Layer" #E8F5E9
+    participant "TindakLanjutController" as TLC
+    participant "TindakLanjutService" as TLS
+end box
+
+box "Data Layer" #FFF3E0
+    participant "TindakLanjut" as TL
+    participant "Kelas" as KM
+    participant "Jurusan" as JM
+    database "MySQL" as DB
+end box
+
+== Lihat Daftar ==
+
+USER -> TLC : GET /tindak-lanjut\n(?status)
+activate TLC
+
+TLC -> TLC : Get user role
+
+alt Role = Wali Kelas
+    TLC -> KM : where wali_kelas_user_id = auth.id
+    activate KM
+    KM -> DB : SELECT * FROM kelas WHERE wali_kelas_user_id = ?
+    DB --> KM : Kelas data
+    KM --> TLC : Kelas yang diampu
+    deactivate KM
+    
+    TLC -> TLC : Filter: siswa.kelas_id = kelas.id\nAND pembina_roles contains 'Wali Kelas'
+    
+else Role = Kaprodi  
+    TLC -> JM : where kaprodi_user_id = auth.id
+    activate JM
+    JM -> DB : SELECT * FROM jurusan WHERE kaprodi_user_id = ?
+    DB --> JM : Jurusan data
+    JM --> TLC : Jurusan yang diampu
+    deactivate JM
+    
+    TLC -> TLC : Filter: siswa.kelas.jurusan_id = jurusan.id\nAND pembina_roles contains 'Kaprodi'
+    
+else Role = Waka Kesiswaan
+    TLC -> TLC : Filter: pembina_roles contains 'Waka Kesiswaan'
+    
+else Role = Kepala Sekolah
+    TLC -> TLC : Filter: pembina_roles contains 'Kepala Sekolah'
+end
+
+TLC -> TLS : getFilteredTindakLanjut(filters)
+activate TLS
+
+TLS -> TL : with siswa.kelas, suratPanggilan\npaginate(15)
+activate TL
+TL -> DB : SELECT tindak_lanjut.*\nWHERE JSON_CONTAINS(pembina_roles, role)\nAND siswa conditions
+DB --> TL : TindakLanjut data
+TL --> TLS : Paginated TindakLanjut
+deactivate TL
+
+TLS --> TLC : Daftar Tindak Lanjut
+deactivate TLS
+
+TLC --> USER : Tampilkan daftar:\n- No Kasus, Siswa, Kelas\n- Pemicu, Status, Pembina\n- Tombol Aksi (sesuai role)
+deactivate TLC
+
+@enduml

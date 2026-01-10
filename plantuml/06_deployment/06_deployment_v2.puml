@@ -1,0 +1,198 @@
+@startuml Deployment_Diagram
+' ============================================================================
+' DEPLOYMENT DIAGRAM - SISTEM INFORMASI KEDISIPLINAN SISWA SMK NEGERI 1
+' ============================================================================
+' Author: System Documentation
+' Version: 2.0 (PlantUML)
+' Date: 27 Desember 2024
+' ============================================================================
+
+' === GLOBAL STYLING ===
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+skinparam linetype ortho
+
+' === NODE STYLING ===
+skinparam node {
+    BackgroundColor #FFFFFF
+    BorderColor #37474F
+    FontColor #212121
+}
+
+' === COMPONENT STYLING ===
+skinparam component {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+}
+
+' === DATABASE STYLING ===
+skinparam database {
+    BackgroundColor #FFF8E1
+    BorderColor #FF8F00
+    FontColor #E65100
+}
+
+' === CLOUD STYLING ===
+skinparam cloud {
+    BackgroundColor #E8F5E9
+    BorderColor #4CAF50
+}
+
+' === ARTIFACT STYLING ===
+skinparam artifact {
+    BackgroundColor #FCE4EC
+    BorderColor #E91E63
+}
+
+title **DEPLOYMENT DIAGRAM - Production Environment**
+
+' ============================================================================
+' INTERNET & CDN
+' ============================================================================
+
+cloud "Internet" as INET {
+    actor "Users" as USERS
+    actor "Admin" as ADMIN
+}
+
+node "CDN Layer" as CDN #E8F5E9 {
+    component "Cloudflare" as CF {
+        [SSL/TLS Termination]
+        [DDoS Protection]
+        [Caching]
+    }
+}
+
+' ============================================================================
+' FIREWALL
+' ============================================================================
+
+node "Firewall" as FW #FFEBEE {
+    component "iptables/ufw" as IPTABLES {
+        [Port 80 (HTTP)]
+        [Port 443 (HTTPS)]
+        [Port 22 (SSH)]
+    }
+}
+
+' ============================================================================
+' VPS SERVER
+' ============================================================================
+
+node "VPS Server\n<<Ubuntu 22.04 LTS>>" as VPS {
+    
+    node "Web Server Layer" as WEB_LAYER #E3F2FD {
+        component "Nginx 1.24" as NGINX {
+            [Reverse Proxy]
+            [Static Files]
+            [Gzip Compression]
+        }
+    }
+    
+    node "Application Layer" as APP_LAYER #E8F5E9 {
+        component "PHP-FPM 8.2" as PHPFPM {
+            artifact "Laravel 12" as LARAVEL
+            artifact "Composer Packages" as COMPOSER
+        }
+        
+        component "Queue Worker" as QUEUE {
+            [Laravel Horizon]
+            [Background Jobs]
+        }
+        
+        component "Cron Scheduler" as CRON {
+            [schedule:run]
+            [Every Minute]
+        }
+    }
+    
+    node "Data Layer" as DATA_LAYER #FFF3E0 {
+        database "MariaDB 10.11" as MARIADB {
+            [smkn1_kedisiplinan]
+            [16 Tables]
+        }
+        
+        database "Redis 7" as REDIS {
+            [Session Store]
+            [Cache Driver]
+            [Queue Driver]
+        }
+    }
+    
+    node "Storage Layer" as STORAGE_LAYER #FCE4EC {
+        folder "/storage/app/public" as UPLOADS {
+            artifact "Bukti Foto" as FOTO
+        }
+        
+        folder "/storage/app/surat" as SURAT_DIR {
+            artifact "Surat PDF" as PDF
+        }
+        
+        folder "/storage/logs" as LOGS {
+            artifact "laravel.log" as LOG
+        }
+    }
+}
+
+' ============================================================================
+' EXTERNAL SERVICES
+' ============================================================================
+
+node "External Services" as EXT #E8EAF6 {
+    component "Let's Encrypt" as LETSENCRYPT {
+        [Auto SSL Renewal]
+    }
+    
+    component "Backup Storage" as BACKUP {
+        [S3/Wasabi]
+        [Daily Backup]
+    }
+}
+
+' ============================================================================
+' CONNECTIONS
+' ============================================================================
+
+USERS --> CF : HTTPS
+ADMIN --> CF : HTTPS
+CF --> IPTABLES : HTTP/HTTPS
+IPTABLES --> NGINX : Allowed Traffic
+
+NGINX --> PHPFPM : FastCGI\nunix socket
+PHPFPM --> MARIADB : TCP :3306
+PHPFPM --> REDIS : TCP :6379
+PHPFPM --> UPLOADS : Read/Write
+PHPFPM --> SURAT_DIR : Write
+PHPFPM --> LOGS : Write
+
+QUEUE --> MARIADB : Jobs
+QUEUE --> REDIS : Queue
+
+CRON --> LARAVEL : Artisan
+
+LETSENCRYPT ..> NGINX : SSL Cert
+MARIADB ..> BACKUP : mysqldump
+
+' ============================================================================
+' NOTES
+' ============================================================================
+
+note right of VPS
+  **Minimum Specs:**
+  - 2 vCPU
+  - 4 GB RAM
+  - 80 GB SSD
+  - Ubuntu 22.04 LTS
+end note
+
+note bottom of MARIADB
+  **Database:**
+  - InnoDB Engine
+  - utf8mb4_unicode_ci
+  - Binary Logging ON
+end note
+
+@enduml

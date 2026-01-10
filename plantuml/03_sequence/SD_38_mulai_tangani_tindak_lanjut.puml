@@ -1,0 +1,95 @@
+@startuml SD_38_Mulai_Tangani_Tindak_Lanjut
+' ============================================================================
+' SEQUENCE DIAGRAM - MULAI TANGANI TINDAK LANJUT
+' ============================================================================
+' Use Case: Kelola Tindak Lanjut
+' Aktor: Wali Kelas, Kaprodi, Waka Kesiswaan
+' Deskripsi: Hanya bisa tangani jika role ada di pembina_roles
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-38: Mulai Tangani Tindak Lanjut**
+
+actor "Wali Kelas / Kaprodi /\nWaka Kesiswaan" as USER
+
+box "Application Layer" #E8F5E9
+    participant "TindakLanjutController" as TLC
+    participant "ActivityLog" as AL
+end box
+
+box "Data Layer" #FFF3E0
+    participant "TindakLanjut" as TL
+    database "MySQL" as DB
+end box
+
+== Proses Mulai Tangani ==
+
+USER -> TLC : PUT /tindak-lanjut/id/mulai-tangani
+activate TLC
+
+TLC -> TL : findOrFail(id)
+activate TL
+TL -> DB : SELECT * FROM tindak_lanjut WHERE id = ?
+DB --> TL : TindakLanjut data
+TL --> TLC : TindakLanjut object
+deactivate TL
+
+TLC -> TLC : Check authorization
+
+alt User role NOT IN tindakLanjut.pembina_roles
+    TLC --> USER : Error (403): "Anda tidak termasuk\ndalam daftar pembina untuk kasus ini"
+else User role IN pembina_roles
+    TLC -> TLC : Check status
+    
+    alt Status bukan BARU atau DISETUJUI
+        TLC --> USER : Error: "Kasus sudah dalam proses\npenanganan atau tidak bisa ditangani"
+    else Status = BARU atau DISETUJUI
+        TLC -> TL : update()
+        activate TL
+        TL -> DB : UPDATE tindak_lanjut SET\nstatus = 'Ditangani',\ntanggal_tindak_lanjut = NOW(),\nditangani_oleh_user_id = auth.id,\nditangani_at = NOW()
+        DB --> TL : Updated
+        TL --> TLC : Success
+        deactivate TL
+        
+        TLC -> AL : log('Status kasus diubah ke Sedang Ditangani')
+        activate AL
+        AL -> DB : INSERT INTO activity_log
+        DB --> AL : Created
+        AL --> TLC : Success
+        deactivate AL
+        
+        TLC --> USER : Redirect back\nFlash: "Kasus berhasil dimulai penanganannya!"
+    end
+end
+deactivate TLC
+
+note right of USER
+  **AKSES BERDASARKAN RULE:**
+  Jika frequency rule menentukan:
+  - Surat 1: pembina = [Wali Kelas]
+  - Surat 2: pembina = [Kaprodi]
+  - Surat 3: pembina = [Waka Kesiswaan]
+  
+  Maka hanya role tersebut yang bisa tangani
+end note
+
+@enduml

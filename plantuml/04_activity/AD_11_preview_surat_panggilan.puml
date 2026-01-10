@@ -1,0 +1,51 @@
+@startuml AD_11_Preview_Surat_Panggilan
+' ============================================================================
+' ACTIVITY DIAGRAM - PREVIEW SURAT PANGGILAN
+' ============================================================================
+' Use Case: Kelola Surat Panggilan - Preview
+' Aktor: Wali Kelas, Kaprodi, Waka Kesiswaan
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+    DiamondBackgroundColor #FFF8E1
+    DiamondBorderColor #FF8F00
+    ArrowColor #455A64
+}
+
+title **AD-11: Preview Surat Panggilan**
+
+|#E8F5E9|Pembina|
+start
+
+:Memilih tindak lanjut dari daftar;
+
+:Mengklik Preview Surat;
+
+|#E3F2FD|Sistem|
+
+:Memeriksa hak akses pembina;
+
+if (Pembina berwenang?) then (Ya)
+    :Mengambil data surat panggilan;
+    :Mengambil data siswa dan kelas;
+    :Mengambil data wali murid;
+    :Menyusun tampilan surat;
+    
+    |Pembina|
+    :Melihat pratinjau surat:\n- Kop surat sekolah\n- Data siswa\n- Jenis panggilan\n- Tanggal menghadap\n- Nama orang tua\n- Tanda tangan pembina;
+    stop
+else (Tidak)
+    |Pembina|
+    :Menampilkan pesan error\nTidak memiliki akses;
+    stop
+endif
+
+@enduml

@@ -1,0 +1,100 @@
+@startuml SD_12_Restore_Siswa
+' ============================================================================
+' SEQUENCE DIAGRAM - RESTORE SISWA
+' ============================================================================
+' Use Case: Kelola Siswa
+' Aktor: Operator Sekolah
+' Deskripsi: Mengembalikan siswa yang sudah dihapus (soft delete)
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-12: Restore Siswa**
+
+actor "Operator\nSekolah" as OPERATOR
+
+box "Application Layer" #E8F5E9
+    participant "SiswaController" as SC
+    participant "SiswaService" as SS
+end box
+
+box "Data Layer" #FFF3E0
+    participant "Siswa Model" as SM
+    database "MySQL" as DB
+end box
+
+== Lihat Daftar Siswa Terhapus ==
+
+OPERATOR -> SC : GET /siswa/deleted\n(?alasan_keluar, ?kelas_id)
+activate SC
+
+SC -> SS : getDeletedSiswa(filters)
+activate SS
+
+SS -> SM : onlyTrashed()\n->with('kelas.jurusan')\n->when(filters)
+activate SM
+SM -> DB : SELECT * FROM siswa\nWHERE deleted_at IS NOT NULL
+DB --> SM : Daftar Siswa Terhapus data
+SM --> SS : Paginated deleted siswa
+deactivate SM
+
+SS --> SC : Paginated deleted siswa
+deactivate SS
+
+SC --> OPERATOR : Tampilkan daftar siswa terhapus:\n- NISN, Nama, Kelas\n- Alasan Keluar, Tanggal Hapus\n- Tombol Restore
+deactivate SC
+
+== Proses Restore ==
+
+OPERATOR -> SC : POST /siswa/{id}/restore
+activate SC
+
+SC -> SS : restoreSiswa(id)
+activate SS
+
+SS -> SM : withTrashed()->findOrFail(id)
+activate SM
+SM -> DB : SELECT * FROM siswa\nWHERE id = ? (include deleted)
+DB --> SM : Siswa data
+SM --> SS : Siswa object
+deactivate SM
+
+SS -> SM : restore()
+activate SM
+SM -> DB : UPDATE siswa SET\ndeleted_at = NULL,\nalasan_keluar = NULL,\nketerangan_keluar = NULL
+DB --> SM : Restored
+SM --> SS : Success
+deactivate SM
+
+SS --> SC : Success
+deactivate SS
+
+SC --> OPERATOR : Redirect /siswa/deleted\nFlash: "Siswa berhasil di-restore"
+deactivate SC
+
+note right of OPERATOR
+  Siswa yang di-restore:
+  - Kembali muncul di daftar aktif
+  - Riwayat pelanggaran tetap ada
+  - Alasan keluar di-reset
+end note
+
+@enduml

@@ -18,21 +18,24 @@ use App\Http\Controllers\Auth\LoginController;
 */
 
 // ===================================================================
-// AUTHENTICATION ROUTES (Guest)
+// AUTHENTICATION ROUTES (Guest) - Protected with Rate Limiting
 // ===================================================================
 
 Route::middleware('guest')->group(function () {
-    // Login
+    // Login Form (no throttle needed for viewing form)
     Route::get('/', [LoginController::class, 'showLoginForm'])
         ->name('login');
 
+    // Login POST - STRICT THROTTLE: 5 attempts/minute
     Route::post('/', [LoginController::class, 'login'])
+        ->middleware('throttle:login')
         ->name('login.post');
 
     // ===================================================================
-    // GOOGLE OAUTH (Login with Google)
+    // GOOGLE OAUTH (Login with Google) - MODERATE THROTTLE: 10/minute
     // ===================================================================
     Route::get('/auth/google', [\App\Http\Controllers\Auth\SocialAuthController::class, 'redirectToGoogle'])
+        ->middleware('throttle:oauth')
         ->name('auth.google');
 
     Route::get('/auth/google/callback', [\App\Http\Controllers\Auth\SocialAuthController::class, 'handleGoogleCallback'])

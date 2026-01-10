@@ -1,0 +1,142 @@
+@startuml SD_01_Login
+' ============================================================================
+' SEQUENCE DIAGRAM - LOGIN
+' ============================================================================
+' Use Case: Login
+' Aktor: Semua pengguna
+' Deskripsi: Proses autentikasi dengan multiple identifier dan redirect
+'            ke dashboard sesuai role
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-01: Login**
+
+actor "Pengguna" as USER
+
+box "Application Layer" #E8F5E9
+    participant "LoginController" as LC
+    participant "RoleService" as RS
+end box
+
+box "Data Layer" #FFF3E0
+    participant "User Model" as UM
+    participant "Session" as SS
+    database "MySQL" as DB
+end box
+
+== Akses Halaman Login ==
+
+USER -> LC : GET /
+activate LC
+LC --> USER : Tampilkan form login:\n- Input: Username/Email/NIP/NUPTK/No.HP\n- Input: Password\n- Checkbox: Ingat Saya
+deactivate LC
+
+== Proses Login ==
+
+USER -> LC : POST /\n(username, password, remember?)
+activate LC
+
+note right of LC
+  **Multi-Identifier Login:**
+  User dapat login dengan:
+  - Username
+  - Email
+  - NIP
+  - NUPTK
+  - Nomor HP (phone)
+end note
+
+LC -> LC : validate(username required,\npassword required)
+
+LC -> UM : findByMultipleIdentifiers(loginField)
+activate UM
+UM -> DB : SELECT * FROM users\nWHERE username = ?\nOR email = ?\nOR nip = ?\nOR nuptk = ?\nOR phone = ?
+DB --> UM : User record or null
+UM --> LC : User object or null
+deactivate UM
+
+alt User tidak ditemukan
+    LC --> USER : Error: "Login gagal. Periksa kembali\nusername/email/NIP/NUPTK/No.HP dan password Anda."
+else User ditemukan
+    LC -> LC : Hash::check(password, user.password)
+    
+    alt Password salah
+        LC --> USER : Error: "Login gagal. Periksa kembali\nusername/email/NIP/NUPTK/No.HP dan password Anda."
+    else Password benar
+        LC -> LC : Auth::login(user, remember)
+        
+        LC -> SS : session()->regenerate()
+        activate SS
+        SS --> LC : Session regenerated
+        deactivate SS
+        
+        alt User tidak aktif (is_active = false)
+            LC -> LC : Auth::logout()
+            LC --> USER : Error: "Akun Anda telah dinonaktifkan.\nSilakan hubungi administrator."
+        else User aktif
+            LC -> UM : update last_login_at
+            activate UM
+            UM -> DB : UPDATE users SET\nlast_login_at = NOW()
+            DB --> UM : Updated
+            UM --> LC : Success
+            deactivate UM
+            
+            LC -> RS : Check role and redirect
+            activate RS
+            RS --> LC : role validation
+            deactivate RS
+            
+            alt Role tidak valid
+                LC -> LC : Auth::logout()
+                LC --> USER : Error: "Role tidak valid."
+            else Role valid
+                alt isRealDeveloper()
+                    LC --> USER : Redirect /dashboard/developer
+                else Role = Waka Kesiswaan atau Operator
+                    LC --> USER : Redirect /dashboard/admin
+                else Role = Kepala Sekolah
+                    LC --> USER : Redirect /dashboard/kepsek
+                else Role = Kaprodi
+                    LC --> USER : Redirect /dashboard/kaprodi
+                else Role = Wali Kelas
+                    LC --> USER : Redirect /dashboard/walikelas
+                else Role = Waka Sarana
+                    LC --> USER : Redirect /dashboard/waka-sarana
+                else Role = Guru
+                    LC --> USER : Redirect /pelanggaran/catat
+                else Role = Wali Murid
+                    LC --> USER : Redirect /dashboard/wali_murid
+                end
+            end
+        end
+    end
+end
+deactivate LC
+
+note right of USER
+  **Fitur Remember Me:**
+  Jika checkbox "Ingat Saya" dicentang,
+  session akan bertahan lebih lama
+  (sesuai konfigurasi Laravel)
+end note
+
+@enduml

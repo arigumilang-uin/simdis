@@ -1,0 +1,57 @@
+@startuml SD_17_Lihat_Detail_Kelas
+' ============================================================================
+' SEQUENCE DIAGRAM - LIHAT DETAIL KELAS
+' ============================================================================
+' Use Case: Kelola Kelas
+' Aktor: Operator, Wali Kelas, Kaprodi, Waka, Kepsek
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-17: Lihat Detail Kelas**
+
+actor "Operator / Wali Kelas /\nKaprodi / Waka / Kepsek" as USER
+
+box "Application Layer" #E8F5E9
+    participant "KelasController" as KC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "Kelas Model" as KM
+    database "MySQL" as DB
+end box
+
+== Lihat Detail Kelas ==
+
+USER -> KC : GET /kelas/id
+activate KC
+
+KC -> KM : findOrFail(id)\nwith jurusan, waliKelas, siswa
+activate KM
+KM -> DB : SELECT kelas with relations
+DB --> KM : Kelas + relations data
+KM --> KC : Kelas object with relations
+deactivate KM
+
+KC --> USER : Tampilkan detail kelas:\n- Info Kelas (Nama, Tingkat)\n- Jurusan\n- Wali Kelas\n- Daftar Siswa di kelas ini
+deactivate KC
+
+@enduml

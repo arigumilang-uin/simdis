@@ -1,0 +1,84 @@
+@startuml COMP_01_Overview
+' ============================================================================
+' COMPONENT DIAGRAM - OVERVIEW ARSITEKTUR
+' ============================================================================
+' Deskripsi: Gambaran umum arsitektur sistem Laravel
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 11
+
+skinparam component {
+    BackgroundColor #FFFFFF
+    BorderColor #37474F
+    FontColor #212121
+}
+
+skinparam package {
+    BackgroundColor #FAFAFA
+    BorderColor #9E9E9E
+    FontColor #424242
+}
+
+skinparam database {
+    BackgroundColor #FFF8E1
+    BorderColor #FF8F00
+}
+
+title **COMP-01: Arsitektur Sistem (Overview)**
+
+package "Presentation Layer" as PRES #E3F2FD {
+    component [Blade Views] as BLADE
+    component [TailwindCSS + Alpine.js] as FRONTEND
+    component [Vite (Build Tool)] as VITE
+}
+
+package "Application Layer" as APP #E8F5E9 {
+    component [Routes] as ROUTES
+    component [Middleware] as MW
+    component [Controllers (28)] as CTRL
+    component [Services (17)] as SVC
+    component [DTOs (11)] as DTO
+}
+
+package "Domain Layer" as DOMAIN #FFF3E0 {
+    component [Rules Engine] as RE
+    component [Repositories (9)] as REPO
+    component [Models (16)] as MDL
+    component [Observers (4)] as OBS
+    component [Enums (4)] as ENUM
+}
+
+package "Infrastructure Layer" as INFRA #E8EAF6 {
+    database [MySQL Database] as DB
+    component [Cache (File/Redis)] as CACHE
+    component [External Packages] as EXT
+}
+
+' Connections
+BLADE --> ROUTES : HTTP Request
+FRONTEND --> VITE
+ROUTES --> MW
+MW --> CTRL
+CTRL --> SVC
+SVC --> DTO
+SVC --> RE
+SVC --> REPO
+REPO --> MDL
+MDL --> OBS
+MDL --> ENUM
+MDL --> DB
+MDL --> CACHE
+SVC --> EXT
+
+legend right
+  **Arsitektur Berlapis:**
+  1. Presentation - Tampilan UI
+  2. Application - Logika Aplikasi
+  3. Domain - Aturan Bisnis
+  4. Infrastructure - Database & Cache
+endlegend
+
+@enduml

@@ -1,0 +1,97 @@
+@startuml SD_52_Lihat_Jejak_Audit
+' ============================================================================
+' SEQUENCE DIAGRAM - LIHAT JEJAK AUDIT
+' ============================================================================
+' Use Case: Lihat Jejak Audit
+' Aktor: Operator, Waka (Kepsek tidak bisa lihat untuk independensi)
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-52: Lihat Jejak Audit**
+
+actor "Operator / Waka" as USER
+
+box "Application Layer" #E8F5E9
+    participant "ActivityLogController" as ALC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "ActivityLog" as AL
+    participant "User" as UM
+    database "MySQL" as DB
+end box
+
+== Lihat Activity Log ==
+
+USER -> ALC : GET /audit/activity-log\n(?user_id, ?event, ?dari, ?sampai)
+activate ALC
+
+ALC -> AL : with causer\nwhen(user_id, filter)\nwhen(event, filter)\nwhen(dateRange, filter)\norderBy(created_at, desc)\npaginate(30)
+activate AL
+AL -> DB : SELECT activity_log.*,\nusers.nama as causer_name\nFROM activity_log\nLEFT JOIN users\nWHERE conditions\nORDER BY created_at DESC
+DB --> AL : Activity data
+AL --> ALC : Paginated Activity
+deactivate AL
+
+ALC -> UM : all()
+activate UM
+UM -> DB : SELECT * FROM users
+DB --> UM : User data
+UM --> ALC : Daftar User (untuk filter)
+deactivate UM
+
+ALC --> USER : Tampilkan log aktivitas:\n- Waktu, User\n- Aksi (create/update/delete)\n- Model, Deskripsi\n- Perubahan (old/new values)
+deactivate ALC
+
+== Lihat Last Login ==
+
+USER -> ALC : GET /audit/last-login
+activate ALC
+
+ALC -> UM : orderBy(last_login_at, desc)\nget()
+activate UM
+UM -> DB : SELECT users.*, roles.nama_role\nFROM users\nJOIN roles\nORDER BY last_login_at DESC
+DB --> UM : Users with login time
+UM --> ALC : List Users with login time
+deactivate UM
+
+ALC --> USER : Tampilkan daftar:\n- Nama, Role\n- Terakhir Login\n- Status Akun
+deactivate ALC
+
+== Export Activity Log ==
+
+USER -> ALC : GET /audit/export\n(?dari, ?sampai)
+activate ALC
+
+ALC -> AL : get data with filters
+activate AL
+AL -> DB : SELECT with conditions
+DB --> AL : Activity data
+AL --> ALC : Collection
+deactivate AL
+
+ALC -> ALC : Build CSV
+
+ALC --> USER : Download:\nActivity_Log_20241228.csv
+deactivate ALC
+
+@enduml

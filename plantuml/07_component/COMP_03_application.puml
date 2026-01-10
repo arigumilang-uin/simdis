@@ -1,0 +1,85 @@
+@startuml COMP_03_Application
+' ============================================================================
+' COMPONENT DIAGRAM - APPLICATION LAYER
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 11
+skinparam linetype polyline
+
+skinparam component {
+    BackgroundColor #FFFFFF
+    BorderColor #37474F
+    FontColor #212121
+}
+
+skinparam package {
+    BackgroundColor #FAFAFA
+    BorderColor #9E9E9E
+    FontColor #424242
+}
+
+title **COMP-03: Application Layer**
+
+package "Routes" as ROUTING #E3F2FD {
+    [Route Files] as ROUTES
+}
+
+package "Middleware" as MW #E8F5E9 {
+    [AuthMiddleware] as AUTH_MW
+    [RoleMiddleware] as ROLE_MW
+}
+
+package "Controllers (28)" as CTRL #FFF3E0 {
+    [Auth (2)] as C_AUTH
+    [Dashboard (7)] as C_DASH
+    [MasterData (5)] as C_MD
+    [Pelanggaran (2)] as C_PLG
+    [TindakLanjut (1)] as C_TL
+    [Pembinaan (1)] as C_PBN
+    [Report (3)] as C_RPT
+    [User (1)] as C_USER
+}
+
+package "Form Requests" as FREQ #E8EAF6 {
+    [Validation + Authorization] as FORM_REQ
+}
+
+' Alur: Routes -> Middleware
+ROUTES -down-> AUTH_MW
+ROUTES -down-> ROLE_MW
+
+' Middleware -> Controllers
+AUTH_MW -down-> C_AUTH
+
+ROLE_MW -down-> C_DASH
+ROLE_MW -down-> C_MD
+ROLE_MW -down-> C_PLG
+ROLE_MW -down-> C_TL
+ROLE_MW -down-> C_PBN
+ROLE_MW -down-> C_RPT
+ROLE_MW -down-> C_USER
+
+' Controllers -> Form Requests
+C_MD -down-> FORM_REQ
+C_PLG -down-> FORM_REQ
+C_TL -down-> FORM_REQ
+C_USER -down-> FORM_REQ
+
+note right of ROUTING
+  **Route Files:**
+  web.php, pelanggaran.php,
+  tindak_lanjut.php, siswa.php,
+  master_data.php, rules.php
+end note
+
+note right of C_DASH
+  **Dashboard per Role:**
+  Kepsek, Waka, Kaprodi,
+  Wali Kelas, Guru,
+  Operator, Wali Murid
+end note
+
+@enduml

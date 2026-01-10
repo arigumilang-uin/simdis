@@ -1,0 +1,102 @@
+@startuml STD_01_Tindak_Lanjut
+' ============================================================================
+' STATE DIAGRAM - TINDAK LANJUT
+' ============================================================================
+' Entity: TindakLanjut
+' Deskripsi: Siklus hidup kasus tindak lanjut pelanggaran siswa
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam state {
+    BackgroundColor #FFFFFF
+    BorderColor #37474F
+    FontColor #212121
+    ArrowColor #455A64
+    StartColor #4CAF50
+    EndColor #F44336
+}
+
+title **STD-01: Siklus Status Tindak Lanjut**
+
+[*] --> Baru : Pelanggaran memicu\nmesin aturan
+
+state Baru #E3F2FD {
+    Baru : Kasus baru tercatat
+    Baru : Surat panggilan sudah tersedia
+    Baru : Menunggu proses selanjutnya
+}
+
+Baru --> MenungguPersetujuan : Kasus perlu\npersetujuan Kepsek
+
+state MenungguPersetujuan #FFF8E1 {
+    MenungguPersetujuan : Kasus dikirim ke Kepala Sekolah
+    MenungguPersetujuan : Menunggu keputusan approval
+}
+
+MenungguPersetujuan --> Disetujui : Kepala Sekolah\nmenyetujui
+MenungguPersetujuan --> Ditolak : Kepala Sekolah\nmenolak
+
+state Ditolak #FFEBEE {
+    Ditolak : Kasus tidak disetujui
+    Ditolak : Alasan penolakan tersimpan
+    Ditolak : Status akhir
+}
+
+Ditolak --> [*]
+
+state Disetujui #E8F5E9 {
+    Disetujui : Kasus telah disetujui
+    Disetujui : Siap untuk ditangani pembina
+}
+
+Baru --> Ditangani : Pembina langsung\nmenangani (tanpa approval)
+Disetujui --> Ditangani : Pembina mulai\nmenangani kasus
+
+state Ditangani #E3F2FD {
+    Ditangani : Pembina sedang menangani
+    Ditangani : Proses pembinaan berlangsung
+    Ditangani : Surat panggilan bisa dicetak
+}
+
+Ditangani --> Selesai : Pembina menyelesaikan\nkasus
+
+state Selesai #C8E6C9 {
+    Selesai : Kasus telah selesai
+    Selesai : Pembinaan telah dilakukan
+    Selesai : Status akhir
+}
+
+Selesai --> [*]
+
+note right of Baru
+  Kasus dibuat otomatis
+  oleh mesin aturan saat
+  pelanggaran dicatat
+end note
+
+note right of Ditolak
+  **Status Akhir**
+  Kasus tidak dapat
+  diproses lebih lanjut
+end note
+
+note right of Selesai
+  **Status Akhir**
+  Kasus telah ditutup
+end note
+
+legend right
+  **Alur Status:**
+  BARU → MENUNGGU PERSETUJUAN → DISETUJUI → DITANGANI → SELESAI
+       ↘ DITOLAK (Akhir)
+  
+  atau
+  
+  BARU → DITANGANI → SELESAI (tanpa approval)
+endlegend
+
+@enduml

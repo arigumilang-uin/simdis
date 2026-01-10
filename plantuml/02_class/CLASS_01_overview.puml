@@ -1,0 +1,143 @@
+@startuml CLASS_01_Overview
+' ============================================================================
+' CLASS DIAGRAM - OVERVIEW
+' ============================================================================
+' Deskripsi: Gambaran umum semua model dan relasi utama
+' Total: 16 Model
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 11
+
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #37474F
+    ArrowColor #455A64
+    FontColor #212121
+    HeaderBackgroundColor #ECEFF1
+}
+
+skinparam package {
+    BackgroundColor #F5F5F5
+    BorderColor #9E9E9E
+    FontColor #424242
+}
+
+title **DIAGRAM KELAS: Gambaran Umum (16 Model)**
+
+' ============================================================================
+' PENGELOLAAN PENGGUNA
+' ============================================================================
+
+package "Pengelolaan Pengguna" #E3F2FD {
+    class Role <<Model>>
+    class User <<Model>>
+}
+
+' ============================================================================
+' STRUKTUR SEKOLAH
+' ============================================================================
+
+package "Struktur Sekolah" #E8F5E9 {
+    class Jurusan <<Model>>
+    class Kelas <<Model>>
+    class Siswa <<Model>>
+}
+
+' ============================================================================
+' SISTEM PELANGGARAN
+' ============================================================================
+
+package "Sistem Pelanggaran" #FFF3E0 {
+    class KategoriPelanggaran <<Model>>
+    class JenisPelanggaran <<Model>>
+    class AturanFrekuensi <<Model>>
+    class RiwayatPelanggaran <<Model>>
+}
+
+' ============================================================================
+' SISTEM TINDAK LANJUT
+' ============================================================================
+
+package "Sistem Tindak Lanjut" #FCE4EC {
+    class TindakLanjut <<Model>>
+    class SuratPanggilan <<Model>>
+    class LogCetakSurat <<Model>>
+}
+
+' ============================================================================
+' SISTEM PEMBINAAN
+' ============================================================================
+
+package "Sistem Pembinaan" #E8EAF6 {
+    class AturanPembinaan <<Model>>
+    class StatusPembinaan <<Model>>
+}
+
+' ============================================================================
+' PENGATURAN SISTEM
+' ============================================================================
+
+package "Pengaturan Sistem" #EFEBE9 {
+    class PengaturanMesinAturan <<Model>>
+    class RiwayatPengaturan <<Model>>
+}
+
+' ============================================================================
+' RELASI ANTAR MODEL
+' ============================================================================
+
+' Pengelolaan Pengguna
+Role "1" --o "*" User : has
+
+' Struktur Sekolah
+Jurusan "1" --o "*" Kelas : has
+Kelas "1" --o "*" Siswa : has
+
+' Penugasan Pengguna
+User "1" -- "0..1" Jurusan : kaprodi
+User "1" -- "0..1" Kelas : waliKelas
+User "1" -- "*" Siswa : waliMurid
+
+' Sistem Pelanggaran
+KategoriPelanggaran "1" --o "*" JenisPelanggaran : has
+JenisPelanggaran "1" --o "*" AturanFrekuensi : has
+JenisPelanggaran "1" --o "*" RiwayatPelanggaran : recorded
+
+' Siswa dan Pelanggaran
+Siswa "1" --o "*" RiwayatPelanggaran : has
+Siswa "1" --o "*" TindakLanjut : has
+Siswa "1" --o "*" StatusPembinaan : has
+
+' Sistem Tindak Lanjut
+TindakLanjut "1" --o "0..1" SuratPanggilan : has
+SuratPanggilan "1" --o "*" LogCetakSurat : has
+
+' Sistem Pembinaan
+AturanPembinaan "1" --o "*" StatusPembinaan : triggers
+
+' Pengaturan Sistem
+PengaturanMesinAturan "1" --o "*" RiwayatPengaturan : has
+
+' ============================================================================
+' KETERANGAN
+' ============================================================================
+
+legend right
+  **Jumlah: 16 Model**
+  ----
+  Pengelolaan Pengguna: 2
+  Struktur Sekolah: 3
+  Sistem Pelanggaran: 4
+  Sistem Tindak Lanjut: 3
+  Sistem Pembinaan: 2
+  Pengaturan Sistem: 2
+  ----
+  **Simbol Relasi:**
+  ──o Composition (has)
+  ─── Association
+endlegend
+
+@enduml

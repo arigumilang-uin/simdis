@@ -1,0 +1,63 @@
+@startuml AD_04_Hapus_Siswa
+' ============================================================================
+' ACTIVITY DIAGRAM - HAPUS SISWA
+' ============================================================================
+' Use Case: Kelola Siswa - Hapus
+' Aktor: Operator Sekolah
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+    DiamondBackgroundColor #FFF8E1
+    DiamondBorderColor #FF8F00
+    ArrowColor #455A64
+}
+
+title **AD-04: Hapus Siswa**
+
+|#E8F5E9|Operator|
+start
+
+:Memilih siswa dari daftar;
+
+:Mengklik tombol Hapus;
+
+|#E3F2FD|Sistem|
+
+:Menampilkan dialog konfirmasi;
+
+|Operator|
+
+:Memilih alasan penghapusan:\n- Alumni\n- Mutasi\n- Dikeluarkan\n- Lainnya;
+
+:Mengisi keterangan tambahan\n(opsional);
+
+:Mengkonfirmasi penghapusan;
+
+|Sistem|
+
+:Menonaktifkan data siswa;
+
+:Menyimpan alasan dan keterangan;
+
+:Mencatat aktivitas penghapusan;
+
+note right
+  Data siswa tidak dihapus permanen.
+  Masih dapat dipulihkan jika diperlukan.
+end note
+
+|Operator|
+
+:Menampilkan pesan sukses\nSiswa berhasil dihapus;
+
+stop
+
+@enduml

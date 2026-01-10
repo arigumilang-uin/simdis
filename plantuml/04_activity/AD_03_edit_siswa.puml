@@ -1,0 +1,73 @@
+@startuml AD_03_Edit_Siswa
+' ============================================================================
+' ACTIVITY DIAGRAM - EDIT SISWA
+' ============================================================================
+' Use Case: Kelola Siswa - Edit
+' Aktor: Operator Sekolah, Wali Kelas (terbatas)
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+    DiamondBackgroundColor #FFF8E1
+    DiamondBorderColor #FF8F00
+    ArrowColor #455A64
+}
+
+title **AD-03: Edit Siswa**
+
+|#E8F5E9|Pengguna|
+start
+
+:Memilih siswa dari daftar;
+
+:Mengklik tombol Edit;
+
+|#E3F2FD|Sistem|
+
+:Memeriksa hak akses pengguna;
+
+if (Role Operator?) then (Ya)
+    :Menampilkan form edit lengkap:\n- NISN, Nama, Kelas\n- Nomor HP Wali, Status;
+else (Wali Kelas)
+    :Memeriksa apakah siswa\ndi kelas bimbingan;
+    
+    if (Siswa di kelas bimbingan?) then (Ya)
+        :Menampilkan form edit terbatas:\n- Nama, Nomor HP Wali;
+    else (Tidak)
+        |Pengguna|
+        :Menampilkan pesan error\nTidak memiliki akses;
+        stop
+    endif
+endif
+
+|Pengguna|
+
+:Mengubah data yang diperlukan;
+
+:Mengklik tombol Simpan;
+
+|Sistem|
+
+:Memvalidasi data;
+
+if (Data valid?) then (Ya)
+    :Menyimpan perubahan data;
+    :Mencatat aktivitas perubahan;
+    
+    |Pengguna|
+    :Menampilkan pesan sukses\nData siswa berhasil diperbarui;
+    stop
+else (Tidak)
+    |Pengguna|
+    :Menampilkan pesan error validasi;
+    stop
+endif
+
+@enduml

@@ -34,6 +34,15 @@ interface BaseRepositoryInterface
     public function findOrFail(int $id): Model;
 
     /**
+     * Find a record by its ID with loaded relations.
+     *
+     * @param int $id
+     * @param array $relations
+     * @return Model|null
+     */
+    public function findWithRelations(int $id, array $relations = []): ?Model;
+
+    /**
      * Get all records.
      *
      * @param array<string> $columns

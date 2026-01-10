@@ -5,7 +5,6 @@ namespace App\Services\Siswa;
 use App\Models\User;
 use App\Models\Role;
 use App\Repositories\Contracts\UserRepositoryInterface;
-use App\Services\User\UserNamingService;
 use App\Exceptions\BusinessValidationException;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -103,11 +102,8 @@ class SiswaWaliService
         // Generate random password
         $password = Str::random(8);
 
-        // Generate nama using UserNamingService
-        $nama = app(UserNamingService::class)->generateName([
-            'role_id' => $waliMuridRole->id,
-            'username' => "Wali dari {$namaSiswa}",
-        ]);
+        // Generate nama
+        $nama = "Wali dari {$namaSiswa}";
 
         $wali = User::create([
             'username' => $username,

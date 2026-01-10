@@ -10,10 +10,13 @@
     </div>
     <div class="flex flex-wrap gap-2">
         <button type="button" 
-                @click="if(confirm('Apakah Anda yakin ingin menghapus ' + selected.length + ' data pelanggaran terpilih? Tindakan ini tidak dapat dibatalkan.')) { alert('Fitur bulk delete sedang dalam pengembangan.'); }" 
+                @click="$dispatch('open-bulk-delete-riwayat-modal', { ids: selected, count: selected.length })" 
                 class="btn btn-sm btn-secondary text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 transition-colors">
             <x-ui.icon name="trash" size="14" />
             <span>Hapus Terpilih</span>
+        </button>
+        <button type="button" @click="selected = []; selectionMode = false;" class="btn btn-sm btn-white">
+            Batal
         </button>
     </div>
 </div>

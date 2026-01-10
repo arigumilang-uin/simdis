@@ -1,0 +1,82 @@
+@startuml SD_24_Edit_Jenis_Pelanggaran
+' ============================================================================
+' SEQUENCE DIAGRAM - EDIT JENIS PELANGGARAN
+' ============================================================================
+' Use Case: Kelola Jenis Pelanggaran
+' Aktor: Operator Sekolah
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-24: Edit Jenis Pelanggaran**
+
+actor "Operator\nSekolah" as OPERATOR
+
+box "Application Layer" #E8F5E9
+    participant "JenisPelanggaran\nController" as JPC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "JenisPelanggaran" as JP
+    participant "KategoriPelanggaran" as KP
+    database "MySQL" as DB
+end box
+
+== Tampilkan Form Edit ==
+
+OPERATOR -> JPC : GET /jenis-pelanggaran/id/edit
+activate JPC
+
+JPC -> JP : findOrFail(id)
+activate JP
+JP -> DB : SELECT * FROM jenis_pelanggaran WHERE id = ?
+DB --> JP : JenisPelanggaran data
+JP --> JPC : JenisPelanggaran object
+deactivate JP
+
+JPC -> KP : all()
+activate KP
+KP -> DB : SELECT * FROM kategori_pelanggaran
+DB --> KP : Kategori data
+KP --> JPC : Daftar Kategori
+deactivate KP
+
+JPC --> OPERATOR : Form edit (pre-filled)
+deactivate JPC
+
+== Proses Update ==
+
+OPERATOR -> JPC : PUT /jenis-pelanggaran/id\n(kategori_id, nama_pelanggaran,\npoin, deskripsi)
+activate JPC
+
+JPC -> JPC : validate()
+
+JPC -> JP : findOrFail(id)->update(data)
+activate JP
+JP -> DB : UPDATE jenis_pelanggaran SET\nkategori_id = ?, nama = ?,\npoin = ?, deskripsi = ?
+DB --> JP : Updated
+JP --> JPC : Success
+deactivate JP
+
+JPC --> OPERATOR : Redirect /jenis-pelanggaran\nFlash: "Jenis pelanggaran berhasil diperbarui"
+deactivate JPC
+
+@enduml

@@ -1,0 +1,87 @@
+@startuml AD_07_Catat_Pelanggaran
+' ============================================================================
+' ACTIVITY DIAGRAM - CATAT PELANGGARAN
+' ============================================================================
+' Use Case: Catat Pelanggaran
+' Aktor: Guru, Wali Kelas, Kaprodi, Waka Kesiswaan, Operator
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+    DiamondBackgroundColor #FFF8E1
+    DiamondBorderColor #FF8F00
+    ArrowColor #455A64
+}
+
+title **AD-07: Catat Pelanggaran**
+
+|#E8F5E9|Pencatat|
+start
+
+:Membuka form catat pelanggaran;
+
+|#E3F2FD|Sistem|
+
+:Menampilkan daftar siswa\nsesuai akses pengguna;
+
+:Menampilkan daftar jenis\npelanggaran yang aktif;
+
+|Pencatat|
+
+:Memilih siswa;
+
+:Memilih jenis pelanggaran;
+
+|#FFF3E0|Mesin Aturan|
+
+if (Jenis memiliki aturan frekuensi?) then (Ya)
+    :Menghitung frekuensi\npelanggaran siswa;
+    :Menentukan poin dan jenis surat\nberdasarkan aturan;
+    :Menentukan pembina\nyang bertugas;
+else (Tidak)
+    :Menggunakan poin standar\njenis pelanggaran;
+endif
+
+|Pencatat|
+
+:Mengisi tanggal pelanggaran;
+
+:Mengisi keterangan (opsional);
+
+:Mengunggah bukti foto (opsional);
+
+:Mengklik tombol Simpan;
+
+|Sistem|
+
+:Memvalidasi kelengkapan data;
+
+:Menyimpan data pelanggaran;
+
+if (Memicu tindak lanjut?) then (Ya)
+    :Membuat data tindak lanjut;
+    :Membuat surat panggilan;
+    :Mengirim notifikasi ke pembina;
+endif
+
+if (Memicu pembinaan?) then (Ya)
+    :Membuat data pembinaan;
+    :Mengirim notifikasi ke pembina;
+endif
+
+:Mencatat aktivitas pencatatan;
+
+|Pencatat|
+
+:Menampilkan pesan sukses;
+
+stop
+
+@enduml

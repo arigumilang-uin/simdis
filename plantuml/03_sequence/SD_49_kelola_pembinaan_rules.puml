@@ -1,0 +1,112 @@
+@startuml SD_49_Kelola_Pembinaan_Rules
+' ============================================================================
+' SEQUENCE DIAGRAM - KELOLA PEMBINAAN RULES
+' ============================================================================
+' Use Case: Kelola Aturan Sistem
+' Aktor: Operator Sekolah
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-49: Kelola Pembinaan Rules**
+
+actor "Operator\nSekolah" as OPERATOR
+
+box "Application Layer" #E8F5E9
+    participant "PembinaanRulesController" as PRC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "PembinaanInternalRule" as PIR
+    database "MySQL" as DB
+end box
+
+== Lihat Daftar Rules ==
+
+OPERATOR -> PRC : GET /pembinaan-rules
+activate PRC
+
+PRC -> PIR : orderBy(poin_min)->get()
+activate PIR
+PIR -> DB : SELECT * FROM pembinaan_internal_rules\nORDER BY poin_min ASC
+DB --> PIR : Rules data
+PIR --> PRC : Daftar Rules
+deactivate PIR
+
+PRC --> OPERATOR : Tampilkan daftar:\n- Poin Min-Max\n- Nama Tingkat\n- Role Pembina\n- Deskripsi
+deactivate PRC
+
+== Tambah Rule ==
+
+OPERATOR -> PRC : POST /pembinaan-rules\n(poin_min, poin_max,\nnama_tingkat, pembina_roles,\ndeskripsi)
+activate PRC
+
+PRC -> PRC : validate()
+
+PRC -> PIR : create(data)
+activate PIR
+PIR -> DB : INSERT INTO pembinaan_internal_rules
+DB --> PIR : Created
+PIR --> PRC : PembinaanInternalRule object
+deactivate PIR
+
+PRC --> OPERATOR : Redirect back\nFlash: "Rule pembinaan berhasil ditambahkan"
+deactivate PRC
+
+== Update Rule ==
+
+OPERATOR -> PRC : PUT /pembinaan-rules/id\n(poin_min, poin_max, ...)
+activate PRC
+
+PRC -> PIR : findOrFail(id)->update(data)
+activate PIR
+PIR -> DB : UPDATE pembinaan_internal_rules SET ...
+DB --> PIR : Updated
+PIR --> PRC : Success
+deactivate PIR
+
+PRC --> OPERATOR : Redirect back\nFlash: "Rule pembinaan berhasil diperbarui"
+deactivate PRC
+
+== Hapus Rule ==
+
+OPERATOR -> PRC : DELETE /pembinaan-rules/id
+activate PRC
+
+PRC -> PIR : findOrFail(id)->delete()
+activate PIR
+PIR -> DB : DELETE FROM pembinaan_internal_rules
+DB --> PIR : Deleted
+PIR --> PRC : Success
+deactivate PIR
+
+PRC --> OPERATOR : Redirect back\nFlash: "Rule pembinaan berhasil dihapus"
+deactivate PRC
+
+note right of PIR
+  **CONTOH RULES:**
+  1-10 poin = Tingkat 1 (Wali Kelas)
+  11-25 poin = Tingkat 2 (Kaprodi)
+  26-50 poin = Tingkat 3 (Waka)
+  51+ poin = Tingkat 4 (Kepala Sekolah)
+end note
+
+@enduml

@@ -1,0 +1,66 @@
+@startuml AD_12_Edit_Surat_Panggilan
+' ============================================================================
+' ACTIVITY DIAGRAM - EDIT SURAT PANGGILAN
+' ============================================================================
+' Use Case: Kelola Surat Panggilan - Edit
+' Aktor: Wali Kelas, Kaprodi, Waka Kesiswaan
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+    DiamondBackgroundColor #FFF8E1
+    DiamondBorderColor #FF8F00
+    ArrowColor #455A64
+}
+
+title **AD-12: Edit Surat Panggilan**
+
+|#E8F5E9|Pembina|
+start
+
+:Memilih tindak lanjut dari daftar;
+
+:Mengklik Edit Surat;
+
+|#E3F2FD|Sistem|
+
+:Memeriksa hak akses pembina;
+
+if (Pembina berwenang?) then (Ya)
+    :Menampilkan form edit surat;
+else (Tidak)
+    |Pembina|
+    :Menampilkan pesan error\nTidak memiliki akses;
+    stop
+endif
+
+|Pembina|
+
+:Mengubah data surat:\n- Tanggal menghadap\n- Nama orang tua\n- Keterangan tambahan;
+
+:Mengklik tombol Simpan;
+
+|Sistem|
+
+:Memvalidasi data;
+
+:Menyimpan perubahan surat;
+
+:Mencatat aktivitas perubahan;
+
+|Pembina|
+
+:Menampilkan pesan sukses;
+
+:Diarahkan ke pratinjau surat;
+
+stop
+
+@enduml

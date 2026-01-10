@@ -31,8 +31,11 @@ class SocialAuthController extends Controller
     public function handleGoogleCallback(): RedirectResponse
     {
         try {
+            // Stateful mode - validates state parameter for CSRF protection
+            // Requires database session driver for reliability
             $googleUser = Socialite::driver('google')->user();
         } catch (\Exception $e) {
+            \Log::error('Google OAuth error', ['error' => $e->getMessage()]);
             return redirect()->route('login')
                 ->withErrors(['google' => 'Gagal terhubung dengan Google. Silakan coba lagi.']);
         }

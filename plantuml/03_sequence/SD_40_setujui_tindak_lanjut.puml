@@ -1,0 +1,99 @@
+@startuml SD_40_Setujui_Tindak_Lanjut
+' ============================================================================
+' SEQUENCE DIAGRAM - SETUJUI TINDAK LANJUT
+' ============================================================================
+' Use Case: Validasi Kasus
+' Aktor: Kepala Sekolah (primary approver)
+' Deskripsi: Hanya Kepala Sekolah yang bisa approve di sistem ini
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-40: Setujui Tindak Lanjut**
+
+actor "Kepala Sekolah" as KEPSEK
+
+box "Application Layer" #E8F5E9
+    participant "TindakLanjutController" as TLC
+    participant "TindakLanjutService" as TLS
+    participant "TindakLanjutPolicy" as TLP
+end box
+
+box "Data Layer" #FFF3E0
+    participant "TindakLanjut" as TL
+    database "MySQL" as DB
+end box
+
+== Proses Setujui ==
+
+KEPSEK -> TLC : POST /tindak-lanjut/id/approve
+activate TLC
+
+TLC -> TL : findOrFail(id)
+activate TL
+TL -> DB : SELECT * FROM tindak_lanjut WHERE id = ?
+DB --> TL : TindakLanjut data
+TL --> TLC : TindakLanjut object
+deactivate TL
+
+TLC -> TLP : authorize(approve, tindakLanjut)
+activate TLP
+
+TLP -> TLP : Check status = MENUNGGU_PERSETUJUAN
+
+alt Status bukan MENUNGGU_PERSETUJUAN
+    TLP --> TLC : Forbidden
+    TLC --> KEPSEK : Error: "Kasus tidak dalam status\nmenunggu persetujuan"
+else Status valid
+    TLP -> TLP : Check user.hasRole('Kepala Sekolah')
+    
+    alt User bukan Kepala Sekolah
+        TLP --> TLC : Forbidden (403)
+        TLC --> KEPSEK : Error: "Anda tidak punya akses"
+    else User adalah Kepala Sekolah
+        TLP --> TLC : Allowed
+        deactivate TLP
+        
+        TLC -> TLS : approveTindakLanjut(id, auth.id)
+        activate TLS
+        
+        TLS -> TL : update()
+        activate TL
+        TL -> DB : UPDATE tindak_lanjut SET\nstatus = 'Disetujui',\napproved_by_user_id = auth.id,\napproved_at = NOW()
+        DB --> TL : Updated
+        TL --> TLS : Success
+        deactivate TL
+        
+        TLS --> TLC : Success
+        deactivate TLS
+        
+        TLC --> KEPSEK : Redirect back\nFlash: "Tindak lanjut berhasil disetujui"
+    end
+end
+deactivate TLC
+
+note right of TL
+  **SETELAH DISETUJUI:**
+  Pembina (Wali Kelas/Kaprodi/Waka)
+  dapat mulai menangani kasus
+end note
+
+@enduml

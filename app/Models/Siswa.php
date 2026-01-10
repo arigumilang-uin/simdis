@@ -32,7 +32,7 @@ class Siswa extends Model
             'created' => "{$userName} menambahkan siswa {$this->nama_siswa}",
             'updated' => "{$userName} mengubah data siswa {$this->nama_siswa}",
             'deleted' => "{$userName} menghapus siswa {$this->nama_siswa}",
-            default => parent::getActivityDescription($eventName),
+            default => "{$userName} melakukan {$eventName} pada data siswa {$this->nama_siswa}",
         };
     }
 

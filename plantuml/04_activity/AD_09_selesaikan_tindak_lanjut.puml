@@ -1,0 +1,59 @@
+@startuml AD_09_Selesaikan_Tindak_Lanjut
+' ============================================================================
+' ACTIVITY DIAGRAM - SELESAIKAN TINDAK LANJUT
+' ============================================================================
+' Use Case: Kelola Tindak Lanjut - Selesaikan
+' Aktor: Wali Kelas, Kaprodi, Waka Kesiswaan
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+    DiamondBackgroundColor #FFF8E1
+    DiamondBorderColor #FF8F00
+    ArrowColor #455A64
+}
+
+title **AD-09: Selesaikan Tindak Lanjut**
+
+|#E8F5E9|Pembina|
+start
+
+:Membuka kasus yang sedang ditangani;
+
+:Melakukan pembinaan kepada\nsiswa dan wali murid;
+
+:Mengklik Selesaikan Kasus;
+
+|#E3F2FD|Sistem|
+
+:Memeriksa hak akses pembina;
+
+if (Pembina berwenang?) then (Ya)
+    if (Status kasus sedang ditangani?) then (Ya)
+        :Mengubah status menjadi Selesai;
+        :Mencatat pembina yang menyelesaikan;
+        :Mencatat waktu penyelesaian;
+        :Mencatat aktivitas;
+        
+        |Pembina|
+        :Menampilkan pesan sukses\nKasus berhasil diselesaikan;
+        stop
+    else (Tidak)
+        |Pembina|
+        :Menampilkan pesan error\nStatus kasus tidak valid;
+        stop
+    endif
+else (Tidak)
+    |Pembina|
+    :Menampilkan pesan error\nTidak memiliki akses;
+    stop
+endif
+
+@enduml

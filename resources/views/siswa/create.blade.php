@@ -362,7 +362,7 @@
                         const response = await fetch(`{{ route('siswa.check-nisn') }}?nisn=${nisn}`);
                         const data = await response.json();
                         
-                        if (data.valid) {
+                        if (data.available) {
                             this.nisnStatus = 'valid';
                             this.nisnMessage = data.message;
                         } else {
@@ -397,7 +397,7 @@
                 clearTimeout(this.waliTimer);
                 this.waliTimer = setTimeout(async () => {
                     try {
-                        const response = await fetch(`{{ route('siswa.check-wali-hp') }}?hp=${hp}`);
+                        const response = await fetch(`{{ route('siswa.check-wali-hp') }}?phone=${hp}`);
                         const data = await response.json();
                         
                         if (data.status === 'found') {

@@ -108,7 +108,7 @@ class UserService
 
             DB::commit();
 
-            return $createdUser;
+            return UserData::from($createdUser);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -213,7 +213,33 @@ class UserService
      */
     public function deleteUser(int $userId): bool
     {
-        return $this->userRepo->delete($userId);
+        DB::beginTransaction();
+        try {
+            // DETACH FROM ASSIGNMENTS BEFORE DELETE
+            // Fixes Integrity constraint violation: 1451
+            
+            // 1. Detach from Jurusan (Kaprodi) - Direct Model Update for Bulk Action
+            \App\Models\Jurusan::where('kaprodi_user_id', $userId)
+                ->update(['kaprodi_user_id' => null]);
+            
+            // 2. Detach from Kelas (Wali Kelas)
+            \App\Models\Kelas::where('wali_kelas_user_id', $userId)
+                ->update(['wali_kelas_user_id' => null]);
+            
+            // 3. Detach from Siswa (Wali Murid)
+            \App\Models\Siswa::where('wali_murid_user_id', $userId)
+                ->update(['wali_murid_user_id' => null]);
+
+            $result = $this->userRepo->delete($userId);
+            
+            DB::commit();
+            
+            return $result;
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
     /**

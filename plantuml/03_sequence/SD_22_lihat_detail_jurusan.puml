@@ -1,0 +1,57 @@
+@startuml SD_22_Lihat_Detail_Jurusan
+' ============================================================================
+' SEQUENCE DIAGRAM - LIHAT DETAIL JURUSAN
+' ============================================================================
+' Use Case: Kelola Jurusan
+' Aktor: Operator, Kaprodi, Waka, Kepsek
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-22: Lihat Detail Jurusan**
+
+actor "Operator / Kaprodi /\nWaka / Kepsek" as USER
+
+box "Application Layer" #E8F5E9
+    participant "JurusanController" as JC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "Jurusan Model" as JM
+    database "MySQL" as DB
+end box
+
+== Lihat Detail ==
+
+USER -> JC : GET /jurusan/id
+activate JC
+
+JC -> JM : findOrFail(id)\nwith kaprodi, kelas.waliKelas
+activate JM
+JM -> DB : SELECT with all relations
+DB --> JM : Jurusan + relations data
+JM --> JC : Jurusan object with relations
+deactivate JM
+
+JC --> USER : Tampilkan detail jurusan:\n- Info Jurusan\n- Kaprodi yang ditugaskan\n- Daftar Kelas di jurusan
+deactivate JC
+
+@enduml

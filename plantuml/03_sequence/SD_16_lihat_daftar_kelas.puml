@@ -1,0 +1,66 @@
+@startuml SD_16_Lihat_Daftar_Kelas
+' ============================================================================
+' SEQUENCE DIAGRAM - LIHAT DAFTAR KELAS
+' ============================================================================
+' Use Case: Kelola Kelas
+' Aktor: Operator, Kepala Sekolah, Waka Kesiswaan, Kaprodi
+' Deskripsi: Melihat daftar kelas
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-16: Lihat Daftar Kelas**
+
+actor "Operator /\nKepsek / Waka /\nKaprodi" as USER
+
+box "Application Layer" #E8F5E9
+    participant "KelasController" as KC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "Kelas Model" as KM
+    participant "Jurusan Model" as JM
+    database "MySQL" as DB
+end box
+
+== Lihat Daftar Kelas ==
+
+USER -> KC : GET /kelas\n(?jurusan_id, ?tingkat)
+activate KC
+
+KC -> KM : with(['jurusan', 'waliKelas'])\n->withCount('siswa')\n->when(filters)
+activate KM
+KM -> DB : SELECT kelas.*, jurusan.nama,\nusers.nama as wali_kelas,\nCOUNT(siswa.id) as siswa_count\nFROM kelas LEFT JOIN jurusan\nLEFT JOIN users\nLEFT JOIN siswa
+DB --> KM : Kelas data with relations
+KM --> KC : Daftar Kelas
+deactivate KM
+
+KC -> JM : all()
+activate JM
+JM -> DB : SELECT * FROM jurusan
+DB --> JM : Jurusan data
+JM --> KC : Daftar Jurusan (untuk filter)
+deactivate JM
+
+KC --> USER : Tampilkan daftar kelas:\n- Nama Kelas, Jurusan, Tingkat\n- Wali Kelas, Jumlah Siswa\n- Filter: Jurusan, Tingkat
+deactivate KC
+
+@enduml

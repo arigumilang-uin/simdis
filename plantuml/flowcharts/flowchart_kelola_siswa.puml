@@ -1,0 +1,115 @@
+@startuml Flowchart_Kelola_Siswa
+' ============================================================================
+' FLOWCHART: ALUR KELOLA DATA SISWA
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+skinparam ActivityBackgroundColor #CFD8DC
+skinparam ActivityBorderColor #546E7A
+skinparam ActivityDiamondBackgroundColor #FFF8E1
+skinparam ActivityDiamondBorderColor #FF8F00
+
+title **FLOWCHART: KELOLA DATA SISWA**\n//Operator Sekolah//
+
+start
+
+:OPERATOR membuka menu
+Master Data Siswa;
+
+:Sistem menampilkan daftar
+siswa dengan filter & pagination;
+
+switch (Pilih aksi?)
+
+case (Tambah)
+  :Klik "Tambah Siswa";
+  :Tampilkan form tambah siswa;
+  :Input data siswa:
+  NISN, Nama, Kelas, No HP Wali;
+  :Klik Simpan;
+  :Validasi data;
+  
+  if (NISN sudah ada?) then (Ya)
+    #FFCDD2:Error: NISN sudah terdaftar;
+    stop
+  else (Tidak)
+    :Simpan ke tabel siswa;
+    :Log aktivitas;
+    #C8E6C9:Siswa berhasil ditambahkan;
+  endif
+
+case (Edit)
+  :Pilih siswa dari daftar;
+  :Klik "Edit";
+  :Tampilkan form edit dengan data;
+  :Ubah data yang diperlukan;
+  :Klik Simpan;
+  :Update tabel siswa;
+  :Log aktivitas;
+  #C8E6C9:Siswa berhasil diperbarui;
+
+case (Hapus)
+  :Pilih siswa dari daftar;
+  :Klik "Hapus";
+  :Tampilkan konfirmasi hapus;
+  
+  if (Konfirmasi hapus?) then (Ya)
+    :Input alasan penghapusan;
+    :Soft delete siswa
+    (set deleted_at);
+    :Simpan alasan_keluar;
+    :Log aktivitas;
+    #C8E6C9:Siswa berhasil dihapus;
+  else (Tidak)
+    :Batal hapus;
+  endif
+
+case (Import)
+  :Klik "Import CSV";
+  :Tampilkan form upload & link template;
+  :Download template CSV;
+  :Isi data di template;
+  :Upload file CSV;
+  :Parse & validasi CSV;
+  
+  if (Ada error?) then (Ya)
+    #FFCDD2:Tampilkan daftar error;
+    stop
+  else (Tidak)
+    :Insert batch ke tabel siswa;
+    :Log aktivitas;
+    #C8E6C9:X siswa berhasil diimport;
+  endif
+
+case (Restore)
+  :Klik tab "Siswa Terhapus";
+  :Tampilkan siswa soft deleted;
+  :Pilih siswa untuk restore;
+  :Klik "Restore";
+  :Hapus deleted_at & alasan_keluar;
+  :Log aktivitas;
+  #C8E6C9:Siswa berhasil direstore;
+
+endswitch
+
+stop
+
+legend right
+  **5 AKSI CRUD:**
+  • Tambah Siswa
+  • Edit Siswa
+  • Hapus (Soft Delete)
+  • Import dari CSV
+  • Restore Siswa
+  ----
+  **NOTE:**
+  Hapus menggunakan
+  Soft Delete untuk
+  menjaga integritas
+  data pelanggaran
+endlegend
+
+@enduml

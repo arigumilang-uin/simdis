@@ -1,0 +1,63 @@
+@startuml AD_18_Hapus_Pengguna
+' ============================================================================
+' ACTIVITY DIAGRAM - HAPUS PENGGUNA
+' ============================================================================
+' Use Case: Kelola Pengguna - Hapus
+' Aktor: Operator Sekolah
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+    DiamondBackgroundColor #FFF8E1
+    DiamondBorderColor #FF8F00
+    ArrowColor #455A64
+}
+
+title **AD-18: Hapus Pengguna**
+
+|#E8F5E9|Operator|
+start
+
+:Memilih pengguna dari daftar;
+
+:Mengklik tombol Hapus;
+
+|#E3F2FD|Sistem|
+
+if (Menghapus akun sendiri?) then (Ya)
+    |Operator|
+    :Menampilkan pesan error\nTidak dapat menghapus akun sendiri;
+    stop
+else (Tidak)
+    :Menampilkan dialog konfirmasi;
+endif
+
+|Operator|
+
+:Mengkonfirmasi penghapusan;
+
+|Sistem|
+
+:Menonaktifkan akun pengguna;
+
+note right
+  Akun dinonaktifkan, bukan dihapus.
+  Data tetap tersimpan untuk audit.
+end note
+
+:Mencatat aktivitas penghapusan;
+
+|Operator|
+
+:Menampilkan pesan sukses\nPengguna berhasil dihapus;
+
+stop
+
+@enduml

@@ -84,6 +84,10 @@ Route::middleware(['auth', 'profile.completed'])->group(function () {
             ->name('bulk-force-delete')
             ->middleware('can:forceDelete,App\Models\Siswa');
 
+        Route::post('/bulk-restore', [SiswaArchiveController::class, 'bulkRestore'])
+            ->name('bulk-restore')
+            ->middleware('can:restore,App\Models\Siswa');
+
         // =============================================================
         // AJAX CHECKS (SiswaController)
         // =============================================================

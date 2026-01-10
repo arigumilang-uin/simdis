@@ -146,6 +146,11 @@ class SiswaBulkController extends Controller
      */
     public function deleteSelected(Request $request): RedirectResponse
     {
+        // Parse ids from comma-separated string to array
+        $idsRaw = $request->input('ids');
+        $siswaIds = is_array($idsRaw) ? $idsRaw : array_filter(explode(',', $idsRaw ?? ''));
+        $request->merge(['siswa_ids' => array_map('intval', $siswaIds)]);
+
         $validated = $request->validate([
             'siswa_ids' => 'required|array|min:1',
             'siswa_ids.*' => 'exists:siswa,id',

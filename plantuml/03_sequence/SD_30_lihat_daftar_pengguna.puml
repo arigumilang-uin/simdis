@@ -1,0 +1,65 @@
+@startuml SD_30_Lihat_Daftar_Pengguna
+' ============================================================================
+' SEQUENCE DIAGRAM - LIHAT DAFTAR PENGGUNA
+' ============================================================================
+' Use Case: Kelola Pengguna
+' Aktor: Operator Sekolah, Kepala Sekolah (view only)
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-30: Lihat Daftar Pengguna**
+
+actor "Operator /\nKepala Sekolah" as USER
+
+box "Application Layer" #E8F5E9
+    participant "UserController" as UC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "User Model" as UM
+    participant "Role Model" as RM
+    database "MySQL" as DB
+end box
+
+== Lihat Daftar ==
+
+USER -> UC : GET /users\n(?role_id, ?status, ?search)
+activate UC
+
+UC -> UM : with role\nwhen(role_id, filter)\nwhen(status, filter)\nwhen(search, filter)\npaginate(20)
+activate UM
+UM -> DB : SELECT users.*, roles.nama_role\nFROM users\nJOIN roles\nWHERE conditions
+DB --> UM : Users data
+UM --> UC : Paginated Users
+deactivate UM
+
+UC -> RM : all()
+activate RM
+RM -> DB : SELECT * FROM roles
+DB --> RM : Roles data
+RM --> UC : Daftar Roles (untuk filter)
+deactivate RM
+
+UC --> USER : Tampilkan daftar pengguna:\n- Nama, Username, Email\n- Role, Status (Aktif/Nonaktif)\n- Terakhir Login\n- Filter by Role, Status
+deactivate UC
+
+@enduml

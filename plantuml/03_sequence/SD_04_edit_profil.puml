@@ -1,0 +1,76 @@
+@startuml SD_04_Edit_Profil
+' ============================================================================
+' SEQUENCE DIAGRAM - EDIT PROFIL
+' ============================================================================
+' Use Case: Kelola Profil
+' Aktor: Semua pengguna
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-04: Edit Profil**
+
+actor "Semua\nPengguna" as USER
+
+box "Application Layer" #E8F5E9
+    participant "UserController" as UC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "User Model" as UM
+    database "MySQL" as DB
+end box
+
+== Tampilkan Form Edit ==
+
+USER -> UC : GET /profile/edit
+activate UC
+
+UC -> UM : Auth::user()
+activate UM
+UM --> UC : User object
+deactivate UM
+
+UC --> USER : Form edit profil (pre-filled):\n- Email, No. HP
+deactivate UC
+
+== Simpan Perubahan ==
+
+USER -> UC : PUT /profile\n(email, phone)
+activate UC
+
+UC -> UC : validate(email, phone)
+
+alt Validasi gagal
+    UC --> USER : Error validasi
+else Validasi sukses
+    UC -> UM : Auth::user()->update(data)
+    activate UM
+    UM -> DB : UPDATE users SET\nemail = ?, phone = ?
+    DB --> UM : Updated
+    UM --> UC : Success
+    deactivate UM
+    
+    UC --> USER : Redirect /profile\nFlash: "Profil berhasil diperbarui"
+end
+deactivate UC
+
+@enduml

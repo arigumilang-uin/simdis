@@ -1,0 +1,94 @@
+@startuml Flowchart_Surat_Panggilan
+' ============================================================================
+' FLOWCHART: ALUR KELOLA SURAT PANGGILAN
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+skinparam ActivityBackgroundColor #E3F2FD
+skinparam ActivityBorderColor #1976D2
+skinparam ActivityDiamondBackgroundColor #FFF8E1
+skinparam ActivityDiamondBorderColor #FF8F00
+
+title **FLOWCHART: KELOLA SURAT PANGGILAN**\n//Pembina: Wali Kelas, Kaprodi, Waka Kesiswaan, Waka Sarana//
+
+start
+
+:PEMBINA membuka
+detail Tindak Lanjut;
+
+:Sistem menampilkan detail
+kasus dengan surat panggilan;
+
+:Klik "Lihat Surat";
+
+:Render template surat
+dengan data aktual;
+
+:Tampilkan preview surat
+dalam format HTML;
+
+:Review isi surat:
+- Nomor surat
+- Data siswa
+- Tanggal pertemuan
+- Keperluan;
+
+if (Perlu edit?) then (Ya)
+  :Klik "Edit Surat";
+  :Tampilkan form edit surat;
+  :Edit field:
+  - Lampiran
+  - Hal/Perihal
+  - Tanggal pertemuan
+  - Waktu pertemuan
+  - Tempat
+  - Keperluan;
+  :Klik Simpan;
+  :Update data surat;
+  :Log aktivitas "Edit Surat";
+  #C8E6C9:Surat berhasil diperbarui;
+endif
+
+if (Lanjut cetak?) then (Ya)
+  :Klik "Cetak Surat";
+  :Generate PDF menggunakan DomPDF;
+  :Simpan PDF ke storage;
+  :Buat record print_log:
+  user_id, printed_at, ip_address;
+  :Buka PDF di tab baru browser;
+  :Review PDF di browser;
+  
+  if (Cetak fisik?) then (Ya)
+    :Klik Print di browser;
+    :Cetak ke printer;
+    #C8E6C9:Surat fisik siap
+    untuk pertemuan wali;
+  else (Tidak)
+    :Simpan PDF untuk cetak nanti;
+  endif
+else (Tidak)
+endif
+
+stop
+
+legend right
+  **3 AKSI UTAMA:**
+  • Preview Surat
+  • Edit Surat
+  • Cetak Surat (PDF)
+  ----
+  **PEMBINA (4 Role):**
+  • Wali Kelas
+  • Kaprodi
+  • Waka Kesiswaan
+  • Waka Sarana
+  ----
+  **TEKNOLOGI:**
+  • DomPDF (Generate PDF)
+  • Print Log (Audit Trail)
+endlegend
+
+@enduml

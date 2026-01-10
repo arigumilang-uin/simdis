@@ -1,0 +1,80 @@
+@startuml COMP_06_External
+' ============================================================================
+' COMPONENT DIAGRAM - EXTERNAL PACKAGES
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 11
+skinparam linetype polyline
+
+skinparam component {
+    BackgroundColor #FFFFFF
+    BorderColor #37474F
+    FontColor #212121
+}
+
+skinparam package {
+    BackgroundColor #FAFAFA
+    BorderColor #9E9E9E
+    FontColor #424242
+}
+
+title **COMP-06: External Packages**
+
+package "System Components" as SYS #E3F2FD {
+    [Services] as S_SVC
+    [Models] as S_MDL
+    [DTOs] as S_DTO
+    [Blade Views] as S_BLADE
+}
+
+package "External Packages" as EXT #E8F5E9 {
+    [barryvdh/dompdf] as DOMPDF
+    [spatie/activitylog] as ACTLOG
+    [spatie/laravel-data] as SPDATA
+    [blade-lucide-icons] as LUCIDE
+}
+
+package "Framework & Build" as FW #FFF3E0 {
+    [Laravel 12.x] as LARAVEL
+    [Vite 7.x] as VITE
+    [TailwindCSS 4] as TW
+    [Alpine.js 3] as ALPINE
+}
+
+' System -> External Packages
+S_SVC -down-> DOMPDF : generate PDF
+S_MDL -down-> ACTLOG : activity log
+S_DTO -down-> SPDATA : type safety
+S_BLADE -down-> LUCIDE : icons
+
+' System -> Framework
+S_SVC -down-> LARAVEL : service container
+S_MDL -down-> LARAVEL : Eloquent ORM
+S_BLADE -down-> LARAVEL : Blade engine
+
+' UI assets -> Build
+S_BLADE -down-> TW : styling
+S_BLADE -down-> ALPINE : interactivity
+TW -down-> VITE : compile
+ALPINE -down-> VITE : bundle
+
+note right of DOMPDF
+  PDF Generation untuk
+  Surat Panggilan & Laporan
+end note
+
+note right of ACTLOG
+  Audit Trail untuk
+  semua perubahan data
+end note
+
+note bottom of LARAVEL
+  **Tech Stack:**
+  Laravel 12.x + PHP 8.3
+  Vite 7.x + Node.js
+end note
+
+@enduml

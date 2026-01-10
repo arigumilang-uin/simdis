@@ -34,7 +34,8 @@ class CreateKelasRequest extends FormRequest
             'jurusan_id' => ['required', 'integer', 'exists:jurusan,id'],
             'konsentrasi_id' => ['nullable', 'integer', 'exists:konsentrasi,id'],
             'wali_kelas_user_id' => ['nullable', 'integer'],
-            'create_wali' => ['nullable', 'boolean'], // For auto-creating wali kelas user
+            'create_wali' => ['nullable', 'boolean'],
+            'rombel' => ['nullable', 'string', 'max:10'], // For auto-creating wali kelas user
         ];
     }
 

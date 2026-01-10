@@ -63,7 +63,7 @@ class SiswaTransferController extends Controller
 
         try {
             $siswa = $this->transferService->getSiswaForTransfer($kelasId);
-            $kelas = \App\Models\Kelas::with('jurusan')->find($kelasId);
+            $kelas = \App\Models\Kelas::with(['jurusan', 'waliKelas'])->find($kelasId);
             
             return response()->json([
                 'success' => true,

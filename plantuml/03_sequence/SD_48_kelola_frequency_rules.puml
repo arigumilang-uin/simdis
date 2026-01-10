@@ -1,0 +1,120 @@
+@startuml SD_48_Kelola_Frequency_Rules
+' ============================================================================
+' SEQUENCE DIAGRAM - KELOLA FREQUENCY RULES
+' ============================================================================
+' Use Case: Kelola Aturan Sistem
+' Aktor: Operator Sekolah
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-48: Kelola Frequency Rules**
+
+actor "Operator\nSekolah" as OPERATOR
+
+box "Application Layer" #E8F5E9
+    participant "FrequencyRulesController" as FRC
+    participant "FrequencyRuleService" as FRS
+end box
+
+box "Data Layer" #FFF3E0
+    participant "JenisPelanggaran" as JP
+    participant "FrequencyRule" as FR
+    database "MySQL" as DB
+end box
+
+== Lihat Rules untuk Jenis Pelanggaran ==
+
+OPERATOR -> FRC : GET /frequency-rules/jenis-pelanggaran-id
+activate FRC
+
+FRC -> JP : findOrFail(id)\nwith frequencyRules
+activate JP
+JP -> DB : SELECT with rules
+DB --> JP : JenisPelanggaran + rules data
+JP --> FRC : JenisPelanggaran object
+deactivate JP
+
+FRC --> OPERATOR : Tampilkan daftar rules:\n- Frekuensi Min-Max\n- Jenis Surat\n- Role Pembina\n- Urutan Tampil
+deactivate FRC
+
+== Tambah Rule ==
+
+OPERATOR -> FRC : POST /frequency-rules/jenis-id\n(frequency_min, frequency_max,\nsurat_type, pembina_roles)
+activate FRC
+
+FRC -> FRC : validate()
+
+FRC -> FRS : createRule(jenisId, data)
+activate FRS
+
+FRS -> FR : create(data)
+activate FR
+FR -> DB : INSERT INTO frequency_rules
+DB --> FR : Created
+FR --> FRS : FrequencyRule object
+deactivate FR
+
+FRS --> FRC : FrequencyRule
+deactivate FRS
+
+FRC --> OPERATOR : Redirect back\nFlash: "Rule berhasil ditambahkan"
+deactivate FRC
+
+== Update Rule ==
+
+OPERATOR -> FRC : PUT /frequency-rules/rule/id\n(frequency_min, frequency_max,\nsurat_type, pembina_roles)
+activate FRC
+
+FRC -> FRS : updateRule(ruleId, data)
+activate FRS
+FRS -> FR : findOrFail(id)->update(data)
+activate FR
+FR -> DB : UPDATE frequency_rules SET ...
+DB --> FR : Updated
+FR --> FRS : Success
+deactivate FR
+FRS --> FRC : Success
+deactivate FRS
+
+FRC --> OPERATOR : Redirect back\nFlash: "Rule berhasil diperbarui"
+deactivate FRC
+
+== Hapus Rule ==
+
+OPERATOR -> FRC : DELETE /frequency-rules/rule/id
+activate FRC
+
+FRC -> FRS : deleteRule(ruleId)
+activate FRS
+FRS -> FR : delete()
+activate FR
+FR -> DB : DELETE FROM frequency_rules
+DB --> FR : Deleted
+FR --> FRS : Success
+deactivate FR
+FRS --> FRC : Success
+deactivate FRS
+
+FRC --> OPERATOR : Redirect back\nFlash: "Rule berhasil dihapus"
+deactivate FRC
+
+@enduml

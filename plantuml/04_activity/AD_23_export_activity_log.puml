@@ -1,0 +1,48 @@
+@startuml AD_23_Export_Activity_Log
+' ============================================================================
+' ACTIVITY DIAGRAM - EXPORT ACTIVITY LOG
+' ============================================================================
+' Use Case: Export Jejak Audit
+' Aktor: Operator, Waka Kesiswaan
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+    DiamondBackgroundColor #FFF8E1
+    DiamondBorderColor #FF8F00
+    ArrowColor #455A64
+}
+
+title **AD-23: Export Jejak Audit**
+
+|#E8F5E9|Pengguna|
+start
+
+:Membuka menu Export Jejak Audit;
+
+:Menentukan filter:\n- Tanggal mulai\n- Tanggal akhir;
+
+:Mengklik tombol Export;
+
+|#E3F2FD|Sistem|
+
+:Mengambil data aktivitas\nsesuai filter;
+
+:Menyusun data dalam format CSV;
+
+:Menyertakan kolom:\nWaktu, Pelaku, Jenis Aksi,\nData, Deskripsi, Nilai Sebelum,\nNilai Sesudah;
+
+|Pengguna|
+
+:Mengunduh file CSV;
+
+stop
+
+@enduml

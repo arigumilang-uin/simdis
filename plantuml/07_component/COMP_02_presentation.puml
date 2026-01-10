@@ -1,0 +1,70 @@
+@startuml COMP_02_Presentation
+' ============================================================================
+' COMPONENT DIAGRAM - PRESENTATION LAYER
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 11
+skinparam linetype polyline
+
+skinparam component {
+    BackgroundColor #FFFFFF
+    BorderColor #37474F
+    FontColor #212121
+}
+
+skinparam package {
+    BackgroundColor #FAFAFA
+    BorderColor #9E9E9E
+    FontColor #424242
+}
+
+title **COMP-02: Presentation Layer**
+
+package "Blade Views" as BLADE #E3F2FD {
+    [layouts/] as LAY
+    [components/] as COMP
+    [pages/ (dashboard, pelanggaran, dll)] as PAGES
+}
+
+package "Frontend Assets" as ASSETS #E8F5E9 {
+    [TailwindCSS 4] as TW
+    [Alpine.js 3] as ALPINE
+    [Lucide Icons] as ICONS
+}
+
+package "Build Tool" as BUILD #FFF3E0 {
+    [Vite 7.x] as VITE
+}
+
+' Views structure
+PAGES -up-> LAY : extends
+LAY -right-> COMP : includes
+
+' Components use Assets
+COMP -down-> TW : styling
+COMP -down-> ALPINE : interactivity
+COMP -down-> ICONS : icons
+
+' Assets compiled by Vite
+TW -down-> VITE : compile
+ALPINE -down-> VITE : bundle
+ICONS -down-> VITE : include
+
+note right of BLADE
+  **~50+ Blade Files:**
+  dashboard/, pelanggaran/,
+  tindaklanjut/, pembinaan/,
+  masterdata/, report/, audit/
+end note
+
+note right of ASSETS
+  **Modern Frontend Stack:**
+  - TailwindCSS: Utility CSS
+  - Alpine.js: Reactive UI
+  - Lucide: SVG Icons
+end note
+
+@enduml

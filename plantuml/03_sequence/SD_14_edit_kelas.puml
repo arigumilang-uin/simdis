@@ -1,0 +1,91 @@
+@startuml SD_14_Edit_Kelas
+' ============================================================================
+' SEQUENCE DIAGRAM - EDIT KELAS
+' ============================================================================
+' Use Case: Kelola Kelas
+' Aktor: Operator Sekolah
+' Deskripsi: Mengubah data kelas
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-14: Edit Kelas**
+
+actor "Operator\nSekolah" as OPERATOR
+
+box "Application Layer" #E8F5E9
+    participant "KelasController" as KC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "Kelas Model" as KM
+    participant "Jurusan Model" as JM
+    participant "User Model" as UM
+    database "MySQL" as DB
+end box
+
+== Tampilkan Form Edit ==
+
+OPERATOR -> KC : GET /kelas/{id}/edit
+activate KC
+
+KC -> KM : findOrFail(id)
+activate KM
+KM -> DB : SELECT * FROM kelas WHERE id = ?
+DB --> KM : Kelas data
+KM --> KC : Kelas object
+deactivate KM
+
+KC -> JM : all()
+activate JM
+JM -> DB : SELECT * FROM jurusan
+DB --> JM : Jurusan data
+JM --> KC : Daftar Jurusan
+deactivate JM
+
+KC -> UM : Wali Kelas tersedia + current wali
+activate UM
+UM -> DB : SELECT * FROM users WHERE role = wali_kelas
+DB --> UM : User data
+UM --> KC : Daftar User
+deactivate UM
+
+KC --> OPERATOR : Form edit kelas (pre-filled)
+deactivate KC
+
+== Proses Update ==
+
+OPERATOR -> KC : PUT /kelas/{id}\n(nama_kelas, jurusan_id, tingkat,\nwali_kelas_user_id)
+activate KC
+
+KC -> KC : validate()
+
+KC -> KM : findOrFail(id)->update(data)
+activate KM
+KM -> DB : UPDATE kelas SET\nnama_kelas = ?,\njurusan_id = ?,\ntingkat = ?,\nwali_kelas_user_id = ?\nWHERE id = ?
+DB --> KM : Updated
+KM --> KC : Success
+deactivate KM
+
+KC --> OPERATOR : Redirect /kelas\nFlash: "Kelas berhasil diperbarui"
+deactivate KC
+
+@enduml

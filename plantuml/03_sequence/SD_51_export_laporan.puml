@@ -1,0 +1,105 @@
+@startuml SD_51_Export_Laporan
+' ============================================================================
+' SEQUENCE DIAGRAM - EXPORT LAPORAN
+' ============================================================================
+' Use Case: Lihat Laporan
+' Aktor: Kepala Sekolah, Waka, Operator
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-51: Export Laporan**
+
+actor "Kepsek / Waka /\nOperator" as USER
+
+box "Application Layer" #E8F5E9
+    participant "ReportController" as RC
+    participant "ExportService" as ES
+end box
+
+box "Data Layer" #FFF3E0
+    participant "RiwayatPelanggaran" as RP
+    database "MySQL" as DB
+end box
+
+box "External" #FCE4EC
+    participant "DomPDF" as PDF
+end box
+
+== Export ke PDF ==
+
+USER -> RC : GET /report/export\n(format=pdf, dari, sampai,\nkelas_id, jurusan_id)
+activate RC
+
+RC -> ES : exportReport(filters, format)
+activate ES
+
+ES -> RP : get data with filters
+activate RP
+RP -> DB : SELECT with conditions
+DB --> RP : Collection data
+RP --> ES : Riwayat collection
+deactivate RP
+
+ES -> PDF : loadView('pdf.laporan', data)
+activate PDF
+PDF -> PDF : Render HTML to PDF
+PDF --> ES : PDF binary
+deactivate PDF
+
+ES --> RC : PDF content
+deactivate ES
+
+RC --> USER : Download:\nLaporan_Pelanggaran_20241228.pdf
+deactivate RC
+
+== Export ke CSV ==
+
+USER -> RC : GET /report/export\n(format=csv, dari, sampai)
+activate RC
+
+RC -> ES : exportReport(filters, format)
+activate ES
+
+ES -> RP : get data with filters
+activate RP
+RP -> DB : SELECT with conditions
+DB --> RP : Collection data
+RP --> ES : Riwayat collection
+deactivate RP
+
+ES -> ES : Build CSV content
+
+note right of ES
+  Format CSV:
+  No, Tanggal, NISN,
+  Nama, Kelas, Jurusan,
+  Pelanggaran, Poin,
+  Status, Dicatat Oleh
+end note
+
+ES --> RC : CSV content
+deactivate ES
+
+RC --> USER : Download:\nLaporan_Pelanggaran_20241228.csv
+deactivate RC
+
+@enduml

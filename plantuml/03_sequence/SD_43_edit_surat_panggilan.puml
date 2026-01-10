@@ -1,0 +1,84 @@
+@startuml SD_43_Edit_Surat_Panggilan
+' ============================================================================
+' SEQUENCE DIAGRAM - EDIT SURAT PANGGILAN
+' ============================================================================
+' Use Case: Kelola Surat Panggilan
+' Aktor: Wali Kelas, Kaprodi, Waka Kesiswaan (sesuai pembina_roles)
+' Deskripsi: Edit konten surat sebelum cetak
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-43: Edit Surat Panggilan**
+
+actor "Wali Kelas / Kaprodi /\nWaka Kesiswaan" as USER
+
+box "Application Layer" #E8F5E9
+    participant "TindakLanjutController" as TLC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "TindakLanjut" as TL
+    participant "SuratPanggilan" as SP
+    database "MySQL" as DB
+end box
+
+== Tampilkan Form Edit ==
+
+USER -> TLC : GET /tindak-lanjut/id/edit-surat
+activate TLC
+
+TLC -> TL : findOrFail(id) with suratPanggilan
+activate TL
+TL -> DB : SELECT * FROM tindak_lanjut with surat
+DB --> TL : TindakLanjut + Surat data
+TL --> TLC : TindakLanjut + Surat
+deactivate TL
+
+TLC -> TLC : Check authorization\n(user.role IN tindakLanjut.pembina_roles)
+
+alt User tidak memiliki akses
+    TLC --> USER : Error (403)
+else User memiliki akses
+    TLC --> USER : Form edit surat:\n- Tanggal Menghadap\n- Nama Orang Tua\n- Keterangan Tambahan
+end
+deactivate TLC
+
+== Proses Update ==
+
+USER -> TLC : PUT /tindak-lanjut/id/update-surat\n(tanggal_menghadap, nama_ortu,\nketerangan)
+activate TLC
+
+TLC -> TLC : validate()
+
+TLC -> TLC : Check authorization
+
+TLC -> SP : update()
+activate SP
+SP -> DB : UPDATE surat_panggilan SET\ntanggal_menghadap = ?,\nnama_orang_tua = ?,\nketerangan = ?
+DB --> SP : Updated
+SP --> TLC : Success
+deactivate SP
+
+TLC --> USER : Redirect to preview\nFlash: "Surat berhasil diperbarui"
+deactivate TLC
+
+@enduml

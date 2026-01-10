@@ -1,0 +1,57 @@
+@startuml AD_21_Export_Laporan
+' ============================================================================
+' ACTIVITY DIAGRAM - EXPORT LAPORAN
+' ============================================================================
+' Use Case: Export Laporan (PDF/CSV)
+' Aktor: Kepala Sekolah, Waka Kesiswaan, Operator
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+    DiamondBackgroundColor #FFF8E1
+    DiamondBorderColor #FF8F00
+    ArrowColor #455A64
+}
+
+title **AD-21: Export Laporan**
+
+|#E8F5E9|Pengguna|
+start
+
+:Membuka menu Export Laporan;
+
+:Menentukan filter:\n- Tanggal mulai\n- Tanggal akhir\n- Kelas (opsional)\n- Jurusan (opsional);
+
+:Memilih format: PDF atau CSV;
+
+:Mengklik tombol Export;
+
+|#E3F2FD|Sistem|
+
+:Mengambil data sesuai filter;
+
+if (Format PDF?) then (Ya)
+    :Menyusun laporan PDF\ndengan kop surat sekolah;
+    :Menyertakan tabel data;
+    :Menyertakan ringkasan statistik;
+    
+    |Pengguna|
+    :Mengunduh file PDF;
+    stop
+else (CSV)
+    :Menyusun data dalam format CSV;
+    :Menyertakan header kolom:\nNo, Tanggal, NISN, Nama,\nKelas, Jurusan, Pelanggaran,\nPoin, Keterangan, Pencatat;
+    
+    |Pengguna|
+    :Mengunduh file CSV;
+    stop
+endif
+
+@enduml

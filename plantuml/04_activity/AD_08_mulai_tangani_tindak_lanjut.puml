@@ -1,0 +1,67 @@
+@startuml AD_08_Mulai_Tangani_Tindak_Lanjut
+' ============================================================================
+' ACTIVITY DIAGRAM - MULAI TANGANI TINDAK LANJUT
+' ============================================================================
+' Use Case: Kelola Tindak Lanjut - Mulai Tangani
+' Aktor: Wali Kelas, Kaprodi, Waka Kesiswaan
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+    DiamondBackgroundColor #FFF8E1
+    DiamondBorderColor #FF8F00
+    ArrowColor #455A64
+}
+
+title **AD-08: Mulai Tangani Tindak Lanjut**
+
+|#E8F5E9|Pembina|
+start
+
+:Membuka menu Tindak Lanjut;
+
+|#E3F2FD|Sistem|
+
+:Menampilkan daftar kasus\nyang menjadi tanggung jawab pembina;
+
+|Pembina|
+
+:Memilih kasus yang akan ditangani;
+
+:Melihat pratinjau surat panggilan;
+
+:Mengklik Mulai Tangani;
+
+|Sistem|
+
+:Memeriksa hak akses pembina;
+
+if (Pembina berwenang?) then (Ya)
+    if (Status kasus memungkinkan?) then (Ya)
+        :Mengubah status menjadi Ditangani;
+        :Mencatat pembina yang menangani;
+        :Mencatat waktu mulai penanganan;
+        :Mencatat aktivitas;
+        
+        |Pembina|
+        :Menampilkan pesan sukses\nKasus berhasil dimulai;
+        stop
+    else (Tidak)
+        |Pembina|
+        :Menampilkan pesan error\nStatus kasus tidak valid;
+        stop
+    endif
+else (Tidak)
+    |Pembina|
+    :Menampilkan pesan error\nTidak memiliki akses;
+    stop
+endif
+
+@enduml

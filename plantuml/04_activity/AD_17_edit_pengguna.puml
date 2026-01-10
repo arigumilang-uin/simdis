@@ -1,0 +1,59 @@
+@startuml AD_17_Edit_Pengguna
+' ============================================================================
+' ACTIVITY DIAGRAM - EDIT PENGGUNA
+' ============================================================================
+' Use Case: Kelola Pengguna - Edit
+' Aktor: Operator Sekolah
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+    DiamondBackgroundColor #FFF8E1
+    DiamondBorderColor #FF8F00
+    ArrowColor #455A64
+}
+
+title **AD-17: Edit Pengguna**
+
+|#E8F5E9|Operator|
+start
+
+:Memilih pengguna dari daftar;
+
+:Mengklik tombol Edit;
+
+|#E3F2FD|Sistem|
+
+:Menampilkan form edit pengguna;
+
+|Operator|
+
+:Mengubah data yang diperlukan:\n- Nama, Email, Role\n- Nomor HP, NIP, NUPTK\n- Status aktif;
+
+:Mengklik tombol Simpan;
+
+|Sistem|
+
+:Memvalidasi data;
+
+if (Email sudah digunakan pengguna lain?) then (Ya)
+    |Operator|
+    :Menampilkan pesan error\nEmail sudah digunakan;
+    stop
+else (Tidak)
+    :Menyimpan perubahan data;
+    :Mencatat aktivitas perubahan;
+    
+    |Operator|
+    :Menampilkan pesan sukses\nPengguna berhasil diperbarui;
+    stop
+endif
+
+@enduml

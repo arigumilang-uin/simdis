@@ -1,0 +1,83 @@
+@startuml AD_01_Login
+' ============================================================================
+' ACTIVITY DIAGRAM - LOGIN
+' ============================================================================
+' Use Case: Login
+' Aktor: Semua Pengguna
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+    DiamondBackgroundColor #FFF8E1
+    DiamondBorderColor #FF8F00
+    ArrowColor #455A64
+}
+
+title **AD-01: Proses Login**
+
+|#E8F5E9|Pengguna|
+start
+
+:Membuka halaman login;
+
+:Memasukkan identitas\n(Username/Email/NIP/NUPTK/No.HP);
+
+:Memasukkan password;
+
+:Mencentang Ingat Saya (opsional);
+
+:Mengklik tombol Login;
+
+|#E3F2FD|Sistem|
+
+:Memvalidasi kelengkapan input;
+
+:Mencari data pengguna\nberdasarkan identitas;
+
+if (Pengguna ditemukan?) then (Ya)
+    :Memverifikasi password;
+    
+    if (Password benar?) then (Ya)
+        :Membuat sesi login;
+        
+        if (Akun aktif?) then (Ya)
+            :Mencatat waktu login terakhir;
+            :Mengambil data role pengguna;
+            
+            if (Role valid?) then (Ya)
+                :Menentukan halaman tujuan\nberdasarkan role;
+                
+                |Pengguna|
+                :Diarahkan ke dashboard;
+                stop
+            else (Tidak)
+                :Menghapus sesi;
+                |Pengguna|
+                :Menampilkan pesan error\nRole tidak valid;
+                stop
+            endif
+        else (Tidak)
+            :Menghapus sesi;
+            |Pengguna|
+            :Menampilkan pesan error\nAkun dinonaktifkan;
+            stop
+        endif
+    else (Tidak)
+        |Pengguna|
+        :Menampilkan pesan error\nLogin gagal;
+        stop
+    endif
+else (Tidak)
+    |Pengguna|
+    :Menampilkan pesan error\nLogin gagal;
+    stop
+endif
+
+@enduml

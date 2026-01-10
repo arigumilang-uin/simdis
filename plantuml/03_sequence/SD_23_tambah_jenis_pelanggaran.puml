@@ -1,0 +1,81 @@
+@startuml SD_23_Tambah_Jenis_Pelanggaran
+' ============================================================================
+' SEQUENCE DIAGRAM - TAMBAH JENIS PELANGGARAN
+' ============================================================================
+' Use Case: Kelola Jenis Pelanggaran
+' Aktor: Operator Sekolah
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-23: Tambah Jenis Pelanggaran**
+
+actor "Operator\nSekolah" as OPERATOR
+
+box "Application Layer" #E8F5E9
+    participant "JenisPelanggaran\nController" as JPC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "JenisPelanggaran" as JP
+    participant "KategoriPelanggaran" as KP
+    database "MySQL" as DB
+end box
+
+== Tampilkan Form ==
+
+OPERATOR -> JPC : GET /jenis-pelanggaran/create
+activate JPC
+
+JPC -> KP : all()
+activate KP
+KP -> DB : SELECT * FROM kategori_pelanggaran
+DB --> KP : Kategori data
+KP --> JPC : Daftar Kategori
+deactivate KP
+
+JPC --> OPERATOR : Form tambah jenis:\n- Pilih Kategori\n- Nama Pelanggaran\n- Poin\n- Deskripsi
+deactivate JPC
+
+== Proses Simpan ==
+
+OPERATOR -> JPC : POST /jenis-pelanggaran\n(kategori_id, nama_pelanggaran,\npoin, deskripsi)
+activate JPC
+
+JPC -> JPC : validate()
+
+JPC -> JP : create(data)
+activate JP
+JP -> DB : INSERT INTO jenis_pelanggaran\n(kategori_id, nama, poin, deskripsi,\nis_active = false)
+DB --> JP : Created
+JP --> JPC : JenisPelanggaran object
+deactivate JP
+
+note right of JP
+  is_active = false by default
+  Harus tambah Frequency Rules
+  sebelum bisa diaktifkan
+end note
+
+JPC --> OPERATOR : Redirect /jenis-pelanggaran\nFlash: "Jenis pelanggaran berhasil ditambahkan"
+deactivate JPC
+
+@enduml

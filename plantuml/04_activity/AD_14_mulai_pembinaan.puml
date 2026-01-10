@@ -1,0 +1,67 @@
+@startuml AD_14_Mulai_Pembinaan
+' ============================================================================
+' ACTIVITY DIAGRAM - MULAI PEMBINAAN INTERNAL
+' ============================================================================
+' Use Case: Kelola Pembinaan - Mulai
+' Aktor: Wali Kelas, Kaprodi, Waka Kesiswaan, Kepala Sekolah
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+    DiamondBackgroundColor #FFF8E1
+    DiamondBorderColor #FF8F00
+    ArrowColor #455A64
+}
+
+title **AD-14: Mulai Pembinaan Internal**
+
+|#E8F5E9|Pembina|
+start
+
+:Membuka menu Pembinaan;
+
+|#E3F2FD|Sistem|
+
+:Menampilkan daftar siswa\nyang memerlukan pembinaan\nsesuai kewenangan pembina;
+
+|Pembina|
+
+:Memilih siswa untuk dibina;
+
+:Melihat detail siswa:\n- Total poin pelanggaran\n- Riwayat pelanggaran\n- Tingkat pembinaan;
+
+:Mengklik Mulai Pembinaan;
+
+|Sistem|
+
+:Memeriksa hak akses pembina;
+
+if (Pembina berwenang?) then (Ya)
+    if (Status memerlukan pembinaan?) then (Ya)
+        :Mengubah status menjadi Sedang Dibina;
+        :Mencatat pembina yang membina;
+        :Mencatat waktu mulai pembinaan;
+        :Mencatat aktivitas;
+        
+        |Pembina|
+        :Menampilkan pesan sukses\nPembinaan berhasil dimulai;
+        stop
+    else (Tidak)
+        |Pembina|
+        :Menampilkan pesan error\nStatus tidak valid;
+        stop
+    endif
+else (Tidak)
+    |Pembina|
+    :Menampilkan pesan error\nTidak memiliki akses;
+    stop
+endif
+
+@enduml

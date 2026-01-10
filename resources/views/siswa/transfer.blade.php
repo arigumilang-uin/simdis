@@ -36,7 +36,7 @@
                         <option value="">-- Pilih Kelas --</option>
                         @foreach($allKelas as $kelas)
                             <option value="{{ $kelas->id }}">
-                                {{ $kelas->nama_kelas }} - {{ $kelas->nama_jurusan ?? 'Umum' }}
+                                {{ $kelas->nama_kelas }} - {{ $kelas->jurusan->nama_jurusan ?? 'Umum' }}
                             </option>
                         @endforeach
                     </select>
@@ -151,7 +151,7 @@
                                 <option value="">-- Pilih Kelas Tujuan --</option>
                                 @foreach($allKelas as $kelas)
                                     <option value="{{ $kelas->id }}" x-bind:disabled="selectedKelasId == {{ $kelas->id }}">
-                                        {{ $kelas->nama_kelas }} - {{ $kelas->nama_jurusan ?? 'Umum' }}
+                                        {{ $kelas->nama_kelas }} - {{ $kelas->jurusan->nama_jurusan ?? 'Umum' }}
                                     </option>
                                 @endforeach
                             </select>
@@ -249,13 +249,20 @@ function transferPage() {
                     }
                 });
                 
-                const data = await response.json();
+                const result = await response.json();
                 
-                if (data.success) {
-                    this.kelasInfo = data.kelas;
-                    this.siswaList = data.siswa;
+                if (result.success) {
+                    // Properly access nested data
+                    const kelas = result.data.kelas;
+                    this.kelasInfo = {
+                        nama_kelas: kelas.nama_kelas,
+                        jurusan: kelas.jurusan?.nama_jurusan || 'Umum',
+                        wali_kelas: kelas.wali_kelas?.nama || '-',
+                        jumlah_siswa: result.data.count
+                    };
+                    this.siswaList = result.data.siswa;
                 } else {
-                    console.error('Error loading siswa:', data.message);
+                    console.error('Error loading siswa:', result.message);
                     this.kelasInfo = null;
                     this.siswaList = [];
                 }

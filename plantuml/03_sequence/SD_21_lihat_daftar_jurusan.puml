@@ -1,0 +1,57 @@
+@startuml SD_21_Lihat_Daftar_Jurusan
+' ============================================================================
+' SEQUENCE DIAGRAM - LIHAT DAFTAR JURUSAN
+' ============================================================================
+' Use Case: Kelola Jurusan
+' Aktor: Operator, Kepala Sekolah, Waka Kesiswaan
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-21: Lihat Daftar Jurusan**
+
+actor "Operator /\nKepsek / Waka" as USER
+
+box "Application Layer" #E8F5E9
+    participant "JurusanController" as JC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "Jurusan Model" as JM
+    database "MySQL" as DB
+end box
+
+== Lihat Daftar ==
+
+USER -> JC : GET /jurusan
+activate JC
+
+JC -> JM : with kaprodi\nwithCount kelas
+activate JM
+JM -> DB : SELECT jurusan.*, users.nama,\nCOUNT(kelas.id) as kelas_count\nFROM jurusan LEFT JOIN users\nLEFT JOIN kelas
+DB --> JM : Jurusan data with count
+JM --> JC : Daftar Jurusan
+deactivate JM
+
+JC --> USER : Tampilkan daftar jurusan:\n- Kode, Nama\n- Kaprodi, Jumlah Kelas
+deactivate JC
+
+@enduml

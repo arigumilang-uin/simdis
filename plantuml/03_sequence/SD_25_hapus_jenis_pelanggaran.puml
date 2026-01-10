@@ -1,0 +1,84 @@
+@startuml SD_25_Hapus_Jenis_Pelanggaran
+' ============================================================================
+' SEQUENCE DIAGRAM - HAPUS JENIS PELANGGARAN
+' ============================================================================
+' Use Case: Kelola Jenis Pelanggaran
+' Aktor: Operator Sekolah
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-25: Hapus Jenis Pelanggaran**
+
+actor "Operator\nSekolah" as OPERATOR
+
+box "Application Layer" #E8F5E9
+    participant "JenisPelanggaran\nController" as JPC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "JenisPelanggaran" as JP
+    participant "RiwayatPelanggaran" as RP
+    participant "FrequencyRule" as FR
+    database "MySQL" as DB
+end box
+
+== Proses Hapus ==
+
+OPERATOR -> JPC : DELETE /jenis-pelanggaran/id
+activate JPC
+
+JPC -> JP : findOrFail(id)
+activate JP
+JP -> DB : SELECT * FROM jenis_pelanggaran WHERE id = ?
+DB --> JP : JenisPelanggaran data
+JP --> JPC : JenisPelanggaran object
+deactivate JP
+
+JPC -> RP : where jenis_pelanggaran_id = id\n->count()
+activate RP
+RP -> DB : SELECT COUNT(*) FROM\nriwayat_pelanggaran WHERE jenis_pelanggaran_id = ?
+DB --> RP : count value
+RP --> JPC : riwayat count
+deactivate RP
+
+alt Ada riwayat pelanggaran terkait
+    JPC --> OPERATOR : Error: "Tidak bisa hapus,\nada riwayat pelanggaran terkait"
+else Tidak ada riwayat
+    JPC -> FR : where jenis_pelanggaran_id = id\n->delete()
+    activate FR
+    FR -> DB : DELETE FROM frequency_rules\nWHERE jenis_pelanggaran_id = ?
+    DB --> FR : Deleted
+    FR --> JPC : Success
+    deactivate FR
+    
+    JPC -> JP : delete()
+    activate JP
+    JP -> DB : DELETE FROM jenis_pelanggaran WHERE id = ?
+    DB --> JP : Deleted
+    JP --> JPC : Success
+    deactivate JP
+    
+    JPC --> OPERATOR : Redirect /jenis-pelanggaran\nFlash: "Jenis pelanggaran berhasil dihapus"
+end
+deactivate JPC
+
+@enduml

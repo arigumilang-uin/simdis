@@ -1,0 +1,101 @@
+@startuml SD_06_Tambah_Siswa
+' ============================================================================
+' SEQUENCE DIAGRAM - TAMBAH SISWA
+' ============================================================================
+' Use Case: Kelola Siswa
+' Aktor: Operator Sekolah
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-06: Tambah Siswa**
+
+actor "Operator\nSekolah" as OPERATOR
+
+box "Application Layer" #E8F5E9
+    participant "SiswaController" as SC
+    participant "SiswaService" as SS
+end box
+
+box "Data Layer" #FFF3E0
+    participant "Siswa Model" as SM
+    participant "User Model" as UM
+    participant "Kelas Model" as KM
+    database "MySQL" as DB
+end box
+
+== Tampilkan Form Tambah ==
+
+OPERATOR -> SC : GET /siswa/create
+activate SC
+
+SC -> KM : all()
+activate KM
+KM -> DB : SELECT * FROM kelas
+DB --> KM : Kelas data
+KM --> SC : Daftar Kelas
+deactivate KM
+
+SC --> OPERATOR : Form tambah siswa:\n- NISN, Nama, Kelas\n- No HP Wali\n- Checkbox: Buat akun wali
+deactivate SC
+
+== Proses Simpan Siswa ==
+
+OPERATOR -> SC : POST /siswa\n(nisn, nama, kelas_id,\nnomor_hp_wali, create_wali)
+activate SC
+
+SC -> SC : validate(nisn, nama, kelas_id)
+
+SC -> SS : createSiswa(data, createWali)
+activate SS
+
+SS -> SM : create(data)
+activate SM
+SM -> DB : INSERT INTO siswa
+DB --> SM : Siswa created
+SM --> SS : Siswa object
+deactivate SM
+
+alt create_wali = true
+    SS -> UM : create user wali murid
+    activate UM
+    UM -> DB : INSERT INTO users
+    DB --> UM : User created
+    UM --> SS : User object
+    deactivate UM
+    
+    SS -> SM : update wali_murid_id
+    activate SM
+    SM -> DB : UPDATE siswa
+    DB --> SM : Updated
+    SM --> SS : Success
+    deactivate SM
+    
+    SS --> SC : Return siswa + wali_credentials
+else create_wali = false
+    SS --> SC : Return siswa only
+end
+deactivate SS
+
+SC --> OPERATOR : Redirect /siswa\nFlash: "Siswa berhasil ditambahkan"
+deactivate SC
+
+@enduml

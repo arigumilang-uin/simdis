@@ -31,11 +31,11 @@
             <span class="text-sm font-medium text-indigo-900">Siswa Terpilih</span>
         </div>
         <div class="flex flex-wrap gap-2">
-            <button type="button" @click="if(confirm('Restore ' + selected.length + ' siswa terpilih ke daftar aktif?')) { alert('Fitur bulk restore sedang dalam pengembangan.'); }" class="btn btn-sm btn-white text-emerald-600 border-emerald-200 hover:bg-emerald-50">
+            <button type="button" @click="$dispatch('open-bulk-restore-modal', { ids: selected, count: selected.length })" class="btn btn-sm btn-white text-emerald-600 border-emerald-200 hover:bg-emerald-50">
                 <x-ui.icon name="rotate-ccw" size="14" />
                 Restore Massal
             </button>
-            <button type="button" @click="if(confirm('Hapus PERMANEN ' + selected.length + ' siswa terpilih? Data tidak dapat dikembalikan!')) { alert('Fitur bulk delete sedang dalam pengembangan.'); }" class="btn btn-sm btn-white text-red-600 border-red-200 hover:bg-red-50">
+            <button type="button" @click="$dispatch('open-bulk-permanent-delete-modal', { ids: selected, count: selected.length })" class="btn btn-sm btn-white text-red-600 border-red-200 hover:bg-red-50">
                 <x-ui.icon name="trash" size="14" />
                 Hapus Permanen
             </button>
@@ -226,5 +226,203 @@
         </div>
     </div>
 </div>
-@endsection
 
+{{-- Bulk Permanent Delete Modal --}}
+<div 
+    x-data="{ 
+        open: false, 
+        selectedIds: [],
+        selectedCount: 0,
+        confirmed: false
+    }"
+    @open-bulk-permanent-delete-modal.window="
+        open = true; 
+        selectedIds = $event.detail.ids; 
+        selectedCount = $event.detail.count;
+        confirmed = false;
+    "
+    x-show="open"
+    x-cloak
+    class="fixed inset-0 z-50 overflow-y-auto"
+>
+    {{-- Backdrop --}}
+    <div 
+        x-show="open" 
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm"
+        @click="open = false"
+    ></div>
+    
+    {{-- Modal Content --}}
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div 
+            x-show="open"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+            class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl"
+            @click.stop
+        >
+            {{-- Header --}}
+            <div class="p-6 border-b border-gray-100">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                        <x-ui.icon name="alert-triangle" size="24" />
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-red-600">⚠️ Hapus Permanen Massal</h3>
+                        <p class="text-sm text-gray-500">Data tidak dapat dikembalikan!</p>
+                    </div>
+                </div>
+            </div>
+            
+            {{-- Body --}}
+            <form action="{{ route('siswa.bulk-force-delete') }}" method="POST">
+                @csrf
+                
+                {{-- Hidden input for IDs --}}
+                <template x-for="id in selectedIds" :key="id">
+                    <input type="hidden" name="siswa_ids[]" :value="id">
+                </template>
+                
+                <div class="p-6 space-y-4">
+                    {{-- Count Info --}}
+                    <div class="p-4 bg-red-50 rounded-xl border border-red-100 text-center">
+                        <p class="text-sm text-red-600">Jumlah siswa yang akan dihapus permanen:</p>
+                        <p class="text-3xl font-bold text-red-800" x-text="selectedCount"></p>
+                    </div>
+                    
+                    {{-- Warning --}}
+                    <div class="p-4 bg-gray-50 rounded-xl space-y-2">
+                        <p class="text-sm font-medium text-gray-800">⚠️ Tindakan ini akan menghapus:</p>
+                        <ul class="text-sm text-gray-600 space-y-1 pl-4">
+                            <li>• Semua data siswa terpilih secara permanen</li>
+                            <li>• Semua riwayat pelanggaran terkait</li>
+                            <li>• Semua kasus tindak lanjut terkait</li>
+                            <li>• Akun wali murid yang tidak memiliki anak lain</li>
+                        </ul>
+                    </div>
+                    
+                    {{-- Confirmation Checkbox --}}
+                    <label class="flex items-start gap-3 cursor-pointer p-3 bg-amber-50 rounded-lg border border-amber-100">
+                        <input 
+                            type="checkbox" 
+                            name="confirm_permanent" 
+                            value="1" 
+                            x-model="confirmed"
+                            class="w-4 h-4 mt-0.5 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                        >
+                        <span class="text-sm text-amber-800">
+                            Saya mengerti bahwa tindakan ini <strong>TIDAK DAPAT DIBATALKAN</strong> dan semua data akan dihapus permanen.
+                        </span>
+                    </label>
+                </div>
+                
+                {{-- Footer --}}
+                <div class="p-6 border-t border-gray-100 flex gap-3 justify-end">
+                    <button type="button" @click="open = false" class="btn btn-secondary">Batal</button>
+                    <button 
+                        type="submit" 
+                        class="btn btn-danger"
+                        :disabled="!confirmed"
+                    >
+                        <x-ui.icon name="trash" size="18" />
+                        <span>Hapus <span x-text="selectedCount"></span> Siswa Permanen</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- Bulk Restore Modal --}}
+<div 
+    x-data="{ 
+        open: false, 
+        selectedIds: [],
+        selectedCount: 0
+    }"
+    @open-bulk-restore-modal.window="
+        open = true; 
+        selectedIds = $event.detail.ids; 
+        selectedCount = $event.detail.count;
+    "
+    x-show="open"
+    x-cloak
+    class="fixed inset-0 z-50 overflow-y-auto"
+>
+    {{-- Backdrop --}}
+    <div 
+        x-show="open" 
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm"
+        @click="open = false"
+    ></div>
+    
+    {{-- Modal Content --}}
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div 
+            x-show="open"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+            class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl"
+            @click.stop
+        >
+            {{-- Header --}}
+            <div class="p-6 border-b border-gray-100">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                        <x-ui.icon name="rotate-ccw" size="24" />
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-emerald-700">Restore Siswa Massal</h3>
+                        <p class="text-sm text-gray-500">Kembalikan siswa ke daftar aktif</p>
+                    </div>
+                </div>
+            </div>
+            
+            {{-- Body --}}
+            <form action="{{ route('siswa.bulk-restore') }}" method="POST">
+                @csrf
+                
+                {{-- Hidden input for IDs --}}
+                <template x-for="id in selectedIds" :key="id">
+                    <input type="hidden" name="siswa_ids[]" :value="id">
+                </template>
+                
+                <div class="p-6 space-y-4">
+                    {{-- Count Info --}}
+                    <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-100 text-center">
+                        <p class="text-sm text-emerald-600">Jumlah siswa yang akan di-restore:</p>
+                        <p class="text-3xl font-bold text-emerald-800" x-text="selectedCount"></p>
+                    </div>
+                    
+                    {{-- Info --}}
+                    <div class="p-4 bg-blue-50 rounded-xl space-y-2">
+                        <p class="text-sm font-medium text-blue-800">ℹ️ Tindakan ini akan:</p>
+                        <ul class="text-sm text-blue-600 space-y-1 pl-4">
+                            <li>• Mengembalikan siswa ke daftar aktif</li>
+                            <li>• Mengaktifkan kembali akun wali murid terkait</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                {{-- Footer --}}
+                <div class="p-6 border-t border-gray-100 flex gap-3 justify-end">
+                    <button type="button" @click="open = false" class="btn btn-secondary">Batal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <x-ui.icon name="rotate-ccw" size="18" />
+                        <span>Restore <span x-text="selectedCount"></span> Siswa</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endsection

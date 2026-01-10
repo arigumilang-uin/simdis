@@ -81,7 +81,7 @@ class PembinaanStatusController extends Controller
     public function selesaikanPembinaan(int $id, Request $request): RedirectResponse
     {
         $user = auth()->user();
-        $hasilPembinaan = $request->input('hasil_pembinaan', '');
+        $hasilPembinaan = $request->input('hasil_pembinaan') ?? '';
 
         $result = $this->pembinaanService->selesaikanPembinaan($id, $user, $hasilPembinaan);
 

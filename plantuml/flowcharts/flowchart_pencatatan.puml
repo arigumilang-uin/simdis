@@ -1,0 +1,95 @@
+@startuml Flowchart_Pencatatan_Pelanggaran
+' ============================================================================
+' FLOWCHART: ALUR PENCATATAN PELANGGARAN SISWA
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+skinparam ActivityBackgroundColor #E3F2FD
+skinparam ActivityBorderColor #1976D2
+skinparam ActivityDiamondBackgroundColor #FFF8E1
+skinparam ActivityDiamondBorderColor #FF8F00
+
+title **FLOWCHART: PENCATATAN PELANGGARAN**\n//Pencatat: Guru, Wali Kelas, Kaprodi, Waka Kesiswaan, Waka Sarana, Operator//
+
+start
+
+:PENCATAT membuka menu
+Catat Pelanggaran;
+
+:Sistem menampilkan
+form pencatatan;
+
+:Pilih SISWA dari daftar;
+
+:Pilih JENIS PELANGGARAN;
+
+:Sistem menghitung
+frekuensi pelanggaran;
+
+if (Frequency Rule match?) then (Ya)
+  :Ambil poin & sanksi
+  dari matched rule;
+else (Tidak)
+  :Gunakan poin default
+  jenis pelanggaran;
+endif
+
+:Input tanggal kejadian;
+
+:Input keterangan
+(opsional);
+
+:Upload bukti foto
+(opsional);
+
+:Klik tombol **SIMPAN**;
+
+:Validasi kelengkapan data;
+
+if (Data valid?) then (Ya)
+  :Simpan ke database
+  riwayat_pelanggaran;
+else (Tidak)
+  :Tampilkan pesan error;
+  stop
+endif
+
+if (Trigger Tindak Lanjut?) then (Ya)
+  :Generate TindakLanjut
+  (status = BARU);
+  :Generate SuratPanggilan
+  (draft otomatis);
+  :Kirim notifikasi
+  ke Pembina;
+endif
+
+if (Trigger Pembinaan?) then (Ya)
+  :Generate PembinaanStatus
+  (status = PERLU_PEMBINAAN);
+  :Kirim notifikasi
+  ke Pembina;
+endif
+
+:Tampilkan pesan sukses
+"Pelanggaran berhasil dicatat";
+
+stop
+
+legend right
+  **PENCATAT (6 Role):**
+  • Guru
+  • Wali Kelas
+  • Kaprodi
+  • Waka Kesiswaan
+  • Waka Sarana
+  • Operator Sekolah
+  ----
+  **RULES ENGINE:**
+  Frequency Rules &
+  Pembinaan Rules
+endlegend
+
+@enduml

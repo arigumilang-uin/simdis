@@ -1,0 +1,107 @@
+@startuml SD_45_Lihat_Siswa_Perlu_Pembinaan
+' ============================================================================
+' SEQUENCE DIAGRAM - LIHAT SISWA PERLU PEMBINAAN
+' ============================================================================
+' Use Case: Kelola Pembinaan
+' Aktor: Wali Kelas, Kaprodi, Waka Kesiswaan, Kepsek
+' Deskripsi: Melihat daftar siswa yang perlu pembinaan berdasarkan range poin
+'            Filter: user.role harus ada di pembina_roles pada rule
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-45: Lihat Siswa Perlu Pembinaan**
+
+actor "Wali Kelas / Kaprodi /\nWaka Kesiswaan /\nKepala Sekolah" as USER
+
+box "Application Layer" #E8F5E9
+    participant "PembinaanStatus\nController" as PC
+    participant "RulesEngine" as RE
+end box
+
+box "Data Layer" #FFF3E0
+    participant "PembinaanInternalRule" as PIR
+    participant "PembinaanStatus" as PS
+    participant "Siswa" as SM
+    database "MySQL" as DB
+end box
+
+== Lihat Daftar ==
+
+USER -> PC : GET /pembinaan\n(?rule_id, ?kelas_id, ?status)
+activate PC
+
+PC -> PC : Get user role
+
+PC -> PIR : orderBy display_order
+activate PIR
+PIR -> DB : SELECT * FROM pembinaan_internal_rules
+DB --> PIR : Rules data
+PIR --> PC : Daftar Rules\n(range poin + pembina_roles)
+deactivate PIR
+
+PC -> RE : getSiswaPerluPembinaan(poinMin, poinMax)
+activate RE
+RE -> SM : Calculate total poin each siswa
+activate SM
+SM -> DB : SELECT siswa with SUM(poin)
+DB --> SM : Siswa data with poin
+SM --> RE : Siswa yang poinnya dalam range
+deactivate SM
+RE --> PC : Siswa collection
+deactivate RE
+
+PC -> PC : Filter role-based
+
+alt Role = Wali Kelas
+    PC -> PC : Filter: siswa.kelas_id = kelas binaan\nAND 'Wali Kelas' IN pembina_roles
+else Role = Kaprodi
+    PC -> PC : Filter: siswa.kelas.jurusan_id = jurusan binaan\nAND 'Kaprodi' IN pembina_roles
+else Role = Waka Kesiswaan
+    PC -> PC : Filter: 'Waka Kesiswaan' IN pembina_roles
+else Role = Kepala Sekolah
+    PC -> PC : Filter: 'Kepala Sekolah' IN pembina_roles
+end
+
+PC -> PS : Auto-create status if not exists
+activate PS
+PS --> PC : Status created/exists
+deactivate PS
+
+PC -> PS : whereJsonContains('pembina_roles', userRole)\nwith filters
+activate PS
+PS -> DB : SELECT pembinaan_status.*\nWHERE JSON_CONTAINS(pembina_roles, role)\nAND conditions
+DB --> PS : Pembinaan data
+PS --> PC : Collection Pembinaan
+deactivate PS
+
+PC --> USER : Tampilkan daftar:\n- Siswa, Kelas, Jurusan\n- Total Poin, Range Poin\n- Status (Perlu/Sedang/Selesai)\n- Pembina yang ditugaskan
+deactivate PC
+
+note right of PIR
+  **CONTOH RULES:**
+  1-10 poin: pembina = [Wali Kelas]
+  11-25 poin: pembina = [Kaprodi]
+  26-50 poin: pembina = [Waka Kesiswaan]
+  51+ poin: pembina = [Kepala Sekolah]
+end note
+
+@enduml

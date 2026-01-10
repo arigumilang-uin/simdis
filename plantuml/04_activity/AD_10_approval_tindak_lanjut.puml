@@ -1,0 +1,74 @@
+@startuml AD_10_Approval_Tindak_Lanjut
+' ============================================================================
+' ACTIVITY DIAGRAM - APPROVAL TINDAK LANJUT
+' ============================================================================
+' Use Case: Validasi Kasus (Approve/Reject)
+' Aktor: Kepala Sekolah
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+    DiamondBackgroundColor #FFF8E1
+    DiamondBorderColor #FF8F00
+    ArrowColor #455A64
+}
+
+title **AD-10: Approval Tindak Lanjut**
+
+|#E8F5E9|KepalaSekolah|
+start
+
+:Membuka menu Persetujuan;
+
+|#E3F2FD|Sistem|
+
+:Menampilkan daftar kasus\nyang menunggu persetujuan;
+
+|KepalaSekolah|
+
+:Memilih kasus untuk ditinjau;
+
+:Meninjau detail kasus:\n- Data siswa\n- Jenis pelanggaran\n- Frekuensi pelanggaran\n- Jenis surat\n- Pembina yang ditugaskan;
+
+:Melihat pratinjau surat panggilan;
+
+if (Keputusan?) then (Setuju)
+    :Mengklik tombol Setujui;
+    
+    |Sistem|
+    :Mengubah status menjadi Disetujui;
+    :Mencatat penyetuju dan waktu;
+    :Mencatat aktivitas persetujuan;
+    :Mengirim notifikasi ke Pembina;
+    
+    |Pembina|
+    :Menerima notifikasi persetujuan;
+    :Dapat mulai menangani kasus;
+    stop
+    
+else (Tolak)
+    |KepalaSekolah|
+    :Mengklik tombol Tolak;
+    :Mengisi alasan penolakan;
+    :Mengkonfirmasi penolakan;
+    
+    |Sistem|
+    :Mengubah status menjadi Ditolak;
+    :Menyimpan alasan penolakan;
+    :Mencatat aktivitas penolakan;
+    :Mengirim notifikasi ke Pembina;
+    
+    |Pembina|
+    :Menerima notifikasi penolakan;
+    :Melihat alasan penolakan;
+    stop
+endif
+
+@enduml

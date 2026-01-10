@@ -1,0 +1,65 @@
+@startuml SD_26_Lihat_Daftar_Jenis_Pelanggaran
+' ============================================================================
+' SEQUENCE DIAGRAM - LIHAT DAFTAR JENIS PELANGGARAN
+' ============================================================================
+' Use Case: Kelola Jenis Pelanggaran
+' Aktor: Operator, Guru, Wali Kelas, Kaprodi, Waka, Kepsek
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-26: Lihat Daftar Jenis Pelanggaran**
+
+actor "Operator / Guru /\nWali Kelas / Kaprodi /\nWaka / Kepsek" as USER
+
+box "Application Layer" #E8F5E9
+    participant "JenisPelanggaran\nController" as JPC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "JenisPelanggaran" as JP
+    participant "KategoriPelanggaran" as KP
+    database "MySQL" as DB
+end box
+
+== Lihat Daftar ==
+
+USER -> JPC : GET /jenis-pelanggaran\n(?kategori_id)
+activate JPC
+
+JPC -> JP : with kategoriPelanggaran\nwithCount frequencyRules\nwhen(kategori_id, filter)
+activate JP
+JP -> DB : SELECT jenis_pelanggaran.*,\nkategori.nama_kategori,\nCOUNT(rules.id) as rules_count\nFROM jenis_pelanggaran\nJOIN kategori_pelanggaran\nLEFT JOIN frequency_rules
+DB --> JP : JenisPelanggaran data
+JP --> JPC : Daftar JenisPelanggaran
+deactivate JP
+
+JPC -> KP : all()
+activate KP
+KP -> DB : SELECT * FROM kategori_pelanggaran
+DB --> KP : Kategori data
+KP --> JPC : Daftar Kategori (untuk filter)
+deactivate KP
+
+JPC --> USER : Tampilkan daftar jenis:\n- Nama, Kategori, Poin\n- Jumlah Rules, Status Aktif\n- Filter by Kategori
+deactivate JPC
+
+@enduml

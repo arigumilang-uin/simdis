@@ -1,0 +1,63 @@
+@startuml AD_16_Tambah_Pengguna
+' ============================================================================
+' ACTIVITY DIAGRAM - TAMBAH PENGGUNA
+' ============================================================================
+' Use Case: Kelola Pengguna - Tambah
+' Aktor: Operator Sekolah
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+    DiamondBackgroundColor #FFF8E1
+    DiamondBorderColor #FF8F00
+    ArrowColor #455A64
+}
+
+title **AD-16: Tambah Pengguna**
+
+|#E8F5E9|Operator|
+start
+
+:Membuka form tambah pengguna;
+
+|#E3F2FD|Sistem|
+
+:Menampilkan daftar role;
+
+|Operator|
+
+:Mengisi data pengguna:\n- Nama lengkap\n- Username\n- Email\n- Password\n- Role\n- Nomor HP\n- NIP (opsional)\n- NUPTK (opsional);
+
+:Mengklik tombol Simpan;
+
+|Sistem|
+
+:Memvalidasi kelengkapan data;
+
+if (Username sudah digunakan?) then (Ya)
+    |Operator|
+    :Menampilkan pesan error\nUsername sudah digunakan;
+    stop
+else (Tidak)
+    if (Email sudah digunakan?) then (Ya)
+        |Operator|
+        :Menampilkan pesan error\nEmail sudah digunakan;
+        stop
+    else (Tidak)
+        :Mengamankan password;
+        :Menyimpan data pengguna baru;
+        
+        |Operator|
+        :Menampilkan pesan sukses\nPengguna berhasil ditambahkan;
+        stop
+    endif
+endif
+
+@enduml

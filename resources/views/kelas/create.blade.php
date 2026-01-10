@@ -13,6 +13,12 @@
 @section('content')
 @php
     $konsentrasiApiUrl = route('api.konsentrasi.by-jurusan');
+    
+    // Build Jurusan Map for Alpine Preview
+    $jurusanMap = [];
+    foreach($jurusanList ?? [] as $j) {
+        $jurusanMap[$j->id] = $j->kode_jurusan ?? strtoupper(substr($j->nama_jurusan, 0, 3));
+    }
 @endphp
 
 <div class="form-page-container" 
@@ -20,6 +26,8 @@
         tingkat: '{{ old('tingkat', '') }}',
         jurusanId: '{{ old('jurusan_id', '') }}',
         konsentrasiId: '{{ old('konsentrasi_id', '') }}',
+        rombel: '{{ old('rombel', 'none') }}',
+        jurusanMap: {{ json_encode($jurusanMap) }},
         createWali: false,
         
         // Dynamic konsentrasi
@@ -41,6 +49,24 @@
             } finally {
                 this.loadingKonsentrasi = false;
             }
+        },
+        
+        generateNamaKelas() {
+             if (!this.tingkat || !this.jurusanId) return '';
+             
+             // Get base code from map
+             let kode = this.jurusanMap[this.jurusanId] || '';
+             
+             // Priority: Konsentrasi Code
+             if (this.konsentrasiId && this.konsentrasiList.length > 0) {
+                 const k = this.konsentrasiList.find(item => item.id == this.konsentrasiId);
+                 if (k) {
+                      kode = k.kode_konsentrasi || k.nama_konsentrasi.substring(0,3).toUpperCase();
+                 }
+             }
+             
+             const rombelSuffix = (this.rombel && this.rombel !== 'none') ? (' ' + this.rombel) : '';
+             return this.tingkat + ' ' + kode + rombelSuffix;
         },
         
         init() {
@@ -134,6 +160,38 @@
                             Tidak ada data konsentrasi untuk jurusan ini.
                         </p>
                     </div>
+
+                {{-- Rombel Number (Added Manual Input) --}}
+                <div class="form-group">
+                    <x-forms.select 
+                        name="rombel" 
+                        label="Nomor Rombel (Opsional)" 
+                        x-model="rombel" 
+                        :value="old('rombel')"
+                        help="Pilih 'Tanpa Nomor' untuk format standar (misal: X TKJ)."
+                    >
+                        <option value="none">Tanpa Nomor</option>
+                        @for($i = 1; $i <= 10; $i++)
+                            <option value="{{ $i }}">{{ $i }}</option>
+                        @endfor
+                    </x-forms.select>
+                </div>
+
+                {{-- Preview Nama Kelas --}}
+                <div class="p-4 bg-blue-50 rounded-xl border border-blue-100 mt-6 mb-6" 
+                        x-show="tingkat && jurusanId" 
+                        x-transition>
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-blue-100 rounded-lg text-blue-600">
+                            <x-ui.icon name="layout" size="24" />
+                        </div>
+                        <div>
+                            <h4 class="text-xs uppercase font-bold text-blue-500 mb-0.5">Preview Nama Kelas</h4>
+                            <div class="text-2xl font-bold text-blue-800 tracking-tight" x-text="generateNamaKelas() || '...'"></div>
+                        </div>
+                    </div>
+                </div>
+                
                 </div>
 
                 {{-- SECTION 2: Wali Kelas --}}

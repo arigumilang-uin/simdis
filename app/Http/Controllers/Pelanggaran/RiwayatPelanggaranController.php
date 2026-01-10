@@ -403,4 +403,68 @@ class RiwayatPelanggaranController extends Controller
         $data = $this->pelanggaranService->searchPelanggaran($query);
         return response()->json($data);
     }
+
+    /**
+     * Bulk delete selected riwayat pelanggaran.
+     */
+    public function bulkDelete(\Illuminate\Http\Request $request): RedirectResponse
+    {
+        // Parse ids from comma-separated string to array (same pattern as SiswaBulkController)
+        $idsRaw = $request->input('ids');
+        $riwayatIds = is_array($idsRaw) ? $idsRaw : array_filter(explode(',', $idsRaw ?? ''));
+        $riwayatIds = array_map('intval', $riwayatIds);
+
+        if (empty($riwayatIds)) {
+            return back()->with('error', 'Pilih minimal 1 data untuk dihapus.');
+        }
+
+        try {
+            $successCount = 0;
+            $failedCount = 0;
+            
+            foreach ($riwayatIds as $riwayatId) {
+                try {
+                    $riwayatData = $this->pelanggaranService->getRiwayatById($riwayatId);
+                    
+                    if (!$riwayatData) {
+                        $failedCount++;
+                        continue;
+                    }
+                    
+                    // Authorization via Policy
+                    $this->authorize('delete', $riwayatData);
+                    
+                    // Delete via service
+                    $this->pelanggaranService->deletePelanggaran(
+                        $riwayatId,
+                        $riwayatData->siswa_id,
+                        $riwayatData->bukti_foto_path ?? null
+                    );
+                    $successCount++;
+                } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+                    $failedCount++;
+                    \Log::warning('Bulk delete authorization failed', ['id' => $riwayatId]);
+                } catch (\Exception $e) {
+                    $failedCount++;
+                    \Log::warning('Failed to delete riwayat', ['id' => $riwayatId, 'error' => $e->getMessage()]);
+                }
+            }
+            
+            $message = "Berhasil menghapus {$successCount} data pelanggaran.";
+            if ($failedCount > 0) {
+                $message .= " {$failedCount} data gagal dihapus (tidak ada izin atau error).";
+            }
+            
+            return redirect()
+                ->route('riwayat.index')
+                ->with('success', $message);
+                
+        } catch (\Exception $e) {
+            \Log::error('Bulk delete riwayat error', ['error' => $e->getMessage()]);
+            
+            return redirect()
+                ->back()
+                ->with('error', 'Gagal menghapus data: ' . $e->getMessage());
+        }
+    }
 }

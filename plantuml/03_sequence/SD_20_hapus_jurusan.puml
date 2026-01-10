@@ -1,0 +1,76 @@
+@startuml SD_20_Hapus_Jurusan
+' ============================================================================
+' SEQUENCE DIAGRAM - HAPUS JURUSAN
+' ============================================================================
+' Use Case: Kelola Jurusan
+' Aktor: Operator Sekolah
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-20: Hapus Jurusan**
+
+actor "Operator\nSekolah" as OPERATOR
+
+box "Application Layer" #E8F5E9
+    participant "JurusanController" as JC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "Jurusan Model" as JM
+    participant "Kelas Model" as KM
+    database "MySQL" as DB
+end box
+
+== Proses Hapus ==
+
+OPERATOR -> JC : DELETE /jurusan/id
+activate JC
+
+JC -> JM : findOrFail(id)
+activate JM
+JM -> DB : SELECT * FROM jurusan WHERE id = ?
+DB --> JM : Jurusan data
+JM --> JC : Jurusan object
+deactivate JM
+
+JC -> KM : where jurusan_id = id -> count()
+activate KM
+KM -> DB : SELECT COUNT(*) FROM kelas\nWHERE jurusan_id = ?
+DB --> KM : count value
+KM --> JC : kelas count
+deactivate KM
+
+alt Ada kelas di jurusan
+    JC --> OPERATOR : Error: "Tidak bisa hapus,\nmasih ada kelas terkait"
+else Tidak ada kelas
+    JC -> JM : delete()
+    activate JM
+    JM -> DB : DELETE FROM jurusan WHERE id = ?
+    DB --> JM : Deleted
+    JM --> JC : Success
+    deactivate JM
+    
+    JC --> OPERATOR : Redirect /jurusan\nFlash: "Jurusan berhasil dihapus"
+end
+deactivate JC
+
+@enduml

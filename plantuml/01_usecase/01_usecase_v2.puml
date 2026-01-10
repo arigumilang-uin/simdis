@@ -1,0 +1,361 @@
+@startuml Use_Case_Diagram
+' ============================================================================
+' USE CASE DIAGRAM - SISTEM INFORMASI KEDISIPLINAN SISWA SMK NEGERI 1
+' ============================================================================
+' Author: System Documentation
+' Version: 6.0 (PlantUML) - Konsolidasi & Bahasa Indonesia
+' Date: 28 Desember 2024
+' ============================================================================
+'
+' PERUBAHAN v6.0:
+' - Konsolidasi dari 37 UC menjadi 17 UC
+' - Semua label menggunakan Bahasa Indonesia konsisten
+' - Lengkapi Profil menjadi <<extend>> dari Login
+' - Ubah Password masuk dalam Kelola Profil / Kelola Pengguna
+' - Rasio UC:SD = 17:17 (seimbang)
+'
+' ============================================================================
+
+' === GLOBAL STYLING ===
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+skinparam wrapWidth 120
+skinparam linetype ortho
+
+' === ACTOR STYLING ===
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #1565C0
+    FontStyle bold
+}
+
+' === USE CASE STYLING ===
+skinparam usecase {
+    BackgroundColor #FFF8E1
+    BorderColor #FF8F00
+    FontColor #E65100
+    BorderThickness 1
+}
+
+' === RECTANGLE (SYSTEM) STYLING ===
+skinparam rectangle {
+    BackgroundColor #FAFAFA
+    BorderColor #37474F
+    FontColor #212121
+    BorderThickness 2
+    RoundCorner 8
+}
+
+' === PACKAGE STYLING ===
+skinparam package {
+    BackgroundColor #FFFFFF
+    BorderColor #90A4AE
+    FontStyle bold
+    FontSize 10
+}
+
+' === ARROW STYLING ===
+skinparam arrow {
+    Color #546E7A
+    FontColor #455A64
+    Thickness 1
+}
+
+' ============================================================================
+' DEFINISI AKTOR (7 Aktor Utama)
+' ============================================================================
+
+' --- Posisi ATAS ---
+actor "Kepala Sekolah" as KEPSEK #BBDEFB
+
+' --- Posisi KIRI ---
+actor "Wali Murid" as WALIMURID #F8BBD9
+actor "Operator Sekolah" as OPERATOR #CFD8DC
+
+' --- Posisi KANAN ---
+actor "Wali Kelas" as WALIKELAS #FFE0B2
+actor "Waka Kesiswaan" as WAKA #C8E6C9
+actor "Kaprodi" as KAPRODI #FFF9C4
+
+' --- Posisi BAWAH ---
+actor "Guru" as GURU #E1BEE7
+actor "Waka Sarana" as WAKASARANA #B2DFDB
+
+' ============================================================================
+' SYSTEM BOUNDARY - 17 USE CASES
+' ============================================================================
+
+rectangle "**SISTEM INFORMASI KEDISIPLINAN SISWA**\n//SMK Negeri 1//" as SYSTEM {
+
+    ' ═══════════════════════════════════════════════════════════════════════
+    ' PACKAGE 1: AUTENTIKASI & PROFIL (3 UC)
+    ' ═══════════════════════════════════════════════════════════════════════
+    package "🔐 Autentikasi & Profil" as PKG_AUTH {
+        usecase "Login" as UC_LOGIN
+        usecase "Logout" as UC_LOGOUT
+        usecase "Kelola Profil" as UC_KELOLA_PROFIL
+        
+        ' Sub-use case (extend)
+        usecase "Lengkapi Profil\n(Login Pertama)" as UC_LENGKAPI_PROFIL
+    }
+    
+    ' ═══════════════════════════════════════════════════════════════════════
+    ' PACKAGE 2: MASTER DATA (5 UC)
+    ' ═══════════════════════════════════════════════════════════════════════
+    package "📊 Master Data" as PKG_MASTER {
+        usecase "Kelola Siswa" as UC_KELOLA_SISWA
+        usecase "Kelola Kelas" as UC_KELOLA_KELAS
+        usecase "Kelola Jurusan" as UC_KELOLA_JURUSAN
+        usecase "Kelola Jenis\nPelanggaran" as UC_KELOLA_JENIS
+        usecase "Kelola Pengguna" as UC_KELOLA_USER
+    }
+    
+    ' ═══════════════════════════════════════════════════════════════════════
+    ' PACKAGE 3: PELANGGARAN (2 UC)
+    ' ═══════════════════════════════════════════════════════════════════════
+    package "⚠️ Pelanggaran" as PKG_PELANG {
+        usecase "Catat Pelanggaran" as UC_CATAT
+        usecase "Kelola Riwayat\nPelanggaran" as UC_KELOLA_RIWAYAT
+    }
+    
+    ' ═══════════════════════════════════════════════════════════════════════
+    ' PACKAGE 4: TINDAK LANJUT (3 UC)
+    ' ═══════════════════════════════════════════════════════════════════════
+    package "� Tindak Lanjut" as PKG_TL {
+        usecase "Kelola Tindak\nLanjut" as UC_KELOLA_TL
+        usecase "Validasi Kasus" as UC_VALIDASI
+        usecase "Kelola Surat\nPanggilan" as UC_KELOLA_SURAT
+    }
+    
+    ' ═══════════════════════════════════════════════════════════════════════
+    ' PACKAGE 5: PEMBINAAN & ATURAN (2 UC)
+    ' ═══════════════════════════════════════════════════════════════════════
+    package "🎓 Pembinaan & Aturan" as PKG_PB {
+        usecase "Kelola Pembinaan" as UC_KELOLA_PB
+        usecase "Kelola Aturan\nSistem" as UC_KELOLA_RULES
+    }
+    
+    ' ═══════════════════════════════════════════════════════════════════════
+    ' PACKAGE 6: LAPORAN & AUDIT (2 UC)
+    ' ═══════════════════════════════════════════════════════════════════════
+    package "📈 Laporan & Audit" as PKG_REPORT {
+        usecase "Lihat Laporan" as UC_LIHAT_LAPORAN
+        usecase "Lihat Jejak\nAudit" as UC_LIHAT_AUDIT
+    }
+}
+
+' ============================================================================
+' RELASI INCLUDE / EXTEND
+' ============================================================================
+
+' Login <<extend>> Lengkapi Profil (untuk login pertama)
+UC_LOGIN <.. UC_LENGKAPI_PROFIL : <<extend>>
+
+' Kelola Profil <<include>> fitur-fitur nya
+note right of UC_KELOLA_PROFIL
+  Mencakup:
+  • Lihat Profil
+  • Edit Profil  
+  • Ubah Password
+end note
+
+' Kelola Siswa <<include>> fitur-fitur nya
+note right of UC_KELOLA_SISWA
+  Mencakup:
+  • Tambah/Edit/Hapus
+  • Import dari CSV
+  • Export ke CSV
+  • Restore Siswa
+end note
+
+' Kelola Pengguna <<include>> fitur-fitur nya
+note right of UC_KELOLA_USER
+  Mencakup:
+  • Tambah/Edit/Hapus
+  • Reset Password
+  • Aktivasi/Nonaktif
+end note
+
+' Kelola Riwayat <<include>> fitur-fitur nya
+note right of UC_KELOLA_RIWAYAT
+  Mencakup:
+  • Lihat Riwayat
+  • Edit Pelanggaran
+  • Hapus Pelanggaran
+  • Export Data
+end note
+
+' Kelola Tindak Lanjut <<include>> fitur-fitur nya
+note right of UC_KELOLA_TL
+  Mencakup:
+  • Lihat Daftar
+  • Mulai Tangani
+  • Selesaikan Kasus
+end note
+
+' Kelola Surat <<include>> fitur-fitur nya
+note right of UC_KELOLA_SURAT
+  Mencakup:
+  • Preview Surat
+  • Edit Surat
+  • Cetak Surat
+end note
+
+' Kelola Pembinaan <<include>> fitur-fitur nya
+note right of UC_KELOLA_PB
+  Mencakup:
+  • Lihat Daftar
+  • Mulai Pembinaan
+  • Selesaikan
+  • Export Data
+end note
+
+' Kelola Aturan <<include>> fitur-fitur nya
+note right of UC_KELOLA_RULES
+  Mencakup:
+  • Aturan Frekuensi
+  • Aturan Pembinaan
+  • Pengaturan Sistem
+end note
+
+' Lihat Laporan <<include>> fitur-fitur nya
+note right of UC_LIHAT_LAPORAN
+  Mencakup:
+  • Dashboard
+  • Export Laporan
+  • Riwayat Persetujuan
+  • Statistik
+end note
+
+' ============================================================================
+' RELASI AKTOR - KEPALA SEKOLAH
+' ============================================================================
+KEPSEK --> UC_LOGIN
+KEPSEK --> UC_LOGOUT
+KEPSEK --> UC_KELOLA_PROFIL
+KEPSEK --> UC_VALIDASI
+KEPSEK --> UC_LIHAT_LAPORAN
+
+' ============================================================================
+' RELASI AKTOR - WALI MURID
+' ============================================================================
+WALIMURID --> UC_LOGIN
+WALIMURID --> UC_LOGOUT
+WALIMURID --> UC_KELOLA_PROFIL
+WALIMURID --> UC_KELOLA_RIWAYAT : <<lihat anak>>
+WALIMURID --> UC_LIHAT_LAPORAN : <<dashboard>>
+
+' ============================================================================
+' RELASI AKTOR - OPERATOR SEKOLAH
+' ============================================================================
+OPERATOR --> UC_LOGIN
+OPERATOR --> UC_LOGOUT
+OPERATOR --> UC_KELOLA_PROFIL
+OPERATOR --> UC_KELOLA_SISWA
+OPERATOR --> UC_KELOLA_KELAS
+OPERATOR --> UC_KELOLA_JURUSAN
+OPERATOR --> UC_KELOLA_JENIS
+OPERATOR --> UC_KELOLA_USER
+OPERATOR --> UC_KELOLA_RULES
+OPERATOR --> UC_LIHAT_LAPORAN
+OPERATOR --> UC_LIHAT_AUDIT
+
+' ============================================================================
+' RELASI AKTOR - WALI KELAS
+' ============================================================================
+WALIKELAS --> UC_LOGIN
+WALIKELAS --> UC_LOGOUT
+WALIKELAS --> UC_KELOLA_PROFIL
+WALIKELAS --> UC_CATAT
+WALIKELAS --> UC_KELOLA_RIWAYAT
+WALIKELAS --> UC_KELOLA_TL
+WALIKELAS --> UC_KELOLA_SURAT
+WALIKELAS --> UC_KELOLA_PB
+WALIKELAS --> UC_LIHAT_LAPORAN
+
+' ============================================================================
+' RELASI AKTOR - WAKA KESISWAAN
+' ============================================================================
+WAKA --> UC_LOGIN
+WAKA --> UC_LOGOUT
+WAKA --> UC_KELOLA_PROFIL
+WAKA --> UC_KELOLA_RIWAYAT
+WAKA --> UC_VALIDASI
+WAKA --> UC_KELOLA_SURAT
+WAKA --> UC_KELOLA_PB
+WAKA --> UC_LIHAT_LAPORAN
+
+' ============================================================================
+' RELASI AKTOR - KAPRODI
+' ============================================================================
+KAPRODI --> UC_LOGIN
+KAPRODI --> UC_LOGOUT
+KAPRODI --> UC_KELOLA_PROFIL
+KAPRODI --> UC_CATAT
+KAPRODI --> UC_KELOLA_RIWAYAT
+KAPRODI --> UC_KELOLA_TL
+KAPRODI --> UC_VALIDASI
+KAPRODI --> UC_KELOLA_SURAT
+KAPRODI --> UC_KELOLA_PB
+KAPRODI --> UC_LIHAT_LAPORAN
+
+' ============================================================================
+' RELASI AKTOR - GURU
+' ============================================================================
+GURU --> UC_LOGIN
+GURU --> UC_LOGOUT
+GURU --> UC_KELOLA_PROFIL
+GURU --> UC_CATAT
+GURU --> UC_KELOLA_RIWAYAT : <<lihat sendiri>>
+
+' ============================================================================
+' RELASI AKTOR - WAKA SARANA
+' ============================================================================
+WAKASARANA --> UC_LOGIN
+WAKASARANA --> UC_LOGOUT
+WAKASARANA --> UC_KELOLA_PROFIL
+WAKASARANA --> UC_KELOLA_RIWAYAT : <<lihat>>
+WAKASARANA --> UC_LIHAT_LAPORAN : <<dashboard>>
+
+' ============================================================================
+' HIDDEN LINKS - PAKSA POSISI AKTOR
+' ============================================================================
+KEPSEK -[hidden]down--> SYSTEM
+WALIMURID -[hidden]down-> OPERATOR
+WALIKELAS -[hidden]down-> WAKA
+WAKA -[hidden]down-> KAPRODI
+GURU -[hidden]right-> WAKASARANA
+
+' ============================================================================
+' LEGENDA
+' ============================================================================
+
+note as N_LEGEND
+  **LEGENDA AKTOR & AKSES**
+  ══════════════════════════════════════
+  
+  **MANAJEMEN:**
+  <back:#BBDEFB> </back> Kepala Sekolah — Validasi, Laporan
+  
+  **EKSTERNAL & ADMIN:**
+  <back:#F8BBD9> </back> Wali Murid — Lihat Data Anak
+  <back:#CFD8DC> </back> Operator — Master Data, Aturan, Audit
+  
+  **AKADEMIK:**
+  <back:#FFE0B2> </back> Wali Kelas — Pelanggaran, Tindak Lanjut, Pembinaan
+  <back:#C8E6C9> </back> Waka Kesiswaan — Validasi, Laporan
+  <back:#FFF9C4> </back> Kaprodi — Pelanggaran, Validasi, Pembinaan
+  
+  **STAFF:**
+  <back:#E1BEE7> </back> Guru — Catat Pelanggaran
+  <back:#B2DFDB> </back> Waka Sarana — Lihat Laporan
+  
+  ══════════════════════════════════════
+  **Total: 7 Aktor, 17 Use Cases**
+  **Versi: 6.0 (Konsolidasi)**
+end note
+
+@enduml

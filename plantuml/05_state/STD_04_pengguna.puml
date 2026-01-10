@@ -1,0 +1,75 @@
+@startuml STD_04_Pengguna
+' ============================================================================
+' STATE DIAGRAM - PENGGUNA
+' ============================================================================
+' Entity: User
+' Deskripsi: Siklus hidup akun pengguna dalam sistem
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam state {
+    BackgroundColor #FFFFFF
+    BorderColor #37474F
+    FontColor #212121
+    ArrowColor #455A64
+    StartColor #4CAF50
+    EndColor #F44336
+}
+
+title **STD-04: Siklus Status Pengguna**
+
+[*] --> Aktif : Operator membuat\nakun pengguna
+
+state Aktif #E8F5E9 {
+    Aktif : Akun dapat digunakan
+    Aktif : Pengguna dapat login
+    Aktif : Mengakses fitur sesuai role
+}
+
+Aktif --> Aktif : Data diperbarui /\nPassword direset
+
+Aktif --> TidakAktif : Operator menonaktifkan\nakun
+
+state TidakAktif #FFEBEE {
+    TidakAktif : Akun dinonaktifkan
+    TidakAktif : Tidak dapat login
+    TidakAktif : Data tetap tersimpan
+}
+
+TidakAktif --> Aktif : Operator mengaktifkan\nkembali akun
+
+TidakAktif --> [*] : Akun dihapus\n(soft delete)
+
+note bottom of Aktif
+  **Role Pengguna:**
+  - Kepala Sekolah
+  - Waka Kesiswaan
+  - Kaprodi
+  - Wali Kelas
+  - Guru
+  - Operator
+  - Wali Murid
+end note
+
+note bottom of TidakAktif
+  **Alasan Nonaktif:**
+  - Pindah tugas
+  - Pensiun
+  - Cuti panjang
+  - Pelanggaran
+end note
+
+legend right
+  **Alur Status:**
+  AKTIF ↔ TIDAK AKTIF → DIHAPUS
+  
+  Data pengguna tidak aktif
+  tetap tersimpan untuk
+  keperluan audit
+endlegend
+
+@enduml

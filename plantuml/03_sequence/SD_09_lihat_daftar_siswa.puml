@@ -1,0 +1,90 @@
+@startuml SD_09_Lihat_Daftar_Siswa
+' ============================================================================
+' SEQUENCE DIAGRAM - LIHAT DAFTAR SISWA
+' ============================================================================
+' Use Case: Kelola Siswa
+' Aktor: Operator, Wali Kelas, Kaprodi, Waka, Kepsek, Wali Murid
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-09: Lihat Daftar Siswa**
+
+actor "Operator / Wali Kelas /\nKaprodi / Waka /\nKepsek / Wali Murid" as USER
+
+box "Application Layer" #E8F5E9
+    participant "SiswaController" as SC
+    participant "SiswaService" as SS
+end box
+
+box "Data Layer" #FFF3E0
+    participant "Siswa Model" as SM
+    participant "Kelas Model" as KM
+    participant "Jurusan Model" as JM
+    database "MySQL" as DB
+end box
+
+== Lihat Daftar Siswa ==
+
+USER -> SC : GET /siswa\n(?kelas_id, ?jurusan_id, ?search)
+activate SC
+
+SC -> SC : Get user role
+
+alt Role = Operator / Kepsek / Waka
+    SC -> SC : Tidak ada filter otomatis\n(bisa lihat semua siswa)
+else Role = Kaprodi
+    SC -> JM : where kaprodi_user_id = auth.id
+    activate JM
+    JM -> DB : SELECT * FROM jurusan WHERE kaprodi_user_id = ?
+    DB --> JM : Jurusan data
+    JM --> SC : Jurusan yang diampu
+    deactivate JM
+    SC -> SC : Auto-filter by jurusan
+else Role = Wali Kelas
+    SC -> KM : where wali_kelas_user_id = auth.id
+    activate KM
+    KM -> DB : SELECT * FROM kelas WHERE wali_kelas_user_id = ?
+    DB --> KM : Kelas data
+    KM --> SC : Kelas yang diampu
+    deactivate KM
+    SC -> SC : Auto-filter by kelas
+else Role = Wali Murid
+    SC -> SC : Filter by wali_murid_id = auth.id
+end
+
+SC -> SS : getFilteredSiswa(filters)
+activate SS
+
+SS -> SM : with kelas.jurusan\npaginate(20)
+activate SM
+SM -> DB : SELECT siswa with relations
+DB --> SM : Paginated Siswa data
+SM --> SS : Paginated Siswa
+deactivate SM
+
+SS --> SC : Daftar Siswa
+deactivate SS
+
+SC --> USER : Tampilkan daftar siswa:\n- NISN, Nama, Kelas, Jurusan\n- Total Poin, Status
+deactivate SC
+
+@enduml

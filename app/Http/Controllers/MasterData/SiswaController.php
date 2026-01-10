@@ -104,11 +104,13 @@ class SiswaController extends Controller
             return response()->json(['available' => false, 'message' => 'NISN harus 10 digit angka']);
         }
 
-        $exists = $this->siswaService->findByNisn($nisn) !== null;
+        $existingSiswa = $this->siswaService->findByNisn($nisn);
+        $exists = $existingSiswa !== null;
 
         return response()->json([
             'available' => !$exists,
-            'message' => $exists ? 'NISN sudah terdaftar' : 'NISN tersedia'
+            'message' => $exists ? 'NISN sudah terdaftar' : 'NISN tersedia',
+            'owner' => $exists ? $existingSiswa->nama_siswa : null,
         ]);
     }
 
@@ -124,14 +126,25 @@ class SiswaController extends Controller
             return response()->json(['available' => true, 'message' => 'Nomor HP kosong']);
         }
 
-        $isUsed = $this->waliService->isPhoneUsedByWali($phoneClean);
+        // Logic check existing via Service (manual query here for specifics)
+        $existingWali = \App\Models\User::where('phone', $phoneClean)
+            ->whereHas('role', fn($q) => $q->where('nama_role', 'Wali Murid'))
+            ->select('id', 'nama', 'username', 'email') // Select needed fields
+            ->first();
+
+        if ($existingWali) {
+            return response()->json([
+                'status' => 'found',
+                'available' => false,
+                'message' => 'Nomor HP sudah terdaftar.',
+                'wali' => $existingWali
+            ]);
+        }
 
         return response()->json([
-            'available' => !$isUsed,
-            'existing' => $isUsed,
-            'message' => $isUsed 
-                ? 'Nomor HP sudah digunakan oleh wali murid lain (akan di-link)' 
-                : 'Nomor HP tersedia untuk akun baru'
+            'status' => 'available',
+            'available' => true,
+            'message' => 'Nomor HP tersedia untuk akun baru.'
         ]);
     }
 
@@ -167,6 +180,8 @@ class SiswaController extends Controller
         return view('siswa.show', [
             'siswa' => $data['siswa'],
             'statistik' => $data['statistik'],
+            'totalPoin' => $data['statistik']['total_poin'] ?? 0,
+            'pembinaanAktif' => $data['statistik']['pembinaan_aktif'] ?? false,
         ]);
     }
 
@@ -177,9 +192,9 @@ class SiswaController extends Controller
     {
         $siswa = $this->siswaService->getSiswaForEdit($id);
         $kelas = $this->siswaService->getAllKelas();
-        $waliMuridOptions = $this->waliService->getAvailableWaliMurid();
+        $waliMurid = $this->waliService->getAvailableWaliMurid();
         
-        return view('siswa.edit', compact('siswa', 'kelas', 'waliMuridOptions'));
+        return view('siswa.edit', compact('siswa', 'kelas', 'waliMurid'));
     }
 
     /**
@@ -205,7 +220,12 @@ class SiswaController extends Controller
             ])
             : SiswaData::from($request->validated());
 
-        $this->siswaService->updateSiswa($id, $siswaData, $isWaliKelas);
+        $this->siswaService->updateSiswa(
+            $id,
+            $siswaData,
+            $isWaliKelas,
+            $request->boolean('create_wali')
+        );
 
         return redirect()
             ->route('siswa.index')

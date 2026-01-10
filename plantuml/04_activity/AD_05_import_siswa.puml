@@ -1,0 +1,66 @@
+@startuml AD_05_Import_Siswa
+' ============================================================================
+' ACTIVITY DIAGRAM - IMPORT SISWA (BULK)
+' ============================================================================
+' Use Case: Kelola Siswa - Import
+' Aktor: Operator Sekolah
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+    DiamondBackgroundColor #FFF8E1
+    DiamondBorderColor #FF8F00
+    ArrowColor #455A64
+}
+
+title **AD-05: Import Siswa (Bulk)**
+
+|#E8F5E9|Operator|
+start
+
+:Membuka form import siswa;
+
+:Memilih kelas tujuan;
+
+:Memilih metode input:\n- Unggah file CSV\n- Input manual;
+
+:Memilih opsi buat akun wali\nuntuk semua siswa (opsional);
+
+:Mengklik tombol Import;
+
+|#E3F2FD|Sistem|
+
+:Membaca dan memproses data;
+
+:Memvalidasi setiap baris data;
+
+fork
+    :Menyimpan data siswa yang valid;
+fork again
+    :Mencatat data siswa yang gagal;
+end fork
+
+:Menghitung hasil proses;
+
+if (Ada yang berhasil?) then (Ya)
+    if (Buat akun wali?) then (Ya)
+        :Membuat akun wali untuk\nsetiap siswa yang berhasil;
+    endif
+    
+    |Operator|
+    :Menampilkan hasil import:\n- Jumlah berhasil\n- Jumlah gagal\n- Daftar akun wali (jika ada);
+    stop
+else (Semua gagal)
+    |Operator|
+    :Menampilkan daftar error\nbeserta penyebabnya;
+    stop
+endif
+
+@enduml

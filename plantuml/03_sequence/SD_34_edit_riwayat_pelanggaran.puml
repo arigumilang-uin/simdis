@@ -1,0 +1,104 @@
+@startuml SD_34_Edit_Riwayat_Pelanggaran
+' ============================================================================
+' SEQUENCE DIAGRAM - EDIT RIWAYAT PELANGGARAN
+' ============================================================================
+' Use Case: Kelola Riwayat Pelanggaran
+' Aktor: 
+'   - Operator: bisa edit SEMUA tanpa batasan waktu
+'   - Guru/Wali Kelas/Kaprodi/Waka: hanya milik sendiri, max 3 hari
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-34: Edit Riwayat Pelanggaran**
+
+actor "Operator / Guru /\nWali Kelas / Kaprodi /\nWaka" as USER
+
+box "Application Layer" #E8F5E9
+    participant "PelanggaranController" as PC
+    participant "RiwayatPelanggaran\nPolicy" as PP
+end box
+
+box "Data Layer" #FFF3E0
+    participant "RiwayatPelanggaran" as RP
+    database "MySQL" as DB
+end box
+
+== Cek Otorisasi ==
+
+USER -> PC : GET /pelanggaran/id/edit
+activate PC
+
+PC -> RP : findOrFail(id)
+activate RP
+RP -> DB : SELECT * FROM riwayat_pelanggaran WHERE id = ?
+DB --> RP : Riwayat data
+RP --> PC : Riwayat object
+deactivate RP
+
+PC -> PP : authorize(update, riwayat)
+activate PP
+
+alt Role = Operator Sekolah
+    PP --> PC : Allowed\n(bisa edit SEMUA tanpa batasan)
+else Role lain (Guru/Wali Kelas/Kaprodi/Waka)
+    PP -> PP : Check ownership\n(riwayat.guru_pencatat_user_id == auth.id)
+    
+    alt Bukan pemilik
+        PP --> PC : Forbidden (403)
+        PC --> USER : Error: "Anda hanya bisa edit\npelanggaran yang Anda catat"
+    else Adalah pemilik
+        PP -> PP : Check time limit\n(created_at + 3 HARI > now)
+        
+        alt Lebih dari 3 hari
+            PP --> PC : Forbidden (403)
+            PC --> USER : Error: "Sudah lewat batas waktu edit (3 hari)"
+        else Masih dalam 3 hari
+            PP --> PC : Allowed
+        end
+    end
+end
+deactivate PP
+
+PC --> USER : Form edit:\n- Keterangan\n- Bukti Foto
+deactivate PC
+
+== Proses Update ==
+
+USER -> PC : PUT /pelanggaran/id\n(keterangan, bukti_foto)
+activate PC
+
+PC -> PP : authorize(update, riwayat)
+activate PP
+PP --> PC : Allowed
+deactivate PP
+
+PC -> RP : findOrFail(id)->update()
+activate RP
+RP -> DB : UPDATE riwayat_pelanggaran SET\nketerangan = ?, bukti_foto = ?
+DB --> RP : Updated
+RP --> PC : Success
+deactivate RP
+
+PC --> USER : Redirect /pelanggaran/riwayat\nFlash: "Riwayat pelanggaran berhasil diperbarui"
+deactivate PC
+
+@enduml

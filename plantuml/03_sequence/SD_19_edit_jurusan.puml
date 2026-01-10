@@ -1,0 +1,82 @@
+@startuml SD_19_Edit_Jurusan
+' ============================================================================
+' SEQUENCE DIAGRAM - EDIT JURUSAN
+' ============================================================================
+' Use Case: Kelola Jurusan
+' Aktor: Operator Sekolah
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-19: Edit Jurusan**
+
+actor "Operator\nSekolah" as OPERATOR
+
+box "Application Layer" #E8F5E9
+    participant "JurusanController" as JC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "Jurusan Model" as JM
+    participant "User Model" as UM
+    database "MySQL" as DB
+end box
+
+== Tampilkan Form Edit ==
+
+OPERATOR -> JC : GET /jurusan/id/edit
+activate JC
+
+JC -> JM : findOrFail(id)
+activate JM
+JM -> DB : SELECT * FROM jurusan WHERE id = ?
+DB --> JM : Jurusan data
+JM --> JC : Jurusan object
+deactivate JM
+
+JC -> UM : Kaprodi tersedia + current
+activate UM
+UM -> DB : SELECT * FROM users WHERE role = kaprodi
+DB --> UM : User data
+UM --> JC : Daftar User
+deactivate UM
+
+JC --> OPERATOR : Form edit (pre-filled)
+deactivate JC
+
+== Proses Update ==
+
+OPERATOR -> JC : PUT /jurusan/id\n(kode_jurusan, nama_jurusan,\nkaprodi_user_id)
+activate JC
+
+JC -> JC : validate()
+
+JC -> JM : findOrFail(id)->update(data)
+activate JM
+JM -> DB : UPDATE jurusan SET ...
+DB --> JM : Updated
+JM --> JC : Success
+deactivate JM
+
+JC --> OPERATOR : Redirect /jurusan\nFlash: "Jurusan berhasil diperbarui"
+deactivate JC
+
+@enduml

@@ -1,0 +1,62 @@
+@startuml AD_15_Selesaikan_Pembinaan
+' ============================================================================
+' ACTIVITY DIAGRAM - SELESAIKAN PEMBINAAN INTERNAL
+' ============================================================================
+' Use Case: Kelola Pembinaan - Selesaikan
+' Aktor: Wali Kelas, Kaprodi, Waka Kesiswaan, Kepala Sekolah
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+    DiamondBackgroundColor #FFF8E1
+    DiamondBorderColor #FF8F00
+    ArrowColor #455A64
+}
+
+title **AD-15: Selesaikan Pembinaan Internal**
+
+|#E8F5E9|Pembina|
+start
+
+:Membuka pembinaan yang\nsedang berjalan;
+
+:Melaksanakan sesi pembinaan;
+
+:Mengisi hasil pembinaan;
+
+:Mengklik Selesaikan Pembinaan;
+
+|#E3F2FD|Sistem|
+
+:Memeriksa hak akses pembina;
+
+if (Pembina berwenang?) then (Ya)
+    if (Status sedang dibina?) then (Ya)
+        :Mengubah status menjadi Selesai;
+        :Mencatat pembina yang menyelesaikan;
+        :Mencatat waktu penyelesaian;
+        :Menyimpan hasil pembinaan;
+        :Mencatat aktivitas;
+        
+        |Pembina|
+        :Menampilkan pesan sukses\nPembinaan berhasil diselesaikan;
+        stop
+    else (Tidak)
+        |Pembina|
+        :Menampilkan pesan error\nStatus tidak valid;
+        stop
+    endif
+else (Tidak)
+    |Pembina|
+    :Menampilkan pesan error\nTidak memiliki akses;
+    stop
+endif
+
+@enduml

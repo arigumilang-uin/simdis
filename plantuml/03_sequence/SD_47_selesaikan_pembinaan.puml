@@ -1,0 +1,103 @@
+@startuml SD_47_Selesaikan_Pembinaan
+' ============================================================================
+' SEQUENCE DIAGRAM - SELESAIKAN PEMBINAAN
+' ============================================================================
+' Use Case: Kelola Pembinaan
+' Aktor: Wali Kelas, Kaprodi, Waka Kesiswaan
+' Deskripsi: Bisa selesaikan jika:
+'   - User adalah yang memulai pembinaan, ATAU
+'   - User role ada di pembina_roles
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-47: Selesaikan Pembinaan**
+
+actor "Wali Kelas / Kaprodi /\nWaka Kesiswaan" as USER
+
+box "Application Layer" #E8F5E9
+    participant "PembinaanStatus\nController" as PC
+    participant "ActivityLog" as AL
+end box
+
+box "Data Layer" #FFF3E0
+    participant "PembinaanStatus" as PS
+    database "MySQL" as DB
+end box
+
+== Proses Selesaikan ==
+
+USER -> PC : PUT /pembinaan/id/selesaikan\n(?hasil_pembinaan)
+activate PC
+
+PC -> PS : findOrFail(id)
+activate PS
+PS -> DB : SELECT * FROM pembinaan_status WHERE id = ?
+DB --> PS : PembinaanStatus data
+PS --> PC : PembinaanStatus object
+deactivate PS
+
+PC -> PC : Get user role
+
+PC -> PC : Check authorization
+
+alt User adalah yang memulai\n(pembinaan.dibina_oleh_user_id == user.id)
+    PC -> PC : Allowed
+else User role IN pembina_roles
+    PC -> PC : Allowed
+else Tidak memenuhi kriteria
+    PC --> USER : Error: "Anda tidak memiliki akses\nuntuk menyelesaikan pembinaan ini"
+end
+
+alt Authorized
+    PC -> PC : Check status
+    
+    alt Status bukan SEDANG_DIBINA
+        PC --> USER : Error: "Tidak dapat menyelesaikan.\nStatus saat ini bukan Sedang Dibina"
+    else Status = SEDANG_DIBINA
+        PC -> PS : selesaikanPembinaan(user.id, hasil)
+        activate PS
+        PS -> DB : UPDATE pembinaan_status SET\nstatus = 'Selesai',\ndiselesaikan_oleh_user_id = auth.id,\nselesai_at = NOW(),\nhasil_pembinaan = ?
+        DB --> PS : Updated
+        PS --> PC : Success
+        deactivate PS
+        
+        PC -> AL : log('Menyelesaikan pembinaan internal')
+        activate AL
+        AL -> DB : INSERT INTO activity_log
+        DB --> AL : Created
+        AL --> PC : Success
+        deactivate AL
+        
+        PC --> USER : Redirect back\nFlash: "Pembinaan berhasil diselesaikan!"
+    end
+end
+deactivate PC
+
+note right of PS
+  **STATUS FINAL: SELESAI**
+  Tracking lengkap:
+  - dibina_oleh + dibina_at
+  - diselesaikan_oleh + selesai_at
+  - hasil_pembinaan (catatan)
+end note
+
+@enduml

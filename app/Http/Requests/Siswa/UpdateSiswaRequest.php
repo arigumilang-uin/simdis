@@ -42,6 +42,7 @@ class UpdateSiswaRequest extends FormRequest
         if ($user?->hasRole('Wali Kelas')) {
             return [
                 'nomor_hp_wali_murid' => ['nullable', 'numeric'],
+                'create_wali' => ['nullable', 'boolean'],
             ];
         }
 
@@ -52,6 +53,7 @@ class UpdateSiswaRequest extends FormRequest
             'kelas_id' => ['required', 'exists:kelas,id'],
             'nomor_hp_wali_murid' => ['nullable', 'numeric'],
             'wali_murid_user_id' => ['nullable', 'exists:users,id'],
+            'create_wali' => ['nullable', 'boolean'],
         ];
     }
 

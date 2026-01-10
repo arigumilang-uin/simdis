@@ -142,4 +142,47 @@ class SiswaArchiveController extends Controller
                 ->with('error', 'Gagal menghapus siswa: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Bulk restore deleted siswa.
+     */
+    public function bulkRestore(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'siswa_ids' => 'required|array|min:1',
+        ], [
+            'siswa_ids.required' => 'Pilih minimal 1 siswa untuk di-restore.',
+        ]);
+
+        try {
+            $successCount = 0;
+            $failedCount = 0;
+            
+            foreach ($validated['siswa_ids'] as $siswaId) {
+                try {
+                    $this->archiveService->restoreSiswa($siswaId);
+                    $successCount++;
+                } catch (\Exception $e) {
+                    $failedCount++;
+                    \Log::warning('Failed to restore siswa', ['id' => $siswaId, 'error' => $e->getMessage()]);
+                }
+            }
+            
+            $message = "Berhasil restore {$successCount} siswa.";
+            if ($failedCount > 0) {
+                $message .= " {$failedCount} siswa gagal di-restore.";
+            }
+            
+            return redirect()
+                ->route('siswa.deleted')
+                ->with('success', $message);
+                
+        } catch (\Exception $e) {
+            \Log::error('Bulk restore error', ['error' => $e->getMessage()]);
+            
+            return redirect()
+                ->back()
+                ->with('error', 'Gagal restore siswa: ' . $e->getMessage());
+        }
+    }
 }

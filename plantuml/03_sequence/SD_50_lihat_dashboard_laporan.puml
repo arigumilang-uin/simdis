@@ -1,0 +1,80 @@
+@startuml SD_50_Lihat_Dashboard_Laporan
+' ============================================================================
+' SEQUENCE DIAGRAM - LIHAT DASHBOARD LAPORAN
+' ============================================================================
+' Use Case: Lihat Laporan
+' Aktor: Kepala Sekolah, Waka, Operator
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-50: Lihat Dashboard Laporan**
+
+actor "Kepsek / Waka /\nOperator" as USER
+
+box "Application Layer" #E8F5E9
+    participant "ReportController" as RC
+    participant "ReportService" as RS
+end box
+
+box "Data Layer" #FFF3E0
+    participant "RiwayatPelanggaran" as RP
+    participant "TindakLanjut" as TL
+    participant "PembinaanStatus" as PS
+    database "MySQL" as DB
+end box
+
+== Lihat Dashboard ==
+
+USER -> RC : GET /report/dashboard\n(?periode, ?kelas_id, ?jurusan_id)
+activate RC
+
+RC -> RS : getDashboardData(filters)
+activate RS
+
+RS -> RP : statistik pelanggaran
+activate RP
+RP -> DB : SELECT COUNT(*) as total,\nSUM(poin) as total_poin,\njenis_pelanggaran_id\nFROM riwayat_pelanggaran\nWHERE periode\nGROUP BY jenis
+DB --> RP : Statistik data
+RP --> RS : Statistik Pelanggaran
+deactivate RP
+
+RS -> TL : statistik tindak lanjut
+activate TL
+TL -> DB : SELECT status, COUNT(*)\nFROM tindak_lanjut\nGROUP BY status
+DB --> TL : Status data
+TL --> RS : Statistik per Status
+deactivate TL
+
+RS -> PS : statistik pembinaan
+activate PS
+PS -> DB : SELECT status, COUNT(*)\nFROM pembinaan_status\nGROUP BY status
+DB --> PS : Pembinaan data
+PS --> RS : Statistik Pembinaan
+deactivate PS
+
+RS --> RC : Return {\n  totalPelanggaran,\n  totalPoin,\n  tindakLanjutByStatus,\n  pembinaanByStatus,\n  top10SiswaByPoin,\n  top10JenisPelanggaran,\n  chartDataBulanan\n}
+deactivate RS
+
+RC --> USER : Tampilkan dashboard:\n- Total Pelanggaran dan Poin\n- Chart Status Tindak Lanjut\n- Chart Status Pembinaan\n- Top 10 Siswa by Poin\n- Top 10 Jenis Pelanggaran
+deactivate RC
+
+@enduml

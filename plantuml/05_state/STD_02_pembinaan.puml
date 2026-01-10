@@ -1,0 +1,76 @@
+@startuml STD_02_Pembinaan
+' ============================================================================
+' STATE DIAGRAM - PEMBINAAN INTERNAL
+' ============================================================================
+' Entity: PembinaanStatus
+' Deskripsi: Siklus hidup pembinaan internal siswa berdasarkan akumulasi poin
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam state {
+    BackgroundColor #FFFFFF
+    BorderColor #37474F
+    FontColor #212121
+    ArrowColor #455A64
+    StartColor #4CAF50
+    EndColor #F44336
+}
+
+title **STD-02: Siklus Status Pembinaan Internal**
+
+[*] --> PerluPembinaan : Total poin siswa\nmasuk rentang aturan
+
+state PerluPembinaan #FFF8E1 {
+    PerluPembinaan : Siswa memerlukan pembinaan
+    PerluPembinaan : Muncul di daftar pembina
+    PerluPembinaan : Tingkat pembinaan ditentukan
+}
+
+PerluPembinaan --> SedangDibina : Pembina memulai\npembinaan
+
+state SedangDibina #E3F2FD {
+    SedangDibina : Proses pembinaan berlangsung
+    SedangDibina : Pembina melakukan sesi pembinaan
+    SedangDibina : Catatan pembinaan dapat diisi
+}
+
+SedangDibina --> Selesai : Pembina menyelesaikan\npembinaan
+
+state Selesai #C8E6C9 {
+    Selesai : Pembinaan telah selesai
+    Selesai : Hasil pembinaan tersimpan
+    Selesai : Status akhir
+}
+
+Selesai --> [*]
+
+note right of PerluPembinaan
+  **Tingkat Pembinaan:**
+  Berdasarkan akumulasi poin:
+  - Tingkat 1: Wali Kelas
+  - Tingkat 2: Kaprodi
+  - Tingkat 3: Waka Kesiswaan
+  - Tingkat 4: Kepala Sekolah
+end note
+
+note right of Selesai
+  **Status Akhir**
+  Pembinaan selesai,
+  hasil tersimpan untuk
+  catatan siswa
+end note
+
+legend right
+  **Alur Status:**
+  PERLU PEMBINAAN → SEDANG DIBINA → SELESAI
+  
+  Pembinaan dipicu otomatis
+  oleh mesin aturan berdasarkan
+  akumulasi poin pelanggaran siswa
+endlegend
+
+@enduml

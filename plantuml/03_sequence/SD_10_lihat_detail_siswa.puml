@@ -1,0 +1,68 @@
+@startuml SD_10_Lihat_Detail_Siswa
+' ============================================================================
+' SEQUENCE DIAGRAM - LIHAT DETAIL SISWA
+' ============================================================================
+' Use Case: Kelola Siswa
+' Aktor: Operator, Wali Kelas, Kaprodi, Waka, Kepsek, Wali Murid
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-10: Lihat Detail Siswa**
+
+actor "Operator / Wali Kelas /\nKaprodi / Waka /\nKepsek / Wali Murid" as USER
+
+box "Application Layer" #E8F5E9
+    participant "SiswaController" as SC
+    participant "SiswaService" as SS
+end box
+
+box "Data Layer" #FFF3E0
+    participant "Siswa Model" as SM
+    database "MySQL" as DB
+end box
+
+== Lihat Detail Siswa ==
+
+USER -> SC : GET /siswa/id
+activate SC
+
+SC -> SS : getSiswaDetail(id)
+activate SS
+
+SS -> SM : findOrFail(id) with relations
+activate SM
+SM -> DB : SELECT siswa with\nkelas, jurusan, waliKelas,\nwaliMurid, riwayatPelanggaran,\ntindakLanjut, pembinaanStatus
+DB --> SM : Siswa + all relations data
+SM --> SS : Siswa object with relations
+deactivate SM
+
+SS -> SS : Calculate totalPoin
+
+SS -> SS : Get pembinaan rekomendasi
+
+SS --> SC : Return siswa detail
+deactivate SS
+
+SC --> USER : Tampilkan detail siswa:\n- Data Pribadi\n- Data Wali Murid\n- Total Poin Pelanggaran\n- Status Pembinaan\n- Riwayat Pelanggaran
+deactivate SC
+
+@enduml

@@ -1,0 +1,62 @@
+@startuml AD_06_Restore_Siswa
+' ============================================================================
+' ACTIVITY DIAGRAM - RESTORE SISWA
+' ============================================================================
+' Use Case: Kelola Siswa - Restore
+' Aktor: Operator Sekolah
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+    DiamondBackgroundColor #FFF8E1
+    DiamondBorderColor #FF8F00
+    ArrowColor #455A64
+}
+
+title **AD-06: Restore Siswa**
+
+|#E8F5E9|Operator|
+start
+
+:Membuka menu Siswa Terhapus;
+
+|#E3F2FD|Sistem|
+
+:Menampilkan daftar siswa\nyang telah dihapus;
+
+|Operator|
+
+:Memilih siswa yang akan dipulihkan;
+
+:Mengklik tombol Restore;
+
+|Sistem|
+
+:Menampilkan dialog konfirmasi;
+
+|Operator|
+
+:Mengkonfirmasi pemulihan;
+
+|Sistem|
+
+:Mengaktifkan kembali data siswa;
+
+:Menghapus informasi alasan keluar;
+
+:Mencatat aktivitas pemulihan;
+
+|Operator|
+
+:Menampilkan pesan sukses\nSiswa berhasil dipulihkan;
+
+stop
+
+@enduml

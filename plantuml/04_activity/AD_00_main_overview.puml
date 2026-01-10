@@ -1,0 +1,248 @@
+@startuml AD_00_Main_Overview
+' ============================================================================
+' ACTIVITY DIAGRAM - OVERVIEW SISTEM KEDISIPLINAN SISWA
+' ============================================================================
+' Kolom: Operator Sekolah | Pencatat | SISTEM | Wali Murid | Kepala Sekolah
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+    DiamondBackgroundColor #FFF8E1
+    DiamondBorderColor #FF8F00
+    ArrowColor #455A64
+}
+
+title **AD-00: Overview Sistem Kedisiplinan Siswa**
+
+|#E8EAF6|Operator Sekolah|
+|#E8F5E9|Pencatat|
+|#E3F2FD|Sistem|
+|#FFEBEE|Wali Murid|
+|#FCE4EC|Kepala Sekolah|
+
+' ============================================================================
+' OPERATOR SEKOLAH
+' ============================================================================
+
+|Operator Sekolah|
+start
+
+:Membuka menu Master Data;
+
+|Sistem|
+:Menampilkan daftar data;
+
+|Operator Sekolah|
+:Mengelola data siswa;
+
+|Sistem|
+:Menyimpan data siswa;
+
+|Operator Sekolah|
+:Mengelola data pengguna;
+
+|Sistem|
+:Menyimpan data pengguna;
+
+|Operator Sekolah|
+:Mengelola jenis pelanggaran;
+
+|Sistem|
+:Menyimpan jenis pelanggaran;
+
+|Operator Sekolah|
+:Melihat Activity Log;
+
+|Sistem|
+:Menampilkan log aktivitas;
+
+|Operator Sekolah|
+stop
+
+' ============================================================================
+' PENCATAT (Guru, Wali Kelas, Kaprodi, Waka, Operator)
+' ============================================================================
+
+|Pencatat|
+start
+
+:Membuka menu Catat Pelanggaran;
+
+|Sistem|
+:Menampilkan form pencatatan;
+
+|Pencatat|
+:Memilih siswa dan jenis pelanggaran;
+:Mengisi keterangan dan bukti;
+:Menyimpan data pelanggaran;
+
+|Sistem|
+:Menjalankan Mesin Aturan;
+
+if (Memicu tindak lanjut?) then (Ya)
+    :Membuat tindak lanjut;
+    :Membuat surat panggilan;
+else (Tidak)
+    :Pelanggaran tercatat tanpa tindak lanjut;
+endif
+
+if (Memicu pembinaan?) then (Ya)
+    :Membuat record pembinaan;
+endif
+
+|Pencatat|
+:Membuka menu Tindak Lanjut;
+
+|Sistem|
+:Menampilkan kasus sesuai role;
+
+|Pencatat|
+:Memilih dan mulai tangani kasus;
+
+|Sistem|
+:Mengubah status ke Ditangani;
+
+|Pencatat|
+:Mencetak surat panggilan;
+
+|Sistem|
+:Mencatat log cetak;
+
+|Pencatat|
+:Melakukan pertemuan dengan wali;
+:Menyelesaikan tindak lanjut;
+
+|Sistem|
+:Mengubah status ke Selesai;
+
+|Pencatat|
+:Membuka menu Pembinaan;
+
+|Sistem|
+:Menampilkan daftar pembinaan;
+
+|Pencatat|
+:Mulai dan selesaikan pembinaan;
+
+|Sistem|
+:Mengubah status pembinaan ke Selesai;
+
+|Pencatat|
+stop
+
+' ============================================================================
+' WALI MURID
+' ============================================================================
+
+|Wali Murid|
+start
+
+:Membuka dashboard;
+
+|Sistem|
+:Menampilkan data anak;
+
+|Wali Murid|
+:Melihat profil anak;
+
+|Sistem|
+:Menampilkan detail siswa;
+
+|Wali Murid|
+:Melihat riwayat pelanggaran;
+
+|Sistem|
+:Menampilkan riwayat pelanggaran;
+
+|Wali Murid|
+:Melihat status tindak lanjut;
+
+|Sistem|
+:Menampilkan status tindak lanjut;
+
+|Wali Murid|
+:Melihat status pembinaan;
+
+|Sistem|
+:Menampilkan status pembinaan;
+
+|Wali Murid|
+stop
+
+' ============================================================================
+' KEPALA SEKOLAH
+' ============================================================================
+
+|Kepala Sekolah|
+start
+
+:Membuka menu Persetujuan;
+
+|Sistem|
+:Menampilkan kasus menunggu persetujuan;
+
+|Kepala Sekolah|
+:Memilih kasus untuk ditinjau;
+
+|Sistem|
+:Menampilkan detail kasus;
+
+|Kepala Sekolah|
+if (Menyetujui?) then (Ya)
+    :Mengklik tombol Setujui;
+    |Sistem|
+    :Mengubah status ke Disetujui;
+    :Mengirim notifikasi ke Pembina;
+else (Tidak)
+    :Mengklik tombol Tolak;
+    :Mengisi alasan penolakan;
+    |Sistem|
+    :Mengubah status ke Ditolak;
+endif
+
+|Kepala Sekolah|
+:Membuka menu Laporan;
+
+|Sistem|
+:Menampilkan statistik dashboard;
+
+|Kepala Sekolah|
+:Memilih filter dan periode;
+:Mengekspor laporan;
+
+|Sistem|
+:Menghasilkan file Excel/PDF;
+
+|Kepala Sekolah|
+stop
+
+' ============================================================================
+' LEGEND
+' ============================================================================
+
+legend right
+  **KETERANGAN ROLE**
+  ----
+  **Operator Sekolah:**
+  Kelola Master Data
+  ----
+  **Pencatat (6 role):**
+  Guru, Wali Kelas, Kaprodi,
+  Waka Kesiswaan, Waka Sarana,
+  Operator Sekolah
+  ----
+  **Wali Murid:**
+  Lihat Data Anak
+  ----
+  **Kepala Sekolah:**
+  Persetujuan & Laporan
+endlegend
+
+@enduml

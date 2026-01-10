@@ -1,0 +1,91 @@
+@startuml COMP_05_Data
+' ============================================================================
+' COMPONENT DIAGRAM - DATA LAYER
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 11
+skinparam linetype polyline
+
+skinparam component {
+    BackgroundColor #FFFFFF
+    BorderColor #37474F
+    FontColor #212121
+}
+
+skinparam package {
+    BackgroundColor #FAFAFA
+    BorderColor #9E9E9E
+    FontColor #424242
+}
+
+skinparam database {
+    BackgroundColor #FFF8E1
+    BorderColor #FF8F00
+}
+
+title **COMP-05: Data Layer**
+
+package "Repositories (9)" as REPO #E3F2FD {
+    [Repository Classes] as REPOS
+}
+
+package "Contracts (6)" as CONT #FFF3E0 {
+    [IRepository Interfaces] as CONTRACTS
+}
+
+package "Eloquent Models (16)" as MDL #E8F5E9 {
+    [Model Classes] as MODELS
+}
+
+package "Observers (4)" as OBS #E8EAF6 {
+    [Observer Classes] as OBSERVERS
+}
+
+package "Enums (4)" as ENUM #FFEBEE {
+    [Enum Classes] as ENUMS
+}
+
+database "MySQL" as DB
+database "Cache" as CACHE
+
+' Repository implements Contract
+REPOS -right-> CONTRACTS : implements
+
+' Repository uses Model
+REPOS -down-> MODELS : query
+
+' Model uses Observer
+MODELS -right-> OBSERVERS : observed by
+
+' Model uses Enum
+MODELS -down-> ENUMS : uses
+
+' Model persists to DB
+MODELS -down-> DB : persist
+MODELS -down-> CACHE : cache
+
+note right of REPOS
+  **9 Repositories:**
+  Base, Siswa, User,
+  TindakLanjut, RiwayatPelanggaran,
+  JenisPelanggaran, FrequencyRule,
+  Jurusan, Kelas
+end note
+
+note right of MODELS
+  **16 Models:**
+  User, Role, Siswa, Kelas,
+  Jurusan, JenisPelanggaran,
+  RiwayatPelanggaran, TindakLanjut,
+  SuratPanggilan, PembinaanStatus, dll
+end note
+
+note right of OBSERVERS
+  **4 Observers:**
+  Siswa, User, Jurusan, Kelas
+end note
+
+@enduml

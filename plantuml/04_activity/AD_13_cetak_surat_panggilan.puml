@@ -1,0 +1,53 @@
+@startuml AD_13_Cetak_Surat_Panggilan
+' ============================================================================
+' ACTIVITY DIAGRAM - CETAK SURAT PANGGILAN
+' ============================================================================
+' Use Case: Kelola Surat Panggilan - Cetak
+' Aktor: Wali Kelas, Kaprodi, Waka Kesiswaan
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+    DiamondBackgroundColor #FFF8E1
+    DiamondBorderColor #FF8F00
+    ArrowColor #455A64
+}
+
+title **AD-13: Cetak Surat Panggilan**
+
+|#E8F5E9|Pembina|
+start
+
+:Memilih tindak lanjut dari daftar;
+
+:Mengklik Cetak Surat;
+
+|#E3F2FD|Sistem|
+
+:Memeriksa hak akses pembina;
+
+if (Pembina berwenang?) then (Ya)
+    :Mencatat riwayat pencetakan\nuntuk keperluan audit;
+    
+    :Menyiapkan data surat lengkap;
+    :Menyusun format surat dengan\nlogo dan tanda tangan;
+    
+    :Menghasilkan dokumen PDF;
+    
+    |Pembina|
+    :Mengunduh atau mencetak\ndokumen PDF;
+    stop
+else (Tidak)
+    |Pembina|
+    :Menampilkan pesan error\nTidak memiliki akses;
+    stop
+endif
+
+@enduml

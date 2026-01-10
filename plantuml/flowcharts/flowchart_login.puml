@@ -1,0 +1,103 @@
+@startuml Flowchart_Login
+' ============================================================================
+' FLOWCHART: ALUR PROSES LOGIN
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+skinparam ActivityBackgroundColor #E3F2FD
+skinparam ActivityBorderColor #1976D2
+skinparam ActivityDiamondBackgroundColor #FFF8E1
+skinparam ActivityDiamondBorderColor #FF8F00
+
+title **FLOWCHART: PROSES LOGIN**\n//Semua Pengguna Sistem//
+
+start
+
+:PENGGUNA membuka
+halaman Login;
+
+:Sistem menampilkan
+form login;
+
+:Input identitas
+(Username/Email/NIP/NUPTK/HP);
+
+:Input password;
+
+:Centang "Ingat Saya"
+(opsional);
+
+:Klik tombol **LOGIN**;
+
+:Validasi kelengkapan input;
+
+if (Input lengkap?) then (Ya)
+else (Tidak)
+  :Tampilkan error
+  "Harap isi semua field";
+  stop
+endif
+
+:Cari pengguna di database;
+
+if (Pengguna ditemukan?) then (Ya)
+else (Tidak)
+  :Tampilkan error "Login gagal";
+  stop
+endif
+
+:Verifikasi password (Hash);
+
+if (Password benar?) then (Ya)
+else (Tidak)
+  :Tampilkan error "Login gagal";
+  stop
+endif
+
+:Cek status akun;
+
+if (Akun aktif?) then (Ya)
+else (Tidak)
+  :Tampilkan error
+  "Akun dinonaktifkan";
+  stop
+endif
+
+:Ambil data role;
+
+if (Role valid?) then (Ya)
+else (Tidak)
+  :Tampilkan error
+  "Role tidak valid";
+  stop
+endif
+
+:Buat sesi login;
+:Update last_login_at;
+
+if (Login pertama kali?) then (Ya)
+  :Redirect ke Lengkapi Profil;
+  :Input email & password baru;
+  :Simpan profil;
+endif
+
+:Redirect ke Dashboard
+sesuai role;
+
+stop
+
+legend right
+  **MULTI-IDENTIFIER:**
+  Username, Email, NIP,
+  NUPTK, Nomor HP
+  ----
+  **8 ROLE:**
+  Kepala Sekolah, Waka,
+  Kaprodi, Wali Kelas,
+  Guru, Operator, Wali Murid
+endlegend
+
+@enduml

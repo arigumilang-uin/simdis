@@ -49,6 +49,10 @@ Route::middleware(['auth', 'profile.completed'])->group(function () {
         // Statistics per siswa
         Route::get('/siswa/{siswa}/statistics', [RiwayatPelanggaranController::class, 'siswaStatistics'])
             ->name('siswa.statistics');
+
+        // Bulk delete
+        Route::post('/bulk-delete', [RiwayatPelanggaranController::class, 'bulkDelete'])
+            ->name('bulk-delete');
     });
     
     // API: Get kelas by jurusan

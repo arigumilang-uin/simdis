@@ -1,0 +1,81 @@
+@startuml SD_27_Tambah_Pengguna
+' ============================================================================
+' SEQUENCE DIAGRAM - TAMBAH PENGGUNA
+' ============================================================================
+' Use Case: Kelola Pengguna
+' Aktor: Operator Sekolah
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-27: Tambah Pengguna**
+
+actor "Operator\nSekolah" as OPERATOR
+
+box "Application Layer" #E8F5E9
+    participant "UserController" as UC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "User Model" as UM
+    participant "Role Model" as RM
+    database "MySQL" as DB
+end box
+
+== Tampilkan Form ==
+
+OPERATOR -> UC : GET /users/create
+activate UC
+
+UC -> RM : all()
+activate RM
+RM -> DB : SELECT * FROM roles
+DB --> RM : Roles data
+RM --> UC : Daftar Roles
+deactivate RM
+
+UC --> OPERATOR : Form tambah pengguna:\n- Nama, Username\n- Email, Password\n- Pilih Role\n- No. HP
+deactivate UC
+
+== Proses Simpan ==
+
+OPERATOR -> UC : POST /users\n(nama, username, email,\npassword, role_id, phone)
+activate UC
+
+UC -> UC : validate()
+
+UC -> UM : create(data)
+activate UM
+UM -> DB : INSERT INTO users\n(nama, username, email,\npassword, role_id, phone,\nis_active = true)
+DB --> UM : Created
+UM --> UC : User object
+deactivate UM
+
+note right of UM
+  Password default di-hash
+  User langsung aktif
+  Perlu lengkapi profil saat login pertama
+end note
+
+UC --> OPERATOR : Redirect /users\nFlash: "Pengguna berhasil ditambahkan"
+deactivate UC
+
+@enduml

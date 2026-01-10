@@ -1,0 +1,75 @@
+@startuml SD_42_Preview_Surat_Panggilan
+' ============================================================================
+' SEQUENCE DIAGRAM - PREVIEW SURAT PANGGILAN
+' ============================================================================
+' Use Case: Kelola Surat Panggilan
+' Aktor: Wali Kelas, Kaprodi, Waka Kesiswaan (sesuai pembina_roles)
+' Deskripsi: Preview surat sebelum cetak
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-42: Preview Surat Panggilan**
+
+actor "Wali Kelas / Kaprodi /\nWaka Kesiswaan" as USER
+
+box "Application Layer" #E8F5E9
+    participant "TindakLanjutController" as TLC
+    participant "TindakLanjutService" as TLS
+end box
+
+box "Data Layer" #FFF3E0
+    participant "TindakLanjut" as TL
+    participant "SuratPanggilan" as SP
+    database "MySQL" as DB
+end box
+
+== Preview Surat ==
+
+USER -> TLC : GET /tindak-lanjut/id/preview-surat
+activate TLC
+
+TLC -> TLS : getTindakLanjutDetail(id)
+activate TLS
+TLS -> TL : findOrFail(id)\nwith siswa.kelas.jurusan, suratPanggilan.printLogs
+activate TL
+TL -> DB : SELECT with relations
+DB --> TL : TindakLanjut + relations data
+TL --> TLS : TindakLanjut object
+deactivate TL
+TLS --> TLC : TindakLanjut object
+deactivate TLS
+
+TLC -> TLC : Check authorization\n(user.role IN tindakLanjut.pembina_roles)
+
+alt User tidak memiliki akses
+    TLC --> USER : Error (403): "Anda tidak termasuk\ndalam daftar pembina untuk kasus ini"
+else User memiliki akses
+    TLC -> SP : get surat content
+    activate SP
+    SP --> TLC : Template + data
+    deactivate SP
+    
+    TLC --> USER : Tampilkan preview surat:\n- Kop Surat Sekolah\n- Data Siswa (NISN, Nama, Kelas)\n- Jenis Panggilan\n- Tanggal Menghadap\n- Nama Orang Tua\n- Tanda Tangan (sesuai pembina_roles)
+end
+deactivate TLC
+
+@enduml

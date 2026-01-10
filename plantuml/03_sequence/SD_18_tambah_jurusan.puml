@@ -1,0 +1,75 @@
+@startuml SD_18_Tambah_Jurusan
+' ============================================================================
+' SEQUENCE DIAGRAM - TAMBAH JURUSAN
+' ============================================================================
+' Use Case: Kelola Jurusan
+' Aktor: Operator Sekolah
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-18: Tambah Jurusan**
+
+actor "Operator\nSekolah" as OPERATOR
+
+box "Application Layer" #E8F5E9
+    participant "JurusanController" as JC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "Jurusan Model" as JM
+    participant "User Model" as UM
+    database "MySQL" as DB
+end box
+
+== Tampilkan Form ==
+
+OPERATOR -> JC : GET /jurusan/create
+activate JC
+
+JC -> UM : where role = KAPRODI\ndan belum punya jurusan
+activate UM
+UM -> DB : SELECT * FROM users\nWHERE role_id = ? AND jurusan IS NULL
+DB --> UM : User data
+UM --> JC : Daftar Kaprodi tersedia
+deactivate UM
+
+JC --> OPERATOR : Form tambah jurusan:\n- Kode, Nama Jurusan\n- Pilih Kaprodi
+deactivate JC
+
+== Proses Simpan ==
+
+OPERATOR -> JC : POST /jurusan\n(kode_jurusan, nama_jurusan,\nkaprodi_user_id)
+activate JC
+
+JC -> JC : validate()
+
+JC -> JM : create(data)
+activate JM
+JM -> DB : INSERT INTO jurusan
+DB --> JM : Created
+JM --> JC : Jurusan object
+deactivate JM
+
+JC --> OPERATOR : Redirect /jurusan\nFlash: "Jurusan berhasil ditambahkan"
+deactivate JC
+
+@enduml

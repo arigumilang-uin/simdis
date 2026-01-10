@@ -42,6 +42,27 @@ class KelasObserver
     }
     
     /**
+     * Handle the Kelas "deleted" event.
+     */
+    public function deleted(Kelas $kelas): void
+    {
+        // Demote wali kelas to Guru if exists
+        if ($kelas->wali_kelas_user_id) {
+            $wali = User::find($kelas->wali_kelas_user_id);
+            $guruRole = Role::where('nama_role', 'Guru')->first();
+            
+            if ($wali && $guruRole && $wali->role_id !== $guruRole->id && $wali->role?->nama_role !== 'Developer') {
+                $wali->updateQuietly([
+                    'role_id' => $guruRole->id,
+                    'nama' => 'Guru', // Reset name to generic role name
+                ]);
+                
+                \Log::info("KelasObserver: User {$wali->username} demoted from Wali Kelas to Guru (Kelas deleted).");
+            }
+        }
+    }
+    
+    /**
      * Sync new wali kelas and demote old wali kelas to Guru.
      * 
      * LOGIC:

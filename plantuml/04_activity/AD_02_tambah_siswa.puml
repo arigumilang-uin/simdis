@@ -1,0 +1,67 @@
+@startuml AD_02_Tambah_Siswa
+' ============================================================================
+' ACTIVITY DIAGRAM - TAMBAH SISWA
+' ============================================================================
+' Use Case: Kelola Siswa - Tambah
+' Aktor: Operator Sekolah
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+    DiamondBackgroundColor #FFF8E1
+    DiamondBorderColor #FF8F00
+    ArrowColor #455A64
+}
+
+title **AD-02: Tambah Siswa**
+
+|#E8F5E9|Operator|
+start
+
+:Membuka form tambah siswa;
+
+|#E3F2FD|Sistem|
+
+:Menampilkan daftar kelas;
+
+|Operator|
+
+:Mengisi data siswa:\n- NISN\n- Nama Lengkap\n- Kelas\n- Nomor HP Wali;
+
+:Memilih opsi buat akun wali\n(opsional);
+
+:Mengklik tombol Simpan;
+
+|Sistem|
+
+:Memvalidasi kelengkapan data;
+
+if (NISN sudah terdaftar?) then (Ya)
+    |Operator|
+    :Menampilkan pesan error\nNISN sudah digunakan;
+    stop
+else (Tidak)
+    :Menyimpan data siswa baru;
+    
+    if (Buat akun wali?) then (Ya)
+        :Membuat akun wali murid;
+        :Menghubungkan siswa dengan\nakun wali;
+        
+        |Operator|
+        :Menampilkan informasi\nakun wali yang dibuat;
+    else (Tidak)
+    endif
+    
+    |Operator|
+    :Menampilkan pesan sukses\nSiswa berhasil ditambahkan;
+    stop
+endif
+
+@enduml

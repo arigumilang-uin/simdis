@@ -1,0 +1,130 @@
+@startuml SD_32_Catat_Pelanggaran
+' ============================================================================
+' SEQUENCE DIAGRAM - CATAT PELANGGARAN
+' ============================================================================
+' Use Case: Catat Pelanggaran
+' Aktor: Guru, Wali Kelas, Kaprodi, Waka Kesiswaan, Waka Sarana, Operator
+' Deskripsi: Semua "teacher roles" dapat mencatat pelanggaran siswa
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-32: Catat Pelanggaran**
+
+actor "Guru / Wali Kelas /\nKaprodi / Waka /\nOperator" as USER
+
+box "Application Layer" #E8F5E9
+    participant "PelanggaranController" as PC
+    participant "PelanggaranService" as PS
+    participant "RulesEngine" as RE
+end box
+
+box "Data Layer" #FFF3E0
+    participant "RiwayatPelanggaran" as RP
+    participant "Siswa" as SM
+    participant "JenisPelanggaran" as JP
+    participant "TindakLanjut" as TL
+    participant "SuratPanggilan" as SP
+    database "MySQL" as DB
+end box
+
+== Tampilkan Form Catat ==
+
+USER -> PC : GET /pelanggaran/catat
+activate PC
+
+PC -> SM : get filtered by role
+activate SM
+SM -> DB : SELECT * FROM siswa WHERE conditions
+DB --> SM : Siswa data
+SM --> PC : Daftar Siswa
+deactivate SM
+
+PC -> JP : where is_active = true
+activate JP
+JP -> DB : SELECT * FROM jenis_pelanggaran WHERE is_active = true
+DB --> JP : JenisPelanggaran data
+JP --> PC : Daftar Jenis Pelanggaran
+deactivate JP
+
+PC --> USER : Form catat pelanggaran:\n- Pilih Siswa\n- Pilih Jenis Pelanggaran\n- Tanggal, Keterangan\n- Upload Bukti (opsional)
+deactivate PC
+
+== Proses Simpan ==
+
+USER -> PC : POST /pelanggaran/catat\n(siswa_id, jenis_pelanggaran_id,\ntanggal, keterangan, bukti_foto)
+activate PC
+
+PC -> PC : validate()
+
+PC -> PS : catatPelanggaran(data, auth.user)
+activate PS
+
+PS -> RP : create(data)
+activate RP
+RP -> DB : INSERT INTO riwayat_pelanggaran\n(siswa_id, jenis_pelanggaran_id,\nguru_pencatat_user_id, tanggal,\nketerangan, bukti_foto)
+DB --> RP : Created
+RP --> PS : RiwayatPelanggaran object
+deactivate RP
+
+PS -> RE : processRules(siswa_id, jenis_pelanggaran_id)
+activate RE
+
+RE -> RP : count(siswa_id, jenis_pelanggaran_id)
+activate RP
+RP -> DB : SELECT COUNT(*) FROM riwayat
+DB --> RP : frequency count
+RP --> RE : frequency
+deactivate RP
+
+RE -> JP : getMatchingRule(frequency)
+activate JP
+JP --> RE : Rule or null
+deactivate JP
+
+alt Rule found - perlu tindak lanjut
+    RE -> TL : create TindakLanjut
+    activate TL
+    TL -> DB : INSERT INTO tindak_lanjut
+    DB --> TL : Created
+    TL --> RE : TindakLanjut object
+    deactivate TL
+    
+    RE -> SP : create SuratPanggilan
+    activate SP
+    SP -> DB : INSERT INTO surat_panggilan
+    DB --> SP : Created
+    SP --> RE : SuratPanggilan object
+    deactivate SP
+    
+    RE --> PS : TindakLanjut created
+else No matching rule
+    RE --> PS : No action needed
+end
+deactivate RE
+
+PS --> PC : Result
+deactivate PS
+
+PC --> USER : Redirect /pelanggaran/riwayat\nFlash: "Pelanggaran berhasil dicatat"\n(+ info jika ada tindak lanjut)
+deactivate PC
+
+@enduml

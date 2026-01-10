@@ -97,7 +97,7 @@ class JurusanService
             $oldKode = $jurusan->kode_jurusan;
             
             // Update jurusan (lines 127-128)
-            $this->jurusanRepository->update($jurusan, [
+            $this->jurusanRepository->update($jurusan->id, [
                 'nama_jurusan' => $data->nama_jurusan,
                 'kode_jurusan' => $kodeJurusan,
                 'kaprodi_user_id' => $data->kaprodi_user_id,

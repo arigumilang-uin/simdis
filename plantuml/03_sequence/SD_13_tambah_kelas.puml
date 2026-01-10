@@ -1,0 +1,83 @@
+@startuml SD_13_Tambah_Kelas
+' ============================================================================
+' SEQUENCE DIAGRAM - TAMBAH KELAS
+' ============================================================================
+' Use Case: Kelola Kelas
+' Aktor: Operator Sekolah
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-13: Tambah Kelas**
+
+actor "Operator\nSekolah" as OPERATOR
+
+box "Application Layer" #E8F5E9
+    participant "KelasController" as KC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "Kelas Model" as KM
+    participant "Jurusan Model" as JM
+    participant "User Model" as UM
+    database "MySQL" as DB
+end box
+
+== Tampilkan Form Tambah ==
+
+OPERATOR -> KC : GET /kelas/create
+activate KC
+
+KC -> JM : all()
+activate JM
+JM -> DB : SELECT * FROM jurusan
+DB --> JM : Jurusan data
+JM --> KC : Daftar Jurusan
+deactivate JM
+
+KC -> UM : where role = WALI_KELAS\ndan belum punya kelas
+activate UM
+UM -> DB : SELECT * FROM users\nWHERE role_id = ? AND kelas IS NULL
+DB --> UM : User data
+UM --> KC : Daftar Wali Kelas tersedia
+deactivate UM
+
+KC --> OPERATOR : Form tambah kelas:\n- Nama Kelas\n- Pilih Jurusan\n- Tingkat (X/XI/XII)\n- Pilih Wali Kelas
+deactivate KC
+
+== Proses Simpan ==
+
+OPERATOR -> KC : POST /kelas\n(nama_kelas, jurusan_id,\ntingkat, wali_kelas_user_id)
+activate KC
+
+KC -> KC : validate()
+
+KC -> KM : create(data)
+activate KM
+KM -> DB : INSERT INTO kelas
+DB --> KM : Kelas created
+KM --> KC : Kelas object
+deactivate KM
+
+KC --> OPERATOR : Redirect /kelas\nFlash: "Kelas berhasil ditambahkan"
+deactivate KC
+
+@enduml

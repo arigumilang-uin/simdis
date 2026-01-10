@@ -1,0 +1,69 @@
+@startuml SD_36_Export_Riwayat_Pelanggaran
+' ============================================================================
+' SEQUENCE DIAGRAM - EXPORT RIWAYAT PELANGGARAN
+' ============================================================================
+' Use Case: Kelola Riwayat Pelanggaran
+' Aktor: Operator, Waka, Kepsek
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-36: Export Riwayat Pelanggaran**
+
+actor "Operator / Waka /\nKepala Sekolah" as USER
+
+box "Application Layer" #E8F5E9
+    participant "PelanggaranController" as PC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "RiwayatPelanggaran" as RP
+    database "MySQL" as DB
+end box
+
+== Proses Export ==
+
+USER -> PC : GET /pelanggaran/export\n(?dari_tanggal, ?sampai_tanggal,\n?kelas_id, ?jurusan_id)
+activate PC
+
+PC -> PC : Apply filters
+
+PC -> RP : with siswa.kelas.jurusan, jenisPelanggaran, user\nwhen(filters)\nget()
+activate RP
+RP -> DB : SELECT riwayat with relations\nWHERE conditions\nORDER BY tanggal DESC
+DB --> RP : Riwayat data
+RP --> PC : Collection Riwayat
+deactivate RP
+
+PC -> PC : Build CSV content
+
+note right of PC
+  Format CSV:
+  No, Tanggal, NISN,
+  Nama Siswa, Kelas, Jurusan,
+  Jenis Pelanggaran, Poin,
+  Keterangan, Dicatat Oleh
+end note
+
+PC --> USER : Download file:\nriwayat_pelanggaran_20241228.csv
+deactivate PC
+
+@enduml

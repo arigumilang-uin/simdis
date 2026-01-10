@@ -95,13 +95,48 @@ class SiswaService
      * @param bool $isWaliKelas
      * @return \App\Models\Siswa
      */
-    public function updateSiswa(int $siswaId, SiswaData $siswaData, bool $isWaliKelas = false): \App\Models\Siswa
+    public function updateSiswa(int $siswaId, SiswaData $siswaData, bool $isWaliKelas = false, bool $createWali = false): \App\Models\Siswa
     {
+        $currentSiswa = $this->findSiswa($siswaId);
+        
+        // Determine initial Wali ID (from manual selection or existing)
+        $waliIdToLink = $isWaliKelas ? $currentSiswa->wali_murid_user_id : $siswaData->wali_murid_user_id;
+        $namaSiswa = $isWaliKelas ? $currentSiswa->nama_siswa : $siswaData->nama_siswa;
+        $nisn = $isWaliKelas ? $currentSiswa->nisn : $siswaData->nisn;
+
+        // Auto-sync Wali based on Phone Number
+        if (!empty($siswaData->nomor_hp_wali_murid)) {
+            $phoneClean = preg_replace('/\D+/', '', $siswaData->nomor_hp_wali_murid);
+            
+            if (!empty($phoneClean)) {
+                // 1. Check if ANY Wali Murid account owns this phone number
+                $existingWali = \App\Models\User::where('phone', $phoneClean)
+                    ->whereHas('role', fn($q) => $q->where('nama_role', 'Wali Murid'))
+                    ->first();
+
+                if ($existingWali) {
+                    // Match found: Always link to this existing account
+                    $waliIdToLink = $existingWali->id;
+                } elseif ($createWali) {
+                    // No match + Checkbox ticked: Create NEW account
+                    $result = $this->waliService->findOrCreateWaliByPhone($phoneClean, $namaSiswa, $nisn);
+                    $waliIdToLink = $result['user_id'];
+                    
+                    if ($result['is_new']) {
+                        session()->flash('wali_credentials', [$result]);
+                    }
+                }
+            }
+        }
+
         $updateData = $isWaliKelas
-            ? ['nomor_hp_wali_murid' => $siswaData->nomor_hp_wali_murid]
+            ? [
+                'nomor_hp_wali_murid' => $siswaData->nomor_hp_wali_murid,
+                'wali_murid_user_id' => $waliIdToLink // Wali Kelas can update link logic implicitly
+              ]
             : [
                 'kelas_id' => $siswaData->kelas_id,
-                'wali_murid_user_id' => $siswaData->wali_murid_user_id,
+                'wali_murid_user_id' => $waliIdToLink,
                 'nisn' => $siswaData->nisn,
                 'nama_siswa' => $siswaData->nama_siswa,
                 'nomor_hp_wali_murid' => $siswaData->nomor_hp_wali_murid,
@@ -155,7 +190,7 @@ class SiswaService
     /**
      * Find siswa by NISN.
      */
-    public function findByNisn(string $nisn): ?\App\Models\Siswa
+    public function findByNisn(string $nisn)
     {
         return $this->siswaRepository->findByNisn($nisn);
     }

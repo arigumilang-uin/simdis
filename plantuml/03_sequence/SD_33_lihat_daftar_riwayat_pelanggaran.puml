@@ -1,0 +1,85 @@
+@startuml SD_33_Lihat_Daftar_Riwayat_Pelanggaran
+' ============================================================================
+' SEQUENCE DIAGRAM - LIHAT DAFTAR RIWAYAT PELANGGARAN
+' ============================================================================
+' Use Case: Kelola Riwayat Pelanggaran
+' Aktor: Semua (dengan filter role-based, Operator tanpa filter)
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-33: Lihat Daftar Riwayat Pelanggaran**
+
+actor "Operator / Guru /\nWali Kelas / Kaprodi /\nWaka / Kepsek /\nWali Murid" as USER
+
+box "Application Layer" #E8F5E9
+    participant "PelanggaranController" as PC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "RiwayatPelanggaran" as RP
+    participant "Kelas" as KM
+    participant "Jurusan" as JM
+    database "MySQL" as DB
+end box
+
+== Lihat Daftar ==
+
+USER -> PC : GET /pelanggaran/riwayat\n(?siswa_id, ?kelas_id, ?tanggal)
+activate PC
+
+PC -> PC : Get user role
+
+alt Role = Operator / Kepsek / Waka
+    PC -> PC : Tidak ada filter otomatis\n(bisa lihat SEMUA riwayat)
+else Role = Guru
+    PC -> PC : Filter: guru_pencatat_user_id = auth.id\n(hanya yang dicatat sendiri)
+else Role = Wali Kelas
+    PC -> KM : where wali_kelas_user_id = auth.id
+    activate KM
+    KM -> DB : SELECT * FROM kelas WHERE wali_kelas_user_id = ?
+    DB --> KM : Kelas data
+    KM --> PC : Kelas yang diampu
+    deactivate KM
+    PC -> PC : Filter by kelas_id
+else Role = Kaprodi
+    PC -> JM : where kaprodi_user_id = auth.id
+    activate JM
+    JM -> DB : SELECT * FROM jurusan WHERE kaprodi_user_id = ?
+    DB --> JM : Jurusan data
+    JM --> PC : Jurusan yang diampu
+    deactivate JM
+    PC -> PC : Filter by jurusan_id
+else Role = Wali Murid
+    PC -> PC : Filter: siswa.wali_murid_id = auth.id
+end
+
+PC -> RP : with siswa.kelas, jenisPelanggaran, user\nwhen(filters)\npaginate(20)
+activate RP
+RP -> DB : SELECT riwayat_pelanggaran.*,\nsiswa.*, kelas.*, jenis_pelanggaran.*\nFROM riwayat_pelanggaran\nJOIN siswa JOIN kelas JOIN jenis
+DB --> RP : Riwayat data
+RP --> PC : Paginated Riwayat
+deactivate RP
+
+PC --> USER : Tampilkan daftar riwayat:\n- Tanggal, Siswa, Kelas\n- Jenis Pelanggaran, Poin\n- Dicatat Oleh\n- Tombol Edit/Hapus (jika diizinkan)
+deactivate PC
+
+@enduml

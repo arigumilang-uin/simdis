@@ -70,6 +70,9 @@
                 
                 {{-- Tabs for Upload Method --}}
                 <div x-data="{ method: 'upload' }" class="space-y-4">
+                    {{-- Hidden input for Data Type --}}
+                    <input type="hidden" name="data_type" :value="method === 'upload' ? 'csv' : 'manual'">
+                    
                     <div class="flex gap-2 border-b border-gray-200">
                         <button 
                             type="button" 
@@ -92,17 +95,17 @@
                     {{-- Upload File Tab --}}
                     <div x-show="method === 'upload'" class="space-y-4">
                         <div class="form-group">
-                            <label for="bulk_file" class="form-label">Upload File CSV/Excel</label>
+                            <label for="csv_file" class="form-label">Upload File CSV/Excel</label>
                             <div class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-blue-400 transition-colors">
-                                <input type="file" id="bulk_file" name="bulk_file" accept=".csv,.txt,.xlsx" class="hidden">
-                                <label for="bulk_file" class="cursor-pointer">
+                                <input type="file" id="csv_file" name="csv_file" accept=".csv,.txt,.xlsx" class="hidden">
+                                <label for="csv_file" class="cursor-pointer">
                                     <x-ui.icon name="upload" size="48" class="mx-auto text-gray-300 mb-3" />
                                     <p class="text-gray-600 font-medium">Klik untuk pilih file atau drag & drop</p>
                                     <p class="text-sm text-gray-400 mt-1">Format: CSV, TXT, XLSX (Maks. 2MB)</p>
                                 </label>
                             </div>
                             <p id="file-name" class="form-help mt-2 hidden"></p>
-                            @error('bulk_file')
+                            @error('csv_file')
                                 <p class="form-error">{{ $message }}</p>
                             @enderror
                         </div>
@@ -123,7 +126,7 @@
                     <div x-show="method === 'manual'" class="space-y-4">
                         <div class="form-group">
                             <x-forms.textarea 
-                                name="bulk_data" 
+                                name="manual_data" 
                                 label="Data Siswa (Format CSV)" 
                                 rows="10"
                                 class="font-mono text-sm"
@@ -180,7 +183,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const fileInput = document.getElementById('bulk_file');
+    const fileInput = document.getElementById('csv_file');
     const fileName = document.getElementById('file-name');
     
     fileInput.addEventListener('change', function() {

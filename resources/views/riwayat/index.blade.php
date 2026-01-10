@@ -147,6 +147,112 @@
     </div>
 </div>
 
+{{-- Bulk Delete Riwayat Modal --}}
+<div 
+    x-data="{ 
+        open: false, 
+        selectedIds: [],
+        selectedCount: 0,
+        confirmed: false
+    }"
+    @open-bulk-delete-riwayat-modal.window="
+        open = true; 
+        selectedIds = $event.detail.ids; 
+        selectedCount = $event.detail.count;
+        confirmed = false;
+    "
+    x-show="open"
+    x-cloak
+    class="fixed inset-0 z-50 overflow-y-auto"
+>
+    {{-- Backdrop --}}
+    <div 
+        x-show="open" 
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm"
+        @click="open = false"
+    ></div>
+    
+    {{-- Modal Content --}}
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div 
+            x-show="open"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+            class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl"
+            @click.stop
+        >
+            {{-- Header --}}
+            <div class="p-6 border-b border-gray-100">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                        <x-ui.icon name="trash" size="24" />
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-red-600">Hapus Data Pelanggaran</h3>
+                        <p class="text-sm text-gray-500">Konfirmasi penghapusan data</p>
+                    </div>
+                </div>
+            </div>
+            
+            {{-- Body --}}
+            <form action="{{ route('riwayat.bulk-delete') }}" method="POST">
+                @csrf
+                
+                {{-- Hidden input for IDs --}}
+                <input type="hidden" name="ids" :value="selectedIds.join(',')">
+                
+                <div class="p-6 space-y-4">
+                    {{-- Count Info --}}
+                    <div class="p-4 bg-red-50 rounded-xl border border-red-100 text-center">
+                        <p class="text-sm text-red-600">Jumlah data yang akan dihapus:</p>
+                        <p class="text-3xl font-bold text-red-800" x-text="selectedCount"></p>
+                    </div>
+                    
+                    {{-- Warning --}}
+                    <div class="p-4 bg-amber-50 rounded-xl space-y-2">
+                        <p class="text-sm font-medium text-amber-800">⚠️ Perhatian:</p>
+                        <ul class="text-sm text-amber-700 space-y-1 pl-4">
+                            <li>• Data pelanggaran yang dihapus tidak dapat dikembalikan</li>
+                            <li>• Poin siswa akan dihitung ulang secara otomatis</li>
+                            <li>• Bukti foto (jika ada) akan dihapus dari storage</li>
+                        </ul>
+                    </div>
+                    
+                    {{-- Confirmation Checkbox --}}
+                    <label class="flex items-start gap-3 cursor-pointer p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <input 
+                            type="checkbox" 
+                            x-model="confirmed"
+                            class="w-4 h-4 mt-0.5 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                        >
+                        <span class="text-sm text-gray-700">
+                            Saya yakin ingin menghapus <strong x-text="selectedCount"></strong> data pelanggaran terpilih.
+                        </span>
+                    </label>
+                </div>
+                
+                {{-- Footer --}}
+                <div class="p-6 border-t border-gray-100 flex gap-3 justify-end">
+                    <button type="button" @click="open = false" class="btn btn-secondary">Batal</button>
+                    <button 
+                        type="submit" 
+                        class="btn btn-danger"
+                        :disabled="!confirmed"
+                    >
+                        <x-ui.icon name="trash" size="18" />
+                        <span>Hapus <span x-text="selectedCount"></span> Data</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
 document.addEventListener('alpine:init', () => {

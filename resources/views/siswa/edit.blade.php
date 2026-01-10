@@ -51,7 +51,23 @@
             label="No. HP Wali Murid" 
             :value="$siswa->nomor_hp_wali_murid" 
             placeholder="Contoh: 08123456789" 
+            placeholder="Contoh: 08123456789" 
         />
+        
+        <div class="form-group">
+            <label class="flex items-center gap-3 cursor-pointer p-3 bg-blue-50 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors">
+                <input 
+                    type="checkbox" 
+                    name="create_wali" 
+                    value="1" 
+                    class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                >
+                <div>
+                    <span class="text-sm font-medium text-blue-800">Sinkronkan Akun Wali Murid</span>
+                    <p class="text-xs text-blue-600">Hubungkan ke akun yang sudah ada atau buat baru berdasarkan No. HP.</p>
+                </div>
+            </label>
+        </div>
         
         <x-forms.select 
             name="wali_murid_id" 

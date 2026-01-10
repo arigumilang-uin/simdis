@@ -1,0 +1,96 @@
+@startuml SD_44_Cetak_Surat_Panggilan
+' ============================================================================
+' SEQUENCE DIAGRAM - CETAK SURAT PANGGILAN
+' ============================================================================
+' Use Case: Kelola Surat Panggilan
+' Aktor: Wali Kelas, Kaprodi, Waka Kesiswaan (sesuai pembina_roles)
+' Deskripsi: Generate PDF surat panggilan dengan logging
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam sequence {
+    ArrowColor #455A64
+    ArrowFontColor #37474F
+    LifeLineBorderColor #78909C
+    LifeLineBackgroundColor #ECEFF1
+    ParticipantBorderColor #37474F
+    ParticipantBackgroundColor #FFFFFF
+    ActorBorderColor #1976D2
+    ActorBackgroundColor #E3F2FD
+    BoxBorderColor #9E9E9E
+    BoxBackgroundColor #FAFAFA
+}
+
+autonumber
+
+title **SD-44: Cetak Surat Panggilan**
+
+actor "Wali Kelas / Kaprodi /\nWaka Kesiswaan" as USER
+
+box "Application Layer" #E8F5E9
+    participant "TindakLanjutController" as TLC
+end box
+
+box "Data Layer" #FFF3E0
+    participant "TindakLanjut" as TL
+    participant "SuratPanggilan" as SP
+    participant "SuratPanggilanPrintLog" as PL
+    database "MySQL" as DB
+end box
+
+box "External" #FCE4EC
+    participant "DomPDF" as PDF
+end box
+
+== Proses Cetak ==
+
+USER -> TLC : GET /tindak-lanjut/id/cetak-surat
+activate TLC
+
+TLC -> TL : findOrFail(id)\nwith siswa.kelas.jurusan, siswa.waliMurid, suratPanggilan
+activate TL
+TL -> DB : SELECT with relations
+DB --> TL : TindakLanjut + relations data
+TL --> TLC : TindakLanjut object
+deactivate TL
+
+TLC -> TLC : Check authorization\n(user.role IN tindakLanjut.pembina_roles)
+
+alt User tidak memiliki akses
+    TLC --> USER : Error (403)
+else User memiliki akses
+    TLC -> PL : create()
+    activate PL
+    PL -> DB : INSERT INTO surat_panggilan_print_logs\n(surat_panggilan_id, user_id,\nprinted_at, ip_address, user_agent)
+    DB --> PL : Created
+    PL --> TLC : PrintLog object
+    deactivate PL
+    
+    note right of PL
+      Log cetak untuk audit:
+      - Siapa yang cetak
+      - Kapan dicetak
+      - IP Address & User Agent
+    end note
+    
+    TLC -> TLC : Convert logo to Base64
+    
+    TLC -> TLC : Parse pembina_roles\nuntuk template tanda tangan
+    
+    TLC -> PDF : loadView('pdf.surat-panggilan', data)
+    activate PDF
+    
+    PDF -> PDF : Render HTML\nSet paper 609x935 portrait
+    PDF --> TLC : PDF binary
+    
+    deactivate PDF
+    
+    TLC --> USER : Stream/Download PDF:\nSurat_Panggilan_NISN.pdf
+end
+deactivate TLC
+
+@enduml

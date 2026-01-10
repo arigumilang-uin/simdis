@@ -1,0 +1,66 @@
+@startuml AD_22_Lihat_Activity_Log
+' ============================================================================
+' ACTIVITY DIAGRAM - LIHAT ACTIVITY LOG (JEJAK AUDIT)
+' ============================================================================
+' Use Case: Lihat Jejak Audit
+' Aktor: Operator, Waka Kesiswaan
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+    DiamondBackgroundColor #FFF8E1
+    DiamondBorderColor #FF8F00
+    ArrowColor #455A64
+}
+
+title **AD-22: Lihat Jejak Audit**
+
+|#E8F5E9|Pengguna|
+start
+
+:Membuka menu Jejak Audit;
+
+|#E3F2FD|Sistem|
+
+:Mengambil data aktivitas\ndengan paginasi;
+
+note right
+  Kepala Sekolah tidak memiliki
+  akses ke menu ini untuk menjaga
+  independensi audit.
+end note
+
+|Pengguna|
+
+:Melihat daftar aktivitas:\n- Waktu\n- Pelaku\n- Jenis aksi\n- Data yang diubah\n- Deskripsi;
+
+:Menerapkan filter (opsional):\n- Pengguna tertentu\n- Jenis aksi\n- Rentang tanggal;
+
+|Sistem|
+
+:Mengambil data sesuai filter;
+
+:Memperbarui tampilan;
+
+|Pengguna|
+
+if (Perlu lihat detail?) then (Ya)
+    :Memilih baris aktivitas;
+    
+    |Sistem|
+    :Menampilkan detail perubahan:\n- Nilai sebelum\n- Nilai sesudah\n- Field yang berubah;
+    
+    |Pengguna|
+    :Melihat detail perubahan;
+endif
+
+stop
+
+@enduml

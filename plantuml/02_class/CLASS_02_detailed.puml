@@ -1,0 +1,351 @@
+@startuml CLASS_02_Detailed
+' ============================================================================
+' DIAGRAM KELAS - DETAIL LENGKAP
+' ============================================================================
+' Deskripsi: Detail lengkap semua model dengan atribut dan metode
+' Total: 16 Model
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 9
+
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #37474F
+    ArrowColor #455A64
+    FontColor #212121
+    HeaderBackgroundColor #ECEFF1
+}
+
+skinparam package {
+    BackgroundColor #F5F5F5
+    BorderColor #9E9E9E
+    FontColor #424242
+}
+
+title **DIAGRAM KELAS: Detail Lengkap (16 Model)**
+
+' ============================================================================
+' PENGELOLAAN PENGGUNA
+' ============================================================================
+
+package "Pengelolaan Pengguna" #E3F2FD {
+    
+    class Role <<Model>> {
+        - id : bigint
+        - nama_role : string
+        __
+        + daftarPengguna() : Koleksi
+    }
+    
+    class User <<Model>> {
+        - id : bigint
+        - role_id : bigint
+        - nama : string
+        - username : string
+        - email : string
+        - password : string
+        - telepon : string
+        - nip : string
+        - nuptk : string
+        - aktif : boolean
+        - terakhir_login : timestamp
+        __
+        + ambilRole() : Role
+        + jurusanDiampu() : Jurusan
+        + kelasDiampu() : Kelas
+        + anakAsuhan() : Koleksi Siswa
+        + cekRole(string) : boolean
+        + apakahGuru() : boolean
+        + bisaLihatSiswa(Siswa) : boolean
+    }
+    
+    Role "1" --o "*" User : has
+}
+
+' ============================================================================
+' STRUKTUR SEKOLAH
+' ============================================================================
+
+package "Struktur Sekolah" #E8F5E9 {
+    
+    class Jurusan <<Model>> {
+        - id : bigint
+        - kaprodi_user_id : bigint
+        - nama_jurusan : string
+        - kode_jurusan : string
+        __
+        + ambilKaprodi() : User
+        + daftarKelas() : Koleksi
+    }
+    
+    class Kelas <<Model>> {
+        - id : bigint
+        - jurusan_id : bigint
+        - wali_kelas_user_id : bigint
+        - nama_kelas : string
+        - tingkat : string
+        __
+        + ambilJurusan() : Jurusan
+        + ambilWaliKelas() : User
+        + daftarSiswa() : Koleksi
+    }
+    
+    class Siswa <<Model>> {
+        - id : bigint
+        - kelas_id : bigint
+        - wali_murid_user_id : bigint
+        - nisn : string
+        - nama_siswa : string
+        - nomor_hp_wali : string
+        - alasan_keluar : string
+        - dihapus_pada : timestamp
+        __
+        + ambilKelas() : Kelas
+        + ambilWaliMurid() : User
+        + riwayatPelanggaran() : Koleksi
+        + daftarTindakLanjut() : Koleksi
+        + hitungTotalPoin() : integer
+    }
+    
+    Jurusan "1" --o "*" Kelas : has
+    Kelas "1" --o "*" Siswa : has
+}
+
+' Relasi User ke Struktur Sekolah
+User "1" -- "0..1" Jurusan : kaprodi
+User "1" -- "0..1" Kelas : waliKelas
+User "1" -- "*" Siswa : waliMurid
+
+' ============================================================================
+' SISTEM PELANGGARAN
+' ============================================================================
+
+package "Sistem Pelanggaran" #FFF3E0 {
+    
+    class KategoriPelanggaran <<Model>> {
+        - id : bigint
+        - nama_kategori : string
+        - tingkat_keseriusan : enum
+        __
+        + daftarJenis() : Koleksi
+    }
+    
+    class JenisPelanggaran <<Model>> {
+        - id : bigint
+        - kategori_id : bigint
+        - nama_pelanggaran : string
+        - poin : integer
+        - punya_aturan_frekuensi : boolean
+        - aktif : boolean
+        __
+        + ambilKategori() : Kategori
+        + daftarAturanFrekuensi() : Koleksi
+        + gunakanAturanFrekuensi() : boolean
+    }
+    
+    class AturanFrekuensi <<Model>> {
+        - id : bigint
+        - jenis_pelanggaran_id : bigint
+        - frekuensi_min : integer
+        - frekuensi_max : integer
+        - poin : integer
+        - deskripsi_sanksi : text
+        - picu_surat : boolean
+        - role_pembina : json
+        __
+        + cocokDenganFrekuensi(n) : boolean
+    }
+    
+    class RiwayatPelanggaran <<Model>> {
+        - id : bigint
+        - siswa_id : bigint
+        - jenis_pelanggaran_id : bigint
+        - pencatat_user_id : bigint
+        - tanggal_kejadian : date
+        - keterangan : text
+        - bukti_foto : string
+        - dihapus_pada : timestamp
+        __
+        + ambilSiswa() : Siswa
+        + ambilJenis() : JenisPelanggaran
+        + ambilPencatat() : User
+    }
+    
+    KategoriPelanggaran "1" --o "*" JenisPelanggaran : has
+    JenisPelanggaran "1" --o "*" AturanFrekuensi : has
+    JenisPelanggaran "1" --o "*" RiwayatPelanggaran : recorded
+}
+
+' Relasi ke Siswa dan User
+Siswa "1" --o "*" RiwayatPelanggaran : has
+User "1" -- "*" RiwayatPelanggaran : records
+
+' ============================================================================
+' SISTEM TINDAK LANJUT
+' ============================================================================
+
+package "Sistem Tindak Lanjut" #FCE4EC {
+    
+    enum StatusTindakLanjut {
+        BARU
+        MENUNGGU_PERSETUJUAN
+        DISETUJUI
+        DITOLAK
+        DITANGANI
+        SELESAI
+    }
+    
+    class TindakLanjut <<Model>> {
+        - id : bigint
+        - siswa_id : bigint
+        - pemicu : text
+        - deskripsi_sanksi : text
+        - role_pembina : json
+        - status : StatusTindakLanjut
+        - tanggal : date
+        - penyetuju_id : bigint
+        - penangani_id : bigint
+        - waktu_ditangani : timestamp
+        - penyelesai_id : bigint
+        - waktu_selesai : timestamp
+        __
+        + ambilSiswa() : Siswa
+        + ambilSuratPanggilan() : Surat
+        + filterMenungguPersetujuan()
+        + filterUntukPembina(role)
+    }
+    
+    class SuratPanggilan <<Model>> {
+        - id : bigint
+        - tindak_lanjut_id : bigint
+        - nomor_surat : string
+        - tipe_surat : string
+        - data_pembina : json
+        - tanggal_surat : date
+        - tanggal_pertemuan : date
+        - tempat : string
+        - keperluan : text
+        __
+        + ambilTindakLanjut() : TindakLanjut
+        + daftarLogCetak() : Koleksi
+    }
+    
+    class LogCetakSurat <<Model>> {
+        - id : bigint
+        - surat_panggilan_id : bigint
+        - user_id : bigint
+        - waktu_cetak : timestamp
+        __
+        + ambilSurat() : SuratPanggilan
+        + ambilUser() : User
+    }
+    
+    TindakLanjut -- StatusTindakLanjut : uses
+    TindakLanjut "1" --o "0..1" SuratPanggilan : has
+    SuratPanggilan "1" --o "*" LogCetakSurat : has
+}
+
+' Relasi ke Siswa
+Siswa "1" --o "*" TindakLanjut : has
+
+' ============================================================================
+' SISTEM PEMBINAAN
+' ============================================================================
+
+package "Sistem Pembinaan" #E8EAF6 {
+    
+    enum StatusPembinaan {
+        PERLU_PEMBINAAN
+        SEDANG_DIBINA
+        SELESAI
+    }
+    
+    class AturanPembinaan <<Model>> {
+        - id : bigint
+        - poin_min : integer
+        - poin_max : integer
+        - role_pembina : json
+        - keterangan : text
+        __
+        + cocokDenganPoin(total) : boolean
+    }
+    
+    class RecordPembinaan <<Model>> {
+        - id : bigint
+        - siswa_id : bigint
+        - aturan_id : bigint
+        - poin_saat_trigger : integer
+        - role_pembina : json
+        - status : StatusPembinaan
+        - pembina_id : bigint
+        - waktu_mulai : timestamp
+        - waktu_selesai : timestamp
+        - hasil : text
+        __
+        + ambilSiswa() : Siswa
+        + ambilAturan() : AturanPembinaan
+        + mulaiPembinaan(userId) : boolean
+        + selesaikanPembinaan() : boolean
+    }
+    
+    RecordPembinaan -- StatusPembinaan : uses
+    AturanPembinaan "1" --o "*" RecordPembinaan : triggers
+}
+
+' Relasi ke Siswa
+Siswa "1" --o "*" RecordPembinaan : has
+
+' ============================================================================
+' PENGATURAN SISTEM
+' ============================================================================
+
+package "Pengaturan Sistem" #EFEBE9 {
+    
+    class Pengaturan <<Model>> {
+        - id : bigint
+        - kunci : string
+        - nilai : string
+        - label : string
+        - deskripsi : text
+        __
+        + daftarRiwayat() : Koleksi
+        + {static} ambilNilai(kunci) : mixed
+        + {static} simpanNilai(kunci, nilai) : boolean
+    }
+    
+    class RiwayatPengaturan <<Model>> {
+        - id : bigint
+        - pengaturan_id : bigint
+        - nilai_lama : string
+        - nilai_baru : string
+        - diubah_oleh : bigint
+        __
+        + ambilPengaturan() : Pengaturan
+        + ambilPengubah() : User
+    }
+    
+    Pengaturan "1" --o "*" RiwayatPengaturan : has
+}
+
+' ============================================================================
+' KETERANGAN
+' ============================================================================
+
+legend right
+  **KETERANGAN**
+  ----
+  **Visibility:**
+  + public
+  - private
+  ----
+  **Relasi:**
+  ──o Composition
+  ─── Association
+  ----
+  **Total: 16 Model**
+endlegend
+
+@enduml

@@ -1,0 +1,87 @@
+@startuml Flowchart_Approval_TindakLanjut
+' ============================================================================
+' FLOWCHART: ALUR APPROVAL TINDAK LANJUT
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 10
+skinparam ActivityBackgroundColor #FCE4EC
+skinparam ActivityBorderColor #C2185B
+skinparam ActivityDiamondBackgroundColor #FFF8E1
+skinparam ActivityDiamondBorderColor #FF8F00
+
+title **FLOWCHART: APPROVAL TINDAK LANJUT**\n//Approver: Kepala Sekolah, Waka Kesiswaan//
+
+start
+
+:APPROVER menerima
+notifikasi kasus baru;
+
+:Buka menu
+Approval Tindak Lanjut;
+
+:Sistem menampilkan
+daftar kasus menunggu;
+
+:Pilih kasus untuk review;
+
+:Sistem menampilkan detail:
+- Kronologi pelanggaran
+- Riwayat siswa
+- Sanksi yang diusulkan
+- Draft surat panggilan;
+
+:Review kelengkapan
+dan kesesuaian;
+
+if (Setuju dengan penanganan?) then (APPROVE)
+  :Klik tombol SETUJUI;
+  :Update status = DISETUJUI;
+  :Set penyetuju_user_id;
+  :Kirim notifikasi ke Pembina;
+  :Tampilkan "Berhasil disetujui";
+  
+  :PEMBINA menerima notifikasi;
+  :Buka detail kasus;
+  :Klik "Mulai Tangani";
+  :Update status = DITANGANI;
+  :Cetak surat panggilan;
+  :Lakukan pertemuan dengan wali;
+  :Input hasil penanganan;
+  :Klik "Selesaikan";
+  :Update status = SELESAI;
+  #C8E6C9:Kasus CLOSED (SELESAI);
+  
+else (REJECT)
+  :Klik tombol TOLAK;
+  :Input alasan penolakan (wajib);
+  :Konfirmasi penolakan;
+  :Update status = DITOLAK;
+  :Simpan alasan_tolak;
+  :Kirim notifikasi penolakan;
+  #FFCDD2:Kasus CLOSED (DITOLAK - FINAL);
+endif
+
+stop
+
+legend right
+  **STATUS FLOW:**
+  BARU → DISETUJUI
+  → DITANGANI → SELESAI
+  ----
+  BARU → DITOLAK (FINAL)
+  ----
+  **APPROVER:**
+  • Kepala Sekolah
+  • Waka Kesiswaan
+  ----
+  **PEMBINA:**
+  • Wali Kelas
+  • Kaprodi
+  • Waka Kesiswaan
+  • Waka Sarana
+endlegend
+
+@enduml
