@@ -1,0 +1,58 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ideal-app
+    container_name: ideal-app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+    networks:
+      - ideal-network
+
+  db:
+    image: mysql:8.0
+    container_name: ideal-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ideal
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - ideal-dbdata:/var/lib/mysql
+    networks:
+      - ideal-network
+
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: ideal-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      PMA_ARBITRARY: 1
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root
+    networks:
+      - ideal-network
+      
+  nginx:
+    image: nginx:alpine
+    container_name: ideal-nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www
+      - ./docker-compose/nginx:/etc/nginx/conf.d/
+    networks:
+      - ideal-network
+
+networks:
+  ideal-network:
+    driver: bridge
+
+volumes:
+  ideal-dbdata:
+    driver: local
