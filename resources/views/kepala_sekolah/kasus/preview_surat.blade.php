@@ -70,11 +70,12 @@
                                 }
                             @endphp
                             
-                            {{-- Template now reads pembina_roles directly from $surat->pembina_roles --}}
+                            {{-- Template with previewMode to scope CSS --}}
                             @include('pdf.surat-panggilan', [
                                 'siswa' => $kasus->siswa,
                                 'surat' => $surat,
                                 'logoBase64' => $logoBase64,
+                                'previewMode' => true,
                             ])
                         </div>
                     </div>

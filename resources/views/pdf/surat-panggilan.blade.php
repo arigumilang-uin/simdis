@@ -1,11 +1,19 @@
+@php
+    // Check if we're in preview mode (included in a page) or PDF mode (standalone)
+    $isPreviewMode = isset($previewMode) && $previewMode === true;
+@endphp
+
+@if(!$isPreviewMode)
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>Surat Panggilan - {{ $siswa->nama_siswa }}</title>
+@endif
     <style>
         /* 
          * FINAL REVISION - COMPREHENSIVE FIXES
+         * CSS scoped for both PDF mode and Preview mode
          */
         
         @page {
@@ -13,27 +21,40 @@
             margin: 1cm 2cm 2cm 2cm; /* MARGIN ATAS DIKURANGI JADI 1CM */
         }
         
+        /* PDF Mode: Apply to body */
+        @if(!$isPreviewMode)
         body {
             font-family: 'Times New Roman', Times, serif;
             font-size: 12pt;
-            line-height: 1.5; /* JARAK ANTAR BARIS LEBIH LEGA */
+            line-height: 1.5;
             margin: 0;
             padding: 0;
             color: #000;
         }
+        @endif
         
-        table {
+        /* Preview Mode: Scope all styles to .surat-preview-container */
+        .surat-preview-container {
+            font-family: 'Times New Roman', Times, serif !important;
+            font-size: 12pt !important;
+            line-height: 1.5 !important;
+            color: #000 !important;
+            padding: 20px;
+        }
+        
+        .surat-preview-container table {
             width: 100%;
             border-collapse: collapse;
             border-spacing: 0;
         }
         
-        td {
+        .surat-preview-container td {
             padding: 0;
             vertical-align: top;
         }
         
         /* CSS KOP */
+        .surat-preview-container .kop-provinsi,
         .kop-provinsi {
             font-size: 16pt;
             font-weight: bold;
@@ -43,6 +64,7 @@
             line-height: 1;
         }
         
+        .surat-preview-container .kop-dinas,
         .kop-dinas {
             font-size: 16pt;
             font-weight: bold;
@@ -52,6 +74,7 @@
             line-height: 1;
         }
         
+        .surat-preview-container .kop-sekolah-container,
         .kop-sekolah-container {
             width: 100%;
             text-align: center;
@@ -60,50 +83,57 @@
             display: block;
         }
 
+        .surat-preview-container .kop-sekolah,
         .kop-sekolah {
-            font-size: 13pt; /* TURUN DARI 14PT AGAR MUAT */
+            font-size: 13pt;
             font-weight: bold;     
             text-transform: uppercase;
-            
             text-shadow: 1px 0 0 #000; 
-            transform: scale(0.85, 2.5);  /* LEBIH KURUS (0.85) AGAR TIDAK LEWAT MARGIN */
+            transform: scale(0.85, 2.5);
             transform-origin: center top; 
-            
             display: inline-block;
             white-space: nowrap;
-            
             margin-top: 2px;
             margin-left: auto;
             margin-right: auto;
         }
         
+        .surat-preview-container .kop-bidang,
         .kop-bidang {
             font-size: 11pt;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 0px;
-            /* JARAK KE ATAS DITAMBAH (KEBAWAHKAN SEDIKIT DARI SEKOLAH) */
             margin-top: 18px; 
             display: inline-block;
-            /* JARAK KE BAWAH DIHAPUS BIAR DEKAT ALAMAT */
             margin-bottom: 0px; 
         }
         
+        .surat-preview-container .kop-alamat,
         .kop-alamat {
-            font-size: 9pt; /* TURUN DARI 10PT AGAR LEBIH KECIL */
+            font-size: 9pt;
             margin-top: 2px; 
             line-height: 1.2;
         }
         
         /* ISI SURAT */
+        .surat-preview-container .indent,
         .indent { text-indent: 40px; }
         
-        /* Justify diganti Left sesuai request "Rata Kiri" */
-        p { text-align: left; margin-bottom: 5px; margin-top: 5px; } 
+        .surat-preview-container p,
+        .surat-preview-container p { 
+            text-align: left; 
+            margin-bottom: 5px; 
+            margin-top: 5px; 
+        }
 
     </style>
+@if(!$isPreviewMode)
 </head>
 <body>
+@else
+<div class="surat-preview-container">
+@endif
 
     {{-- KOP SURAT --}}
     {{-- Hapus border-bottom di sini untuk hindari duplikasi --}}
@@ -201,7 +231,7 @@
         
         {{-- Hapus class 'indent', ganti jadi rata kiri murni --}}
         <p style="text-align: left; margin-bottom: 5px;">
-            Menindak Lanjuti masalah kedisiplinan Siswa di Sekolah, kami bermaksud memanggil orang tua/wali dan juga peserta didik atas Nama <strong>{{ $siswa->nama_siswa }}</strong> Kelas/Jurusan <strong>{{ $siswa->kelas->nama_kelas ?? '...........' }}</strong>
+            Menindak Lanjuti masalah kedisiplinan Siswa di Sekolah, kami bermaksud memanggil orang tua/wali dan juga peserta didik atas Nama <strong>{{ $siswa->nama_siswa }}</strong> Kelas/Jurusan <strong>{{ $siswa->kelas->nama_kelas ?? '...........' }}/{{ $siswa->kelas->jurusan->nama_jurusan ?? '...........' }}</strong>
         </p>
         
         {{-- Margin top dikurangi (5px) agar DEKAT dengan teks di atasnya --}}
@@ -441,5 +471,9 @@
         
     </table>
 
+@if(!$isPreviewMode)
 </body>
 </html>
+@else
+</div>
+@endif
