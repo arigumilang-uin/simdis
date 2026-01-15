@@ -19,23 +19,30 @@ class KonsentrasiSeeder extends Seeder
     {
         // Mapping: jurusan_kode => [konsentrasi list]
         $konsentrasiData = [
-            'ATP' => [
-                ['nama' => 'Budidaya Tanaman Perkebunan', 'kode' => 'BTP'],
-                ['nama' => 'Perbenihan dan Kultur Jaringan Tanaman', 'kode' => 'PKJT'],
+            'JA' => [
+                ['nama'=> 'Konsentrasi Jurusan A', 'kode'=> 'KJA'],
+                ['nama'=> 'Konsentrasi Jurusan A 11', 'kode'=> 'KJA11'],
+                ['nama'=> 'Konsentrasi Jurusan A 12', 'kode'=> 'KJA12'],
             ],
-            'APHP' => [
-                ['nama' => 'Pengolahan Hasil Pertanian', 'kode' => 'PHP'],
-                ['nama' => 'Pengawasan Mutu Hasil Pertanian', 'kode' => 'PMHP'],
+            'JB' => [
+                ['nama'=> 'Konsentrasi Jurusan B', 'kode'=> 'KJB'],
+                ['nama'=> 'Konsentrasi Jurusan B 11', 'kode'=> 'KJB11'],
+                ['nama'=> 'Konsentrasi Jurusan B 12', 'kode'=> 'KJB12'],
             ],
-            'ATU' => [
-                ['nama' => 'Budidaya Ternak Unggas', 'kode' => 'BTU'],
+            'JC' => [
+                ['nama'=> 'Konsentrasi Jurusan C', 'kode'=> 'KJC'],
+                ['nama'=> 'Konsentrasi Jurusan C 11', 'kode'=> 'KJC11'],
+                ['nama'=> 'Konsentrasi Jurusan C 12', 'kode'=> 'KJC12'],
             ],
-            'TEB' => [
-                ['nama' => 'Teknik Pembangkit Biomassa', 'kode' => 'TPB'],
+            'JD' => [
+                ['nama'=> 'Konsentrasi Jurusan D', 'kode'=> 'KJD'],
+                ['nama'=> 'Konsentrasi Jurusan D 11', 'kode'=> 'KJD11'],
+                ['nama'=> 'Konsentrasi Jurusan D 12', 'kode'=> 'KJD12'],
             ],
-            'AKL' => [
-                ['nama' => 'Akuntansi', 'kode' => 'AK'],
-                ['nama' => 'Keuangan Lembaga', 'kode' => 'KL'],
+            'JE' => [
+                ['nama'=> 'Konsentrasi Jurusan E', 'kode'=> 'KJE'],
+                ['nama'=> 'Konsentrasi Jurusan E 11', 'kode'=> 'KJE11'],
+                ['nama'=> 'Konsentrasi Jurusan E 12', 'kode'=> 'KJE12'],
             ],
         ];
 

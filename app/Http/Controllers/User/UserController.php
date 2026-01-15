@@ -210,7 +210,7 @@ class UserController extends Controller
      * - username (Nama Lengkap): 
      *   - Wali Murid: CAN EDIT
      *   - Other roles: CANNOT EDIT (only Operator Sekolah can)
-     * - email, phone, nip, nuptk: EDITABLE
+     * - email, phone, nip, ni_pppk, nuptk: EDITABLE
      */
     public function updateProfile(Request $request): RedirectResponse
     {
@@ -228,6 +228,7 @@ class UserController extends Controller
             ],
             'phone' => ['nullable', 'string', 'max:20'],
             'nip' => ['nullable', 'string', 'max:20', \Illuminate\Validation\Rule::unique('users', 'nip')->ignore($userId)],
+            'ni_pppk' => ['nullable', 'string', 'max:50', \Illuminate\Validation\Rule::unique('users', 'ni_pppk')->ignore($userId)],
             'nuptk' => ['nullable', 'string', 'max:20', \Illuminate\Validation\Rule::unique('users', 'nuptk')->ignore($userId)],
         ];
         
@@ -250,6 +251,7 @@ class UserController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
             'nip' => $request->nip,
+            'ni_pppk' => $request->ni_pppk,
             'nuptk' => $request->nuptk,
             'role_id' => $user->role_id,
             'is_active' => $user->is_active,

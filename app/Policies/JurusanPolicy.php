@@ -41,6 +41,7 @@ class JurusanPolicy
             'Operator Sekolah', 
             'Kepala Sekolah', 
             'Waka Kesiswaan', 
+            'Waka Kurikulum',
             'Waka Sarana'
         ]);
     }
@@ -101,6 +102,7 @@ class JurusanPolicy
             'Operator Sekolah',
             'Kepala Sekolah',
             'Waka Kesiswaan',
+            'Waka Kurikulum',
             'Waka Sarana',
             'Kaprodi'
         ]);

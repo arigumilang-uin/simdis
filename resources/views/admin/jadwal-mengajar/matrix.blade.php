@@ -109,7 +109,7 @@
                                 @foreach($templateJams as $slot)
                                     @php
                                         $jadwal = $existingJadwal[$slot->id] ?? null;
-                                        $isBreak = in_array($slot->tipe, ['istirahat', 'ishoma', 'upacara', 'lainnya']);
+                                        $isBreak = $slot->tipe !== 'pelajaran';
                                     @endphp
                                     
                                     @if($isBreak)
@@ -136,7 +136,7 @@
                                             </td>
                                             <td>
                                                 <select x-model="mapelId" 
-                                                        @change="save()" 
+                                                        @change="onMapelChange()" 
                                                         :disabled="saving"
                                                         class="form-input text-sm w-full border-slate-200 focus:border-emerald-500 focus:ring-emerald-500"
                                                         :class="{ 'opacity-50': saving }">
@@ -149,14 +149,18 @@
                                             <td>
                                                 <select x-model="guruId" 
                                                         @change="save()" 
-                                                        :disabled="saving"
+                                                        :disabled="saving || loadingGuru"
                                                         class="form-input text-sm w-full border-slate-200 focus:border-emerald-500 focus:ring-emerald-500"
-                                                        :class="{ 'opacity-50': saving }">
+                                                        :class="{ 'opacity-50': saving || loadingGuru }">
                                                     <option value="">-- Pilih Guru --</option>
-                                                    @foreach($guruList as $g)
-                                                        <option value="{{ $g->id }}">{{ $g->username }}</option>
-                                                    @endforeach
+                                                    <template x-for="g in guruOptions" :key="g.id">
+                                                        <option :value="g.id" x-text="g.nama + (g.is_primary ? ' ⭐' : '')"></option>
+                                                    </template>
+                                                    <template x-if="guruOptions.length === 0 && !loadingGuru && mapelId">
+                                                        <option disabled>Tidak ada guru untuk mapel ini</option>
+                                                    </template>
                                                 </select>
+                                                <div x-show="loadingGuru" class="text-xs text-slate-400 mt-1">Loading guru...</div>
                                             </td>
                                         </tr>
                                     @endif
@@ -169,7 +173,12 @@
 
             {{-- Info --}}
             <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm text-slate-600">
-                <strong>💡 Tips:</strong> Pilih mata pelajaran dan guru langsung dari dropdown. Data akan otomatis tersimpan.
+                <strong>💡 Tips:</strong> 
+                <ul class="list-disc list-inside mt-1 space-y-1">
+                    <li>Pilih mata pelajaran terlebih dahulu, maka guru pengampu akan muncul di dropdown.</li>
+                    <li>Guru dengan tanda ⭐ adalah guru utama untuk mapel tersebut.</li>
+                    <li>Data akan otomatis tersimpan setelah memilih guru.</li>
+                </ul>
             </div>
         @else
             <x-ui.empty-state
@@ -207,12 +216,54 @@
 
 @push('scripts')
 <script>
+// Cache guru per mapel
+const guruCache = {};
+
 function jadwalRow(templateJamId, initialMapelId, initialGuruId) {
     return {
         templateJamId: templateJamId,
         mapelId: initialMapelId || '',
         guruId: initialGuruId || '',
+        guruOptions: [],
         saving: false,
+        loadingGuru: false,
+
+        async init() {
+            // Load guru if mapel already selected
+            if (this.mapelId) {
+                await this.loadGuruForMapel(this.mapelId);
+            }
+        },
+
+        async onMapelChange() {
+            this.guruId = ''; // Reset guru when mapel changes
+            if (this.mapelId) {
+                await this.loadGuruForMapel(this.mapelId);
+            } else {
+                this.guruOptions = [];
+            }
+        },
+
+        async loadGuruForMapel(mapelId) {
+            // Check cache first
+            if (guruCache[mapelId]) {
+                this.guruOptions = guruCache[mapelId];
+                return;
+            }
+
+            this.loadingGuru = true;
+            try {
+                const response = await fetch(`/admin/mata-pelajaran/${mapelId}/guru`);
+                const data = await response.json();
+                this.guruOptions = data;
+                guruCache[mapelId] = data; // Cache it
+            } catch (error) {
+                console.error('Error loading guru:', error);
+                this.guruOptions = [];
+            } finally {
+                this.loadingGuru = false;
+            }
+        },
 
         async save() {
             // Only save if both are selected or both are empty

@@ -324,12 +324,11 @@
             }
             
             if ($user) {
-                $nipLabel = !empty($user->nip) ? 'NIP.' : (!empty($user->nuptk) ? 'NUPTK.' : 'NIP.');
                 return [
                     'username' => $user->username,
                     'nama' => $user->nama,
-                    'nip' => $user->nip ?? $user->nuptk ?? null,
-                    'nip_label' => $nipLabel,
+                    'nip' => $user->getIdentifierNumber(),
+                    'nip_label' => $user->getIdentifierLabel() . '.',
                 ];
             }
             

@@ -37,9 +37,9 @@ class AdminDashboardController extends Controller
         $user = Auth::user();
 
         // =============================================================
-        // SCENARIO A: OPERATOR SEKOLAH
+        // SCENARIO A: OPERATOR SEKOLAH & WAKA KURIKULUM
         // =============================================================
-        if ($user->hasRole('Operator Sekolah')) {
+        if ($user->hasRole('Operator Sekolah') || $user->hasRole('Waka Kurikulum')) {
             $stats = $this->dashboardService->getOperatorStats();
             return view('dashboards.operator', $stats);
         }

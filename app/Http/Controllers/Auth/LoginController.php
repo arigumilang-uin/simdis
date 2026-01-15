@@ -52,10 +52,11 @@ class LoginController extends Controller
         $password = $request->password;
 
         // --- Cari user berdasarkan berbagai identifier ---
-        // Prioritas: username > email > nip > nuptk > phone
+        // Prioritas: username > email > nip > ni_pppk > nuptk > phone
         $user = \App\Models\User::where('username', $loginField)
             ->orWhere('email', $loginField)
             ->orWhere('nip', $loginField)
+            ->orWhere('ni_pppk', $loginField)
             ->orWhere('nuptk', $loginField)
             ->orWhere('phone', $loginField)
             ->first();
@@ -104,7 +105,7 @@ class LoginController extends Controller
                 return redirect()->intended('/dashboard/developer');
             }
 
-            if ($user->hasAnyRole(['Waka Kesiswaan', 'Operator Sekolah'])) {
+            if ($user->hasAnyRole(['Waka Kesiswaan', 'Operator Sekolah', 'Waka Kurikulum'])) {
                 return redirect()->intended('/dashboard/admin');
             } elseif ($user->hasRole('Kepala Sekolah')) {
                 return redirect()->intended('/dashboard/kepsek');

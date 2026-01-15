@@ -45,7 +45,7 @@ class SiswaPolicy
         }
 
         // Admin, Kepsek, Waka bisa lihat semua
-        return $user->hasAnyRole(['Operator Sekolah', 'Kepala Sekolah', 'Waka Kesiswaan', 'Waka Sarana']);
+        return $user->hasAnyRole(['Operator Sekolah', 'Kepala Sekolah', 'Waka Kesiswaan', 'Waka Kurikulum', 'Waka Sarana']);
     }
 
     /**

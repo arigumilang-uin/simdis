@@ -31,6 +31,9 @@ class UserNamingService
             case 'Waka Kesiswaan':
                 return 'Waka Kesiswaan';
 
+            case 'Waka Kurikulum':
+                return 'Waka Kurikulum';
+
             case 'Waka Sarana':
                 return 'Waka Sarana';
 
@@ -88,6 +91,9 @@ class UserNamingService
 
             case 'Waka Kesiswaan':
                 return self::ensureUniqueUsername('wakakesiswaan', $user->id ?? null);
+
+            case 'Waka Kurikulum':
+                return self::ensureUniqueUsername('wakakurikulum', $user->id ?? null);
 
             case 'Kaprodi':
                 $jurusan = $user->jurusanDiampu;

@@ -31,7 +31,7 @@ Route::middleware(['auth', 'profile.completed'])->group(function () {
             'update' => 'jurusan.update',
             'destroy' => 'jurusan.destroy',
         ])
-        ->middleware('role:Operator Sekolah');
+        ->middleware('role:Operator Sekolah,Waka Kurikulum');
 
     // ===================================================================
     // KONSENTRASI ROUTES (Konsentrasi Keahlian)
@@ -47,7 +47,7 @@ Route::middleware(['auth', 'profile.completed'])->group(function () {
             'update' => 'konsentrasi.update',
             'destroy' => 'konsentrasi.destroy',
         ])
-        ->middleware('role:Operator Sekolah');
+        ->middleware('role:Operator Sekolah,Waka Kurikulum');
     
     // API: Get konsentrasi by jurusan (for dynamic dropdown in Kelas form)
     Route::get('/api/konsentrasi-by-jurusan', [KonsentrasiController::class, 'getByJurusan'])
@@ -68,5 +68,5 @@ Route::middleware(['auth', 'profile.completed'])->group(function () {
             'update' => 'kelas.update',
             'destroy' => 'kelas.destroy',
         ])
-        ->middleware('role:Operator Sekolah');
+        ->middleware('role:Operator Sekolah,Waka Kurikulum');
 });

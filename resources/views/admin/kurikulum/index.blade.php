@@ -2,14 +2,16 @@
 
 @section('title', 'Kurikulum')
 
-@section('content')
-<div class="space-y-6">
-    {{-- Page Header --}}
+@section('page-header')
     <x-page-header 
         title="Kurikulum" 
         subtitle="Kelola data master kurikulum yang digunakan di sekolah"
         :total="$kurikulums->count()" 
     />
+@endsection
+
+@section('content')
+<div class="space-y-6">
 
     {{-- Action Bar --}}
     <div class="flex justify-between items-center">

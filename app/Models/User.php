@@ -42,6 +42,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'google_id',
         'phone',
         'nip',
+        'ni_pppk',
         'nuptk',
         'password',
         'username_changed_at',
@@ -145,6 +146,16 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Relasi: Mata pelajaran yang bisa diajarkan oleh guru ini (many-to-many)
+     */
+    public function mapelDiajar(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(MataPelajaran::class, 'guru_mata_pelajaran', 'user_id', 'mata_pelajaran_id')
+            ->withPivot('is_primary')
+            ->withTimestamps();
+    }
+
+    /**
      * Check if the user has the given role name.
      * Accepts a single role string or an array of role names.
      *
@@ -194,9 +205,66 @@ class User extends Authenticatable implements MustVerifyEmail
         'Wali Kelas',
         'Kaprodi',
         'Waka Kesiswaan',
+        'Waka Kurikulum',
         'Waka Sarana',
         'Operator Sekolah',
     ];
+
+    /**
+     * Get the identifier number with priority: NIP > NI PPPK > NUPTK
+     * 
+     * @return string|null
+     */
+    public function getIdentifierNumber(): ?string
+    {
+        if (!empty($this->nip)) {
+            return $this->nip;
+        }
+        if (!empty($this->ni_pppk)) {
+            return $this->ni_pppk;
+        }
+        if (!empty($this->nuptk)) {
+            return $this->nuptk;
+        }
+        return null;
+    }
+
+    /**
+     * Get the identifier label based on which identifier is used
+     * Priority: NIP > NI PPPK > NUPTK
+     * 
+     * @return string
+     */
+    public function getIdentifierLabel(): string
+    {
+        if (!empty($this->nip)) {
+            return 'NIP';
+        }
+        if (!empty($this->ni_pppk)) {
+            return 'NI PPPK';
+        }
+        if (!empty($this->nuptk)) {
+            return 'NUPTK';
+        }
+        return 'NIP';
+    }
+
+    /**
+     * Get the formatted identifier with label
+     * Example: "NIP. 198012345678" or "NI PPPK. 202012345678" or "NUPTK. 1234567890"
+     * 
+     * @return string
+     */
+    public function getFormattedIdentifier(): string
+    {
+        $number = $this->getIdentifierNumber();
+        $label = $this->getIdentifierLabel();
+        
+        if ($number) {
+            return $label . '. ' . $number;
+        }
+        return $label . '. _______________________';
+    }
 
     /**
      * Whether the user is a teacher (can record violations).

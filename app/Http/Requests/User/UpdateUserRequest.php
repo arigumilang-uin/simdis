@@ -58,6 +58,12 @@ class UpdateUserRequest extends FormRequest
                 'max:20',
                 Rule::unique('users', 'nip')->ignore($userId),
             ],
+            'ni_pppk' => [
+                'nullable', 
+                'string', 
+                'max:50',
+                Rule::unique('users', 'ni_pppk')->ignore($userId),
+            ],
             'nuptk' => [
                 'nullable', 
                 'string', 
@@ -91,6 +97,7 @@ class UpdateUserRequest extends FormRequest
             'email' => 'Email',
             'phone' => 'Nomor HP',
             'nip' => 'NIP',
+            'ni_pppk' => 'NI PPPK',
             'nuptk' => 'NUPTK',
             'is_active' => 'Status Aktif',
             'password' => 'Password Baru',

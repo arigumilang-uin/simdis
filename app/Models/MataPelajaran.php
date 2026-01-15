@@ -57,6 +57,24 @@ class MataPelajaran extends Model
         return $this->hasMany(JadwalMengajar::class, 'mata_pelajaran_id');
     }
 
+    /**
+     * Guru-guru yang bisa mengajar mata pelajaran ini (many-to-many)
+     */
+    public function guruPengampu(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'guru_mata_pelajaran', 'mata_pelajaran_id', 'user_id')
+            ->withPivot('is_primary')
+            ->withTimestamps();
+    }
+
+    /**
+     * Guru utama untuk mata pelajaran ini
+     */
+    public function guruUtama(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->guruPengampu()->wherePivot('is_primary', true);
+    }
+
     // =====================================================================
     // ----------------------- QUERY SCOPES -----------------------
     // =====================================================================

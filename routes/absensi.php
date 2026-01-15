@@ -54,7 +54,7 @@ Route::middleware(['auth', 'profile.completed'])->group(function () {
     // ADMIN ROUTES - AKADEMIK
     // ===================================================================
     
-    Route::prefix('admin')->name('admin.')->middleware('role:Operator Sekolah,Developer')->group(function () {
+    Route::prefix('admin')->name('admin.')->middleware('role:Operator Sekolah,Waka Kurikulum,Developer')->group(function () {
         
         // --- Kurikulum ---
         Route::prefix('kurikulum')->name('kurikulum.')->group(function () {
@@ -91,13 +91,18 @@ Route::middleware(['auth', 'profile.completed'])->group(function () {
             Route::delete('/{id}', [MataPelajaranController::class, 'destroy'])->name('destroy');
             // API: Get mapel by kurikulum
             Route::get('/by-kurikulum/{kurikulumId}', [MataPelajaranController::class, 'getByKurikulum'])->name('byKurikulum');
+            // API: Get guru by mapel
+            Route::get('/{mapelId}/guru', [MataPelajaranController::class, 'getGuruByMapel'])->name('guruByMapel');
         });
 
         // --- Template Jam (replaces Jam Pelajaran) ---
         Route::prefix('template-jam')->name('template-jam.')->group(function () {
             Route::get('/', [TemplateJamController::class, 'index'])->name('index');
             Route::post('/', [TemplateJamController::class, 'store'])->name('store');
+            Route::post('/generate', [TemplateJamController::class, 'generate'])->name('generate');
+            Route::post('/add-row', [TemplateJamController::class, 'addRow'])->name('addRow');
             Route::put('/{id}', [TemplateJamController::class, 'update'])->name('update');
+            Route::patch('/{id}/update-field', [TemplateJamController::class, 'updateField'])->name('updateField');
             Route::delete('/{id}', [TemplateJamController::class, 'destroy'])->name('destroy');
             Route::patch('/{id}/reorder', [TemplateJamController::class, 'reorder'])->name('reorder');
             Route::post('/copy', [TemplateJamController::class, 'copy'])->name('copy');
@@ -109,6 +114,9 @@ Route::middleware(['auth', 'profile.completed'])->group(function () {
             Route::get('/matrix', [JadwalMengajarController::class, 'matrix'])->name('matrix');
             Route::post('/update-cell', [JadwalMengajarController::class, 'updateCell'])->name('updateCell');
             Route::delete('/{id}', [JadwalMengajarController::class, 'destroy'])->name('destroy');
+            // PDF Export
+            Route::get('/pdf/download', [\App\Http\Controllers\Admin\JadwalPdfController::class, 'generate'])->name('pdf.download');
+            Route::get('/pdf/preview', [\App\Http\Controllers\Admin\JadwalPdfController::class, 'preview'])->name('pdf.preview');
             // API endpoints
             Route::get('/api/mapel-for-kelas', [JadwalMengajarController::class, 'getMapelForKelas'])->name('api.mapelForKelas');
             Route::get('/api/template-jam', [JadwalMengajarController::class, 'getTemplateJam'])->name('api.templateJam');

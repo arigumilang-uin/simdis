@@ -255,7 +255,7 @@ Alpine.data("userForm", (config = {}) => ({
     },
 
     needsNipNuptk() {
-        const roles = ["guru", "waka kesiswaan", "waka sarana", "operator sekolah", "wali kelas", "kaprodi", "kepala sekolah"];
+        const roles = ["guru", "waka kesiswaan", "waka kurikulum", "waka sarana", "operator sekolah", "wali kelas", "kaprodi", "kepala sekolah"];
         const name = this.getRoleName();
         return roles.some((r) => name.includes(r));
     },

@@ -72,6 +72,7 @@ class UserService
                 'email' => $data->email,
                 'phone' => $data->phone,
                 'nip' => $data->nip,
+                'ni_pppk' => $data->ni_pppk,
                 'nuptk' => $data->nuptk,
                 'password' => Hash::make($data->password),
                 'is_active' => true,
@@ -145,6 +146,7 @@ class UserService
                 'email' => $data->email,
                 'phone' => $data->phone,
                 'nip' => $data->nip,
+                'ni_pppk' => $data->ni_pppk,
                 'nuptk' => $data->nuptk,
                 'is_active' => $data->is_active,
             ];

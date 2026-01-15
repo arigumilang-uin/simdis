@@ -16,33 +16,24 @@ class JurusanSeeder extends Seeder
     {
         $jurusan = [
             [
-                'nama_jurusan' => 'Agribisnis Tanaman Perkebunan',
-                'kode_jurusan' => 'ATP',
-            ],
-            [
-                'nama_jurusan' => 'Agribisnis Pengolahan Hasil Pertanian',
-                'kode_jurusan' => 'APHP',
-            ],
-            [
-                'nama_jurusan' => 'Agribisnis Ternak Unggas',
-                'kode_jurusan' => 'ATU',
-            ],
-            [
-                'nama_jurusan' => 'Teknik Energi Biomassa',
-                'kode_jurusan' => 'TEB',
-            ],
-            [
-                'nama_jurusan' => 'Akuntansi dan Keuangan Lembaga',
-                'kode_jurusan' => 'AKL',
-            ],
-
-            [
                 'nama_jurusan' => 'Jurusan A',
                 'kode_jurusan' => 'JA',                
             ],
             [
                 'nama_jurusan' => 'Jurusan B',
                 'kode_jurusan' => 'JB',
+            ],
+            [
+                'nama_jurusan' => 'Jurusan C',
+                'kode_jurusan' => 'JC',
+            ],
+            [
+                'nama_jurusan' => 'Jurusan D',
+                'kode_jurusan' => 'JD',
+            ],
+            [
+                'nama_jurusan' => 'Jurusan E',
+                'kode_jurusan' => 'JE',
             ],
         ];
 

@@ -122,7 +122,7 @@ class UserRepository extends BaseRepository implements UserRepositoryInterface
      */
     public function getTeachers(): Collection
     {
-        $teacherRoles = ['Guru', 'Wali Kelas', 'Kaprodi', 'Waka Kesiswaan', 'Waka Sarana', 'Operator Sekolah'];
+        $teacherRoles = ['Guru', 'Wali Kelas', 'Kaprodi', 'Waka Kesiswaan', 'Waka Kurikulum', 'Waka Sarana', 'Operator Sekolah'];
 
         return $this->model
             ->whereHas('role', function ($query) use ($teacherRoles) {

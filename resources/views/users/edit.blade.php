@@ -33,7 +33,7 @@
                           return this.roleMap[this.roleId] || '';
                       },
                       needsNipNuptk() {
-                          const roles = ['guru', 'waka kesiswaan', 'waka sarana', 'operator sekolah', 'wali kelas', 'kaprodi', 'kepala sekolah'];
+                          const roles = ['guru', 'waka kesiswaan', 'waka kurikulum', 'waka sarana', 'operator sekolah', 'wali kelas', 'kaprodi', 'kepala sekolah'];
                           const name = this.getRoleName();
                           return roles.some(r => name.includes(r));
                       },
@@ -141,7 +141,7 @@
                     />
                 </div>
                 
-                {{-- NIP & NUPTK (untuk Guru, Waka, Kepala Sekolah, etc) --}}
+                {{-- NIP, NI PPPK & NUPTK (untuk Guru, Waka, Kepala Sekolah, etc) --}}
                 <div x-show="needsNipNuptk() || isDeveloper()" 
                      x-transition:enter="transition ease-out duration-200"
                      x-transition:enter-start="opacity-0 transform -translate-y-2"
@@ -152,19 +152,29 @@
                         Data Kepegawaian
                     </h4>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <x-forms.input 
                             name="nip" 
                             label="NIP" 
                             :value="$user->nip"
-                            placeholder="18 digit NIP" 
+                            placeholder="18 digit NIP"
+                            help="Untuk PNS"
+                        />
+                        
+                        <x-forms.input 
+                            name="ni_pppk" 
+                            label="NI PPPK" 
+                            :value="$user->ni_pppk"
+                            placeholder="Nomor Induk PPPK"
+                            help="Untuk PPPK"
                         />
                         
                         <x-forms.input 
                             name="nuptk" 
                             label="NUPTK" 
                             :value="$user->nuptk"
-                            placeholder="16 digit NUPTK" 
+                            placeholder="16 digit NUPTK"
+                            help="Untuk Non-ASN"
                         />
                     </div>
                 </div>

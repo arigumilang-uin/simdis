@@ -327,7 +327,7 @@ class JadwalService
         
         return [
             'guru' => User::whereHas('role', function($q) {
-                    $q->whereIn('nama_role', ['Guru', 'Wali Kelas', 'Kaprodi', 'Waka Kesiswaan', 'Waka Sarana', 'Kepala Sekolah']);
+                    $q->whereIn('nama_role', ['Guru', 'Wali Kelas', 'Kaprodi', 'Waka Kesiswaan', 'Waka Kurikulum', 'Waka Sarana', 'Kepala Sekolah']);
                 })
                 ->where('is_active', true)
                 ->orderBy('nama')

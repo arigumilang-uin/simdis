@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
             KelasSeeder::class,
             UserSeeder::class,
             KurikulumSeeder::class,
+            MapelSeeder::class,  // Mata pelajaran + guru pengampu
         ]);
         
         $this->command->info('');

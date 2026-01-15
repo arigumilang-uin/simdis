@@ -65,6 +65,7 @@
                     $role === 'Kaprodi' => route('dashboard.kaprodi'),
                     $role === 'Wali Murid' => route('dashboard.wali_murid'),
                     $role === 'Waka Sarana' => route('dashboard.waka-sarana'),
+                    $role === 'Waka Kurikulum' => route('dashboard.admin'),
                     default => route('dashboard.admin')
                 };
             @endphp
@@ -77,8 +78,8 @@
         </ul>
     @endunless
     
-    {{-- Operational Menu (Guru, Wali Kelas, Waka, Kaprodi, Waka Sarana) --}}
-    @if(in_array($role, ['Guru', 'Wali Kelas', 'Waka Kesiswaan', 'Kaprodi', 'Waka Sarana']) || $isDeveloper)
+    {{-- Operational Menu (Guru, Wali Kelas, Waka, Kaprodi, Waka Sarana, Waka Kurikulum) --}}
+    @if(in_array($role, ['Guru', 'Wali Kelas', 'Waka Kesiswaan', 'Waka Kurikulum', 'Kaprodi', 'Waka Sarana']) || $isDeveloper)
         <div class="sidebar-section">Operasional</div>
         <ul class="sidebar-menu">
             <li class="sidebar-menu-item">
@@ -222,6 +223,68 @@
             <li class="sidebar-menu-item">
                 <a href="{{ route('admin.kurikulum.index') }}" class="sidebar-menu-link {{ Request::routeIs('admin.kurikulum.*') ? 'active' : '' }}">
                     <x-ui.icon name="layers" class="sidebar-menu-icon" />
+                    <span>Kurikulum</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{{ route('admin.periode-semester.index') }}" class="sidebar-menu-link {{ Request::routeIs('admin.periode-semester.*') ? 'active' : '' }}">
+                    <x-ui.icon name="calendar" class="sidebar-menu-icon" />
+                    <span>Periode Semester</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{{ route('admin.mata-pelajaran.index') }}" class="sidebar-menu-link {{ Request::routeIs('admin.mata-pelajaran.*') ? 'active' : '' }}">
+                    <x-ui.icon name="book-open" class="sidebar-menu-icon" />
+                    <span>Mata Pelajaran</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{{ route('admin.template-jam.index') }}" class="sidebar-menu-link {{ Request::routeIs('admin.template-jam.*') ? 'active' : '' }}">
+                    <x-ui.icon name="clock" class="sidebar-menu-icon" />
+                    <span>Template Jam</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{{ route('admin.jadwal-mengajar.index') }}" class="sidebar-menu-link {{ Request::routeIs('admin.jadwal-mengajar.*') ? 'active' : '' }}">
+                    <x-ui.icon name="grid" class="sidebar-menu-icon" />
+                    <span>Jadwal Mengajar</span>
+                </a>
+            </li>
+        </ul>
+    @endif
+    
+    {{-- Kurikulum Menu (Waka Kurikulum) --}}
+    @if($role === 'Waka Kurikulum' || $isDeveloper)
+        <div class="sidebar-section">Kurikulum</div>
+        <ul class="sidebar-menu">
+            {{-- Data Siswa (list only) --}}
+            <li class="sidebar-menu-item">
+                <a href="{{ route('siswa.index') }}" class="sidebar-menu-link {{ Request::routeIs('siswa.index', 'siswa.show') ? 'active' : '' }}">
+                    <x-ui.icon name="users" class="sidebar-menu-icon" />
+                    <span>Daftar Siswa</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{{ route('jurusan.index') }}" class="sidebar-menu-link {{ Request::routeIs('jurusan.*') ? 'active' : '' }}">
+                    <x-ui.icon name="hexagon" class="sidebar-menu-icon" />
+                    <span>Data Jurusan</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{{ route('konsentrasi.index') }}" class="sidebar-menu-link {{ Request::routeIs('konsentrasi.*') ? 'active' : '' }}">
+                    <x-ui.icon name="layers" class="sidebar-menu-icon" />
+                    <span>Data Konsentrasi</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{{ route('kelas.index') }}" class="sidebar-menu-link {{ Request::routeIs('kelas.*') ? 'active' : '' }}">
+                    <x-ui.icon name="layout" class="sidebar-menu-icon" />
+                    <span>Data Kelas</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{{ route('admin.kurikulum.index') }}" class="sidebar-menu-link {{ Request::routeIs('admin.kurikulum.*') ? 'active' : '' }}">
+                    <x-ui.icon name="book" class="sidebar-menu-icon" />
                     <span>Kurikulum</span>
                 </a>
             </li>

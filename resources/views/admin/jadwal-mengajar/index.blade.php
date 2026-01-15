@@ -2,14 +2,16 @@
 
 @section('title', 'Jadwal Mengajar')
 
-@section('content')
-<div class="space-y-6">
-    {{-- Page Header --}}
+@section('page-header')
     <x-page-header 
         title="Jadwal Mengajar" 
         subtitle="Kelola jadwal mengajar per periode semester"
         :total="$jadwals->total()"
     />
+@endsection
+
+@section('content')
+<div class="space-y-6">
 
     {{-- Alert --}}
     @if(session('success'))
@@ -25,7 +27,20 @@
 
     {{-- Action Button --}}
     <div class="flex justify-between items-center">
-        <div></div>
+        <div class="flex items-center gap-2">
+            {{-- PDF Export --}}
+            <a href="{{ route('admin.jadwal-mengajar.pdf.preview') }}" 
+               target="_blank"
+               class="btn btn-secondary">
+                <x-ui.icon name="eye" size="18" />
+                <span>Preview PDF</span>
+            </a>
+            <a href="{{ route('admin.jadwal-mengajar.pdf.download') }}" 
+               class="btn btn-secondary">
+                <x-ui.icon name="download" size="18" />
+                <span>Download PDF</span>
+            </a>
+        </div>
         <a href="{{ route('admin.jadwal-mengajar.matrix') }}{{ $selectedPeriode ? '?periode_id=' . $selectedPeriode->id : '' }}" class="btn btn-primary">
             <x-ui.icon name="grid" size="18" />
             <span>Input Matrix</span>
@@ -124,11 +139,11 @@
                 <thead>
                     <tr>
                         <th class="w-24">Hari</th>
-                        <th class="w-32">Waktu</th>
+                        <th class="w-40">Waktu</th>
                         <th>Kelas</th>
                         <th>Mata Pelajaran</th>
                         <th>Guru</th>
-                        <th class="w-24 text-center">Status</th>
+
                         <th class="w-24 text-center">Aksi</th>
                     </tr>
                 </thead>
@@ -152,13 +167,7 @@
                                 @endif
                             </td>
                             <td>{{ $jadwal->guru?->username ?? '-' }}</td>
-                            <td class="text-center">
-                                @if($jadwal->is_active)
-                                    <span class="badge badge-success">Aktif</span>
-                                @else
-                                    <span class="badge badge-secondary">Nonaktif</span>
-                                @endif
-                            </td>
+
                             <td>
                                 <div class="flex items-center justify-center">
                                     <form action="{{ route('admin.jadwal-mengajar.destroy', $jadwal->id) }}" 

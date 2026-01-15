@@ -20,6 +20,7 @@ class UserData extends Data
         public ?string $email = null, // NULLABLE: email optional
         public ?string $phone = null,
         public ?string $nip = null,
+        public ?string $ni_pppk = null,
         public ?string $nuptk = null,
         public ?string $password = null,
         public bool $is_active = true,
@@ -55,6 +56,7 @@ class UserData extends Data
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:20'],
             'nip' => ['nullable', 'string', 'max:50'],
+            'ni_pppk' => ['nullable', 'string', 'max:50'],
             'nuptk' => ['nullable', 'string', 'max:50'],
             'role_id' => ['required', 'integer', 'exists:roles,id'],
             'password' => ['nullable', 'string', 'min:8'],

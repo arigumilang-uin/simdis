@@ -255,7 +255,7 @@
                         <div class="jabatan">{{ $pembina['jabatan'] ?? '' }}</div>
                         <div class="nama">{{ $pembina['nama'] ?? '(...................................)' }}</div>
                         @if(isset($pembina['nip']) && $pembina['nip'])
-                            <div class="nip">NIP. {{ $pembina['nip'] }}</div>
+                            <div class="nip">{{ $pembina['nip_label'] ?? 'NIP.' }} {{ $pembina['nip'] }}</div>
                         @else
                             <div class="nip">(...................................)</div>
                         @endif
@@ -273,8 +273,8 @@
                     <div class="ttd-cell">
                         <div class="jabatan">Wali Kelas</div>
                         <div class="nama">{{ $siswa->kelas->waliKelas->nama ?? '(...................................)' }}</div>
-                        @if($siswa->kelas->waliKelas && $siswa->kelas->waliKelas->nip)
-                            <div class="nip">NIP. {{ $siswa->kelas->waliKelas->nip }}</div>
+                        @if($siswa->kelas->waliKelas)
+                            <div class="nip">{{ $siswa->kelas->waliKelas->getFormattedIdentifier() }}</div>
                         @else
                             <div class="nip">(...................................)</div>
                         @endif

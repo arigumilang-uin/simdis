@@ -27,13 +27,6 @@ class KurikulumSeeder extends Seeder
                 'tahun_berlaku' => 2022,
                 'is_active' => true,
             ],
-            [
-                'kode' => 'MERDEKA_SMK',
-                'nama' => 'Kurikulum Merdeka SMK',
-                'deskripsi' => 'Kurikulum Merdeka yang disesuaikan untuk SMK dengan penekanan pada Teaching Factory dan praktik industri.',
-                'tahun_berlaku' => 2022,
-                'is_active' => true,
-            ],
         ];
 
         foreach ($kurikulums as $data) {

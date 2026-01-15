@@ -101,9 +101,9 @@
                         </div>
                     </div>
                     
-                    {{-- NIP/NUPTK (for teachers) --}}
+                    {{-- NIP/NI PPPK/NUPTK (for teachers) --}}
                     @if(Auth::user()->hasAnyRole(['Guru', 'Wali Kelas', 'Kaprodi', 'Waka Kesiswaan', 'Kepala Sekolah']))
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="form-group">
                             <label for="nip" class="form-label">NIP</label>
                             <input 
@@ -114,7 +114,24 @@
                                 class="form-input @error('nip') error @enderror" 
                                 placeholder="Nomor Induk Pegawai"
                             >
+                            <p class="form-help">Untuk PNS</p>
                             @error('nip')
+                                <p class="form-error">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="ni_pppk" class="form-label">NI PPPK</label>
+                            <input 
+                                type="text" 
+                                id="ni_pppk" 
+                                name="ni_pppk" 
+                                value="{{ old('ni_pppk', Auth::user()->ni_pppk) }}"
+                                class="form-input @error('ni_pppk') error @enderror" 
+                                placeholder="Nomor Induk PPPK"
+                            >
+                            <p class="form-help">Untuk PPPK</p>
+                            @error('ni_pppk')
                                 <p class="form-error">{{ $message }}</p>
                             @enderror
                         </div>
@@ -127,8 +144,9 @@
                                 name="nuptk" 
                                 value="{{ old('nuptk', Auth::user()->nuptk) }}"
                                 class="form-input @error('nuptk') error @enderror" 
-                                placeholder="Nomor Unik Pendidik dan Tenaga Kependidikan"
+                                placeholder="Nomor Unik Pendidik"
                             >
+                            <p class="form-help">Untuk Non-ASN</p>
                             @error('nuptk')
                                 <p class="form-error">{{ $message }}</p>
                             @enderror

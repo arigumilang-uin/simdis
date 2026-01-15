@@ -107,16 +107,15 @@
                         />
                     </div>
 
-                    {{-- DYNAMIC FIELDS BASED ON ROLE --}}
-                    
-                    {{-- NIP/NUPTK (Guru/Staff) --}}
+                    {{-- NIP/NI PPPK/NUPTK (Guru/Staff) --}}
                     <div x-show="needsNipNuptk()" x-transition class="bg-amber-50 rounded-lg p-5 border border-amber-100 mb-4">
                         <h4 class="text-sm font-semibold text-amber-800 mb-3 flex items-center gap-2">
                             <x-ui.icon name="credit-card" size="14" /> Identitas Kepegawaian
                         </h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <x-forms.input name="nip" label="NIP" placeholder="Nomor Induk Pegawai" />
-                            <x-forms.input name="nuptk" label="NUPTK" placeholder="Nomor Unik Pendidik" />
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <x-forms.input name="nip" label="NIP" placeholder="Nomor Induk Pegawai" help="Untuk PNS" />
+                            <x-forms.input name="ni_pppk" label="NI PPPK" placeholder="Nomor Induk PPPK" help="Untuk PPPK" />
+                            <x-forms.input name="nuptk" label="NUPTK" placeholder="Nomor Unik Pendidik" help="Untuk Non-ASN" />
                         </div>
                     </div>
 
