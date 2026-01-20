@@ -60,53 +60,71 @@
         </div>
     </div>
 
-    {{-- Filter --}}
-    <div class="card">
-        <div class="card-header">
-            <div class="flex items-center gap-2">
-                <x-ui.icon name="filter" size="18" class="text-gray-400" />
-                <span class="card-title">Filter & Export</span>
-            </div>
+    {{-- Table with Unified Layout --}}
+    <div class="bg-white md:border md:border-gray-200 md:rounded-xl md:shadow-sm overflow-hidden mb-8 border-b border-gray-200 md:border-b-0">
+        {{-- Toolbar --}}
+        <div class="px-4 md:px-6 py-5 border-b border-gray-100 bg-white">
+            <x-ui.action-bar :total="count($pembinaanList ?? [])" totalLabel="Siswa" class="!gap-4">
+                <x-slot:filters>
+                    <div class="space-y-4">
+                        {{-- Status --}}
+                        <div class="space-y-1">
+                            <label class="text-xs font-semibold text-gray-500 uppercase">Status</label>
+                            <select name="status" class="form-select w-full text-sm rounded-lg" onchange="this.form.submit()" form="filter-form">
+                                <option value="">Semua Status</option>
+                                <option value="Perlu Pembinaan" {{ ($statusFilter ?? '') == 'Perlu Pembinaan' ? 'selected' : '' }}>🟡 Perlu Pembinaan</option>
+                                <option value="Sedang Dibina" {{ ($statusFilter ?? '') == 'Sedang Dibina' ? 'selected' : '' }}>🔵 Sedang Dibina</option>
+                                <option value="Selesai" {{ ($statusFilter ?? '') == 'Selesai' ? 'selected' : '' }}>🟢 Selesai</option>
+                            </select>
+                        </div>
+                        
+                        {{-- Range Poin --}}
+                        <div class="space-y-1">
+                            <label class="text-xs font-semibold text-gray-500 uppercase">Range Poin</label>
+                            <select name="rule_id" class="form-select w-full text-sm rounded-lg" onchange="this.form.submit()" form="filter-form">
+                                <option value="">Semua Range</option>
+                                @foreach($rules ?? [] as $rule)
+                                    <option value="{{ $rule->id }}" {{ ($ruleId ?? '') == $rule->id ? 'selected' : '' }}>{{ $rule->getRangeText() }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        
+                        {{-- Kelas --}}
+                        <div class="space-y-1">
+                            <label class="text-xs font-semibold text-gray-500 uppercase">Kelas</label>
+                            <select name="kelas_id" class="form-select w-full text-sm rounded-lg" onchange="this.form.submit()" form="filter-form">
+                                <option value="">Semua Kelas</option>
+                                @foreach($kelasList ?? [] as $kelas)
+                                    <option value="{{ $kelas->id }}" {{ ($kelasId ?? '') == $kelas->id ? 'selected' : '' }}>{{ $kelas->nama_kelas }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        
+                        {{-- Jurusan --}}
+                        <div class="space-y-1">
+                            <label class="text-xs font-semibold text-gray-500 uppercase">Jurusan</label>
+                            <select name="jurusan_id" class="form-select w-full text-sm rounded-lg" onchange="this.form.submit()" form="filter-form">
+                                <option value="">Semua Jurusan</option>
+                                @foreach($jurusanList ?? [] as $jurusan)
+                                    <option value="{{ $jurusan->id }}" {{ ($jurusanId ?? '') == $jurusan->id ? 'selected' : '' }}>{{ $jurusan->nama_jurusan }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </x-slot:filters>
+                @if(request()->hasAny(['status', 'rule_id', 'kelas_id', 'jurusan_id']))
+                <x-slot:reset>
+                    <a href="{{ route('pembinaan.index') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">Reset</a>
+                </x-slot:reset>
+                @endif
+            </x-ui.action-bar>
+            
+            {{-- Hidden form for filter submission --}}
+            <form id="filter-form" method="GET" action="{{ route('pembinaan.index') }}" class="hidden"></form>
         </div>
-        <div class="card-body">
-            <form method="GET" action="{{ route('pembinaan.index') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <x-forms.select name="status" label="Status" :selected="$statusFilter ?? ''">
-                    <option value="">Semua Status</option>
-                    <option value="Perlu Pembinaan">🟡 Perlu Pembinaan</option>
-                    <option value="Sedang Dibina">🔵 Sedang Dibina</option>
-                    <option value="Selesai">🟢 Selesai</option>
-                </x-forms.select>
 
-                <x-forms.select name="rule_id" label="Range Poin" :selected="$ruleId ?? ''">
-                    <option value="">Semua Range</option>
-                    @foreach($rules ?? [] as $rule)
-                        <option value="{{ $rule->id }}">{{ $rule->getRangeText() }}</option>
-                    @endforeach
-                </x-forms.select>
-
-                <x-forms.select name="kelas_id" label="Kelas" :selected="$kelasId ?? ''">
-                    <option value="">Semua Kelas</option>
-                    @foreach($kelasList ?? [] as $kelas)
-                        <option value="{{ $kelas->id }}">{{ $kelas->nama_kelas }}</option>
-                    @endforeach
-                </x-forms.select>
-
-                <x-forms.select name="jurusan_id" label="Jurusan" :selected="$jurusanId ?? ''">
-                    <option value="">Semua Jurusan</option>
-                    @foreach($jurusanList ?? [] as $jurusan)
-                        <option value="{{ $jurusan->id }}">{{ $jurusan->nama_jurusan }}</option>
-                    @endforeach
-                </x-forms.select>
-                <div class="form-group flex items-end gap-2">
-                    <button type="submit" class="btn btn-primary flex-1">Filter</button>
-                    <a href="{{ route('pembinaan.index') }}" class="btn btn-secondary">Reset</a>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    {{-- Table --}}
-    <div class="table-container">
+        {{-- Table --}}
+        <div class="table-container">
         <table class="table">
             <thead>
                 <tr>
@@ -218,6 +236,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 
     {{-- Info Section --}}

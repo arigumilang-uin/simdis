@@ -4,6 +4,20 @@
     $role = $user?->effectiveRoleName() ?? $user?->role?->nama_role ?? 'Guest';
     $isDeveloper = $user?->isDeveloper() ?? false;
     $override = session('developer_role_override');
+    
+    // Get user identifier with priority: NIP > NI PPPK > NUPTK > HP
+    $userIdentifier = null;
+    if ($user) {
+        if (!empty($user->nip)) {
+            $userIdentifier = $user->nip;
+        } elseif (!empty($user->ni_pppk)) {
+            $userIdentifier = $user->ni_pppk;
+        } elseif (!empty($user->nuptk)) {
+            $userIdentifier = $user->nuptk;
+        } elseif (!empty($user->no_hp)) {
+            $userIdentifier = $user->no_hp;
+        }
+    }
 @endphp
 
 <!-- Brand (Hidden on mobile, shown in navbar instead) -->
@@ -30,6 +44,9 @@
         {{ strtoupper(substr($user->username ?? 'U', 0, 1)) }}
     </div>
     <div class="sidebar-user-info">
+        @if($userIdentifier)
+            <div class="sidebar-user-id">{{ $userIdentifier }}</div>
+        @endif
         <div class="sidebar-user-name">{{ Str::limit($user->username ?? 'User', 18) }}</div>
         <div class="sidebar-user-role">{{ $role }}</div>
     </div>

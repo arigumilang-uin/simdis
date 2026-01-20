@@ -13,74 +13,55 @@
     ];
 @endphp
 
-<div class="space-y-6" x-data='dataTable(@json($tableConfig))'>
-    {{-- Filter --}}
-    <div class="card" x-data="{ expanded: {{ request()->hasAny(['search', 'type', 'dari_tanggal', 'sampai_tanggal']) ? 'true' : 'false' }} }">
-        <div class="card-header cursor-pointer" @click="expanded = !expanded">
-            <div class="flex items-center gap-2">
-                <x-ui.icon name="filter" size="18" class="text-gray-400" />
-                <span class="card-title">Filter Parameter</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <span class="text-xs text-gray-500" x-show="isLoading">Memuat...</span>
-                <x-ui.icon name="chevron-down" size="20" class="text-gray-400 transition-transform" ::class="{ 'rotate-180': expanded }" />
-            </div>
-        </div>
-        
-        <div x-show="expanded" x-collapse.duration.300ms x-cloak>
-            <div class="card-body border-t border-gray-100">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div class="form-group md:col-span-2">
-                        <label class="form-label">Cari Deskripsi / User</label>
-                    <div class="relative">
-                        <input 
-                            type="text" 
-                            x-model.debounce.500ms="filters.search" 
-                            class="form-input pr-10 w-full" 
-                            placeholder="Kata kunci..."
-                        >
-                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none" x-show="isLoading">
-                            <x-ui.icon name="spinner" size="16" class="animate-spin h-4 w-4 text-gray-400" />
+<div class="space-y-4" x-data='dataTable(@json($tableConfig))'>
+    
+    <div class="bg-white md:border md:border-gray-200 md:rounded-xl md:shadow-sm overflow-hidden mb-8 border-b border-gray-200 md:border-b-0">
+        {{-- Toolbar --}}
+        <div class="px-4 md:px-6 py-5 border-b border-gray-100 bg-white">
+            <x-ui.action-bar :total="$logs->total()" totalLabel="Log" class="!gap-4">
+                <x-slot:search>
+                    <input 
+                        type="text" 
+                        x-model.debounce.500ms="filters.search"
+                        class="w-full md:w-80 rounded-xl border-0 bg-gray-100/80 text-sm text-gray-800 py-2.5 pl-10 pr-4 hover:bg-gray-100 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:shadow-lg focus:shadow-indigo-500/5 transition-all duration-200 placeholder-gray-400"
+                        placeholder="Kata kunci..."
+                    >
+                </x-slot:search>
+                <x-slot:filters>
+                    <div class="space-y-4">
+                        {{-- Jenis Log --}}
+                        <div class="space-y-1">
+                            <label class="text-xs font-semibold text-gray-500 uppercase">Jenis Log</label>
+                            <select x-model="filters.type" class="form-select w-full text-sm rounded-lg">
+                                <option value="">Semua Jenis</option>
+                                @foreach($activityTypes ?? [] as $type)
+                                    <option value="{{ $type }}">{{ ucfirst($type) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        
+                        {{-- Dari Tanggal --}}
+                        <div class="space-y-1">
+                            <label class="text-xs font-semibold text-gray-500 uppercase">Dari Tanggal</label>
+                            <input type="date" x-model="filters.dari_tanggal" class="form-input w-full text-sm rounded-lg">
+                        </div>
+                        
+                        {{-- Sampai Tanggal --}}
+                        <div class="space-y-1">
+                            <label class="text-xs font-semibold text-gray-500 uppercase">Sampai Tanggal</label>
+                            <input type="date" x-model="filters.sampai_tanggal" class="form-input w-full text-sm rounded-lg">
                         </div>
                     </div>
-                </div>
-                
-                <div class="form-group md:col-span-2">
-                    <label class="form-label">Jenis Log</label>
-                    <select x-model="filters.type" class="form-input form-select w-full">
-                        <option value="">Semua Jenis</option>
-                        @foreach($activityTypes ?? [] as $type)
-                            <option value="{{ $type }}">
-                                {{ ucfirst($type) }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                
-                <div class="form-group md:col-span-2">
-                    <label class="form-label">Dari</label>
-                    <input type="date" x-model="filters.dari_tanggal" class="form-input w-full">
-                </div>
+                </x-slot:filters>
+                <x-slot:reset>
+                    <button type="button" @click="filters.search = ''; filters.type = ''; filters.dari_tanggal = ''; filters.sampai_tanggal = '';" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">Reset</button>
+                </x-slot:reset>
+            </x-ui.action-bar>
+        </div>
 
-                <div class="form-group md:col-span-2">
-                    <label class="form-label">Sampai</label>
-                    <input type="date" x-model="filters.sampai_tanggal" class="form-input w-full">
-                </div>
-                
-                <div class="md:col-span-4 flex justify-end">
-                    <button type="button" @click="filters.search = ''; filters.type = ''; filters.dari_tanggal = ''; filters.sampai_tanggal = '';" class="btn btn-secondary text-xs">
-                        <x-ui.icon name="refresh-cw" size="14" />
-                        <span>Reset Filter</span>
-                    </button>
-                </div>
-            </div>
-            </div>
+        {{-- Table --}}
+        <div id="activity-logs-table-container" class="transition-opacity duration-200" :class="{ 'opacity-50': isLoading }">
+            @include('kepala_sekolah.activity._table_logs')
         </div>
     </div>
-
-    {{-- Table --}}
-    <div id="activity-logs-table-container" class="transition-opacity duration-200" :class="{ 'opacity-50': isLoading }">
-        @include('kepala_sekolah.activity._table_logs')
-    </div>
 </div>
-

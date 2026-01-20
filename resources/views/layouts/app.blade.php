@@ -85,46 +85,17 @@
                 @endphp
                 
                 @if($hasPageHeader)
-                {{-- Page Header Segment (Collapsible) --}}
-                <div class="relative z-10 cursor-pointer hover:bg-gray-50/30 transition-colors"
-                     :class="$store.layout.focusMode ? 'pointer-events-none' : 'bg-[#f8fafc]/95 backdrop-blur-md shadow-sm border-b border-gray-200/50'"
-                     @click="$store.layout.toggleFocusMode()"
-                     title="Klik untuk menyembunyikan header">
-                    
-                    <!-- Collapsible Area -->
-                    <div x-show="!$store.layout.focusMode" x-collapse.duration.300ms 
-                         class="pointer-events-auto relative">
-                         
-                        <!-- Ultra compact padding: px-1 on mobile for maximum table width -->
-                        <div class="px-0 md:px-6 pt-2 pb-3"> 
-                            <!-- Flash Messages -->
-                            @include('components.alerts')
-                            
-                            <!-- Page Header -->
-                            <div>
-                                @yield('page-header')
-                            </div>
-                        </div>
-
-                         <!-- Visual Handle (Restored) -->
-                         <div class="absolute bottom-1 left-0 w-full flex justify-center opacity-40">
-                            <div class="h-1 w-12 rounded-full bg-gray-300"></div>
+                {{-- Page Header Segment (Always visible, no collapse) --}}
+                <div class="relative z-10 bg-[#f8fafc] border-b border-gray-200/50">
+                    <div class="px-1 md:px-6 pt-4 pb-4"> 
+                        <!-- Flash Messages -->
+                        @include('components.alerts')
+                        
+                        <!-- Page Header -->
+                        <div>
+                            @yield('page-header')
                         </div>
                     </div>
-                </div>
-
-                <!-- Expand Trigger -->
-                <div x-show="$store.layout.focusMode" 
-                     style="display: none;"
-                     class="absolute top-16 left-0 w-full flex justify-center pointer-events-auto z-50"
-                     x-transition:enter="transition ease-out duration-300 delay-100"
-                     x-transition:enter-start="opacity-0 -translate-y-2"
-                     x-transition:enter-end="opacity-100 translate-y-0">
-                    <button @click="$store.layout.toggleFocusMode()" 
-                            class="bg-white border-x border-b border-gray-200/80 shadow-sm rounded-b-full px-5 py-0.5 flex items-center justify-center group hover:shadow-md hover:border-primary-100 transition-all cursor-pointer h-5"
-                            title="Tampilkan Header">
-                        <x-ui.icon name="chevron-down" size="14" class="text-gray-400 group-hover:text-primary-500" />
-                    </button>
                 </div>
                 @else
                 {{-- Dashboard mode: No header, just flash messages if any --}}
@@ -140,7 +111,7 @@
             <div class="page-content relative bg-[#f8fafc] flex-1">
                 <!-- Main Content Area -->
                 <!-- px-1 on mobile: almost full width for tables -->
-                <div class="px-1 md:px-6 pt-0 pb-4 flex flex-col [&>*:first-child]:mt-0"> 
+                <div class="px-0 md:px-3 pt-6 pb-4 flex flex-col [&>*:first-child]:mt-0"> 
                     @yield('content')
                 </div>
             </div>

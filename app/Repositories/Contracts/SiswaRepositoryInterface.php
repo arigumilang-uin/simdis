@@ -101,4 +101,12 @@ interface SiswaRepositoryInterface extends BaseRepositoryInterface
      * @return int
      */
     public function countByJurusan(int $jurusanId): int;
+
+    /**
+     * Get all siswa IDs based on filter criteria.
+     *
+     * @param SiswaFilterData $filters
+     * @return array
+     */
+    public function getIdsByFilter(SiswaFilterData $filters): array;
 }

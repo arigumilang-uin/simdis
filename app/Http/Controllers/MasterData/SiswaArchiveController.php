@@ -38,8 +38,20 @@ class SiswaArchiveController extends Controller
             'alasan_keluar' => $request->input('alasan_keluar'),
             'kelas_id' => $request->input('kelas_id'),
             'search' => $request->input('search'),
+            'jurusan_id' => $request->input('jurusan_id'),
+            'konsentrasi_id' => $request->input('konsentrasi_id'),
+            'tingkat' => $request->input('tingkat'),
         ];
         
+        // Apply role-based auto-filters (optional, but good for consistency)
+        $user = auth()->user();
+        if ($user->hasRole('Kaprodi') && $user->jurusan) {
+            $filters['jurusan_id'] = $user->jurusan->id;
+        }
+        if ($user->hasRole('Wali Kelas') && $user->kelasDiampu) {
+            $filters['kelas_id'] = $user->kelasDiampu->id;
+        }
+
         $deletedSiswa = $this->archiveService->getDeletedSiswa($filters);
         
         // Return partial view if requested
@@ -48,9 +60,11 @@ class SiswaArchiveController extends Controller
         }
 
         $allKelas = $this->siswaService->getAllKelasForFilter();
+        $allJurusan = $this->siswaService->getAllJurusanForFilter();
+        $allKonsentrasi = $this->siswaService->getAllKonsentrasiForFilter();
         $alasanOptions = ['Alumni', 'Dikeluarkan', 'Pindah Sekolah', 'Lainnya'];
         
-        return view('siswa.deleted', compact('deletedSiswa', 'allKelas', 'alasanOptions', 'filters'));
+        return view('siswa.deleted', compact('deletedSiswa', 'allKelas', 'allJurusan', 'allKonsentrasi', 'alasanOptions', 'filters'));
     }
     
     /**
@@ -114,16 +128,37 @@ class SiswaArchiveController extends Controller
      */
     public function bulkForceDestroy(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'siswa_ids' => 'required|array|min:1',
+        $request->validate([
+            'siswa_ids' => 'nullable',
+            'filters' => 'nullable|array',
+            'all_selected' => 'nullable|boolean',
             'confirm_permanent' => 'required|accepted',
         ], [
-            'siswa_ids.required' => 'Pilih minimal 1 siswa untuk dihapus.',
             'confirm_permanent.accepted' => 'Anda harus confirm permanent delete.',
         ]);
 
         try {
-            $result = $this->archiveService->bulkPermanentDelete($validated['siswa_ids']);
+            $idsToDelete = [];
+
+            if ($request->boolean('all_selected')) {
+                $filters = $request->input('filters', []);
+                
+                // Role Scope
+                $user = auth()->user();
+                if ($user->hasRole('Kaprodi') && $user->jurusan) $filters['jurusan_id'] = $user->jurusan->id;
+                if ($user->hasRole('Wali Kelas') && $user->kelasDiampu) $filters['kelas_id'] = $user->kelasDiampu->id;
+
+                $idsToDelete = $this->archiveService->getDeletedIdsByFilter($filters);
+            } else {
+                $idsRaw = $request->input('siswa_ids');
+                $idsToDelete = is_array($idsRaw) ? array_map('intval', $idsRaw) : [];
+            }
+
+            if (empty($idsToDelete)) {
+                return back()->with('error', 'Pilih minimal 1 siswa untuk dihapus.');
+            }
+
+            $result = $this->archiveService->bulkPermanentDelete($idsToDelete);
             
             $message = "Berhasil menghapus PERMANENT {$result['success_count']} siswa.";
             if ($result['failed_count'] > 0) {
@@ -148,17 +183,37 @@ class SiswaArchiveController extends Controller
      */
     public function bulkRestore(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'siswa_ids' => 'required|array|min:1',
-        ], [
-            'siswa_ids.required' => 'Pilih minimal 1 siswa untuk di-restore.',
+        $request->validate([
+            'siswa_ids' => 'nullable',
+            'filters' => 'nullable|array',
+            'all_selected' => 'nullable|boolean',
         ]);
 
         try {
+            $idsToRestore = [];
+
+            if ($request->boolean('all_selected')) {
+                $filters = $request->input('filters', []);
+                
+                // Role Scope
+                $user = auth()->user();
+                if ($user->hasRole('Kaprodi') && $user->jurusan) $filters['jurusan_id'] = $user->jurusan->id;
+                if ($user->hasRole('Wali Kelas') && $user->kelasDiampu) $filters['kelas_id'] = $user->kelasDiampu->id;
+
+                $idsToRestore = $this->archiveService->getDeletedIdsByFilter($filters);
+            } else {
+                $idsRaw = $request->input('siswa_ids');
+                $idsToRestore = is_array($idsRaw) ? array_map('intval', $idsRaw) : [];
+            }
+
+            if (empty($idsToRestore)) {
+                return back()->with('error', 'Pilih minimal 1 siswa untuk di-restore.');
+            }
+
             $successCount = 0;
             $failedCount = 0;
             
-            foreach ($validated['siswa_ids'] as $siswaId) {
+            foreach ($idsToRestore as $siswaId) {
                 try {
                     $this->archiveService->restoreSiswa($siswaId);
                     $successCount++;

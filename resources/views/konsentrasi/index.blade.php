@@ -6,8 +6,22 @@
     <x-page-header 
         title="Manajemen Konsentrasi" 
         subtitle="Kelola data konsentrasi keahlian per jurusan."
-        :total="$konsentrasiList->total()"
-    />
+    >
+        <x-slot:actions>
+            <a href="{{ route('konsentrasi.trash') }}" class="btn btn-secondary">
+                <x-ui.icon name="archive" size="16" />
+                <span>Arsip</span>
+            </a>
+            <button 
+                type="button" 
+                @click="$dispatch('open-konsentrasi-form', { title: 'Tambah Konsentrasi Baru' })"
+                class="btn btn-primary"
+            >
+                <x-ui.icon name="plus" size="18" />
+                <span>Tambah Konsentrasi</span>
+            </button>
+        </x-slot:actions>
+    </x-page-header>
 @endsection
 
 @section('content')
@@ -22,77 +36,41 @@
     ];
 @endphp
 
-<div class="space-y-6" x-data='dataTable(@json($tableConfig))'>
-    {{-- Action Button --}}
-    <div class="flex justify-between items-center">
-        <a href="{{ route('konsentrasi.trash') }}" class="btn btn-white">
-            <x-ui.icon name="archive" size="16" />
-            <span>Arsip</span>
-        </a>
-        <button 
-            type="button" 
-            @click="$dispatch('open-konsentrasi-form', { title: 'Tambah Konsentrasi Baru' })"
-            class="btn btn-primary"
-        >
-            <x-ui.icon name="plus" size="18" />
-            <span>Tambah Konsentrasi</span>
-        </button>
-    </div>
-
-    {{-- Filter Card --}}
-    <div class="card" x-data="{ expanded: {{ request()->hasAny(['search', 'jurusan_id']) ? 'true' : 'false' }} }">
-        <div class="card-header cursor-pointer" @click="expanded = !expanded">
-            <div class="flex items-center gap-2">
-                <x-ui.icon name="filter" class="text-gray-400" size="18" />
-                <span class="card-title">Filter Data</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <span class="text-xs text-gray-500" x-show="isLoading">Memuat...</span>
-                <x-ui.icon name="chevron-down" size="20" class="text-gray-400 transition-transform" ::class="{ 'rotate-180': expanded }" />
-            </div>
+<div class="space-y-4" x-data='dataTable(@json($tableConfig))'>
+    
+    <div class="bg-white md:border md:border-gray-200 md:rounded-xl md:shadow-sm overflow-hidden mb-8 border-b border-gray-200 md:border-b-0">
+        {{-- Unified Toolbar --}}
+        <div class="px-4 md:px-6 py-5 border-b border-gray-100 bg-white">
+            <x-ui.action-bar :total="$konsentrasiList->total()" totalLabel="Konsentrasi" class="!gap-4">
+                <x-slot:search>
+                    <input 
+                        type="text" 
+                        x-model.debounce.500ms="filters.search"
+                        class="w-full md:w-80 rounded-xl border-0 bg-gray-100/80 text-sm text-gray-800 py-2.5 pl-10 pr-4 hover:bg-gray-100 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:shadow-lg focus:shadow-indigo-500/5 transition-all duration-200 placeholder-gray-400"
+                        placeholder="Cari nama/kode konsentrasi..."
+                    >
+                </x-slot:search>
+                <x-slot:filters>
+                    <div class="space-y-3">
+                        <label class="text-xs font-semibold text-gray-500 uppercase">Jurusan</label>
+                        <select x-model="filters.jurusan_id" class="form-select w-full text-sm">
+                            <option value="">Semua Jurusan</option>
+                            @foreach($jurusanList as $jurusan)
+                                <option value="{{ $jurusan->id }}">{{ $jurusan->nama_jurusan }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </x-slot:filters>
+                <x-slot:reset>
+                    <button type="button" @click="resetFilters()" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">Reset</button>
+                </x-slot:reset>
+            </x-ui.action-bar>
         </div>
-        
-        <div x-show="expanded" x-collapse.duration.300ms x-cloak>
-            <div class="card-body border-t border-gray-100">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {{-- Search --}}
-                    <div class="form-group">
-                        <x-forms.input
-                            name="search"
-                            label="Cari"
-                            x-model.debounce.500ms="filters.search"
-                            placeholder="Nama/Kode konsentrasi..."
-                        />
-                    </div>
-                    
-                    {{-- Jurusan --}}
-                    <div class="form-group">
-                        <x-forms.select
-                            name="jurusan_id" 
-                            label="Jurusan"
-                            x-model="filters.jurusan_id"
-                            :options="$jurusanList"
-                            optionValue="id"
-                            optionLabel="nama_jurusan"
-                            placeholder="Semua Jurusan"
-                        />
-                    </div>
-                    
-                    {{-- Actions --}}
-                    <div class="flex items-end">
-                        <button type="button" @click="resetFilters()" class="btn btn-secondary text-xs">
-                            <x-ui.icon name="refresh-cw" size="14" />
-                            <span>Reset</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    {{-- Table Container for AJAX --}}
-    <div id="konsentrasi-table-container" :class="{ 'opacity-50': isLoading }">
-        @include('konsentrasi._table')
+        {{-- Table Container for AJAX --}}
+        <div id="konsentrasi-table-container" :class="{ 'opacity-50': isLoading }">
+            @include('konsentrasi._table')
+        </div>
     </div>
 </div>
 

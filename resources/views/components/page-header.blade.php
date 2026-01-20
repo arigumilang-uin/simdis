@@ -1,31 +1,34 @@
+{{--
+    Page Header Component - Title, subtitle, and action buttons
+    
+    Layout:
+    [Title & Subtitle]                    [Action Buttons...]
+    
+    Usage:
+    <x-page-header title="..." subtitle="...">
+        <x-slot:actions>
+            <a href="..." class="btn btn-primary">Add</a>
+        </x-slot:actions>
+    </x-page-header>
+--}}
+
 @props([
     'title',
     'subtitle' => null,
-    'total' => null,
-    'totalLabel' => 'data',
-    'icon' => null
 ])
 
-<div class="page-header-stylish">
-    <div class="page-header-text">
-        <h1 class="page-header-title">{{ $title }}</h1>
+<div class="page-header-stylish !flex !flex-row !items-start md:!items-end !justify-between !gap-4">
+    <div class="page-header-text flex-1 min-w-0">
+        <h1 class="page-header-title break-words pr-2">{{ $title }}</h1>
         @if($subtitle)
-            <p class="page-header-subtitle">{{ $subtitle }}</p>
+            <p class="page-header-subtitle break-words pr-2">{{ $subtitle }}</p>
         @endif
     </div>
     
-    @if($total !== null)
-        <div class="page-header-stats" 
-             x-data="{ total: {{ $total }} }"
-             @update-total-data.window="total = $event.detail.total">
-            @if($icon)
-                <x-ui.icon :name="$icon" size="16" />
-            @else
-                <x-ui.icon name="database" size="16" />
-            @endif
-            <span>Total: <span class="count" x-text="total">{{ $total }}</span> {{ $totalLabel }}</span>
+    {{-- Action Buttons (right side) --}}
+    @if(isset($actions))
+        <div class="flex flex-col md:flex-row items-end md:items-center gap-2 md:gap-3 shrink-0">
+            {{ $actions }}
         </div>
     @endif
-    
-    {{ $slot }}
 </div>

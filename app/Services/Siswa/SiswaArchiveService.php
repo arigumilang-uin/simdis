@@ -37,13 +37,11 @@ class SiswaArchiveService
      * @param array $filters
      * @return LengthAwarePaginator
      */
-    public function getDeletedSiswa(array $filters = []): LengthAwarePaginator
+    /**
+     * Apply filters to query builder.
+     */
+    private function applyFilters($query, array $filters)
     {
-        $query = Siswa::onlyTrashed()
-            ->with(['kelas.jurusan', 'waliMurid'])
-            ->orderBy('deleted_at', 'desc');
-
-        // Apply filters
         if (!empty($filters['alasan_keluar'])) {
             $query->where('alasan_keluar', $filters['alasan_keluar']);
         }
@@ -60,7 +58,57 @@ class SiswaArchiveService
             });
         }
 
+        if (!empty($filters['konsentrasi_id'])) {
+            $query->whereHas('kelas', function ($q) use ($filters) {
+                $q->where('konsentrasi_id', $filters['konsentrasi_id']);
+            });
+        }
+
+        if (!empty($filters['tingkat'])) {
+            $query->whereHas('kelas', function ($q) use ($filters) {
+                $q->where('tingkat', $filters['tingkat']);
+            });
+        }
+
+        // Jurusan filter (biasanya via Kaprodi scope, tapi bisa juga dropdown jika diperlukan)
+        if (!empty($filters['jurusan_id'])) {
+             $query->whereHas('kelas', function ($q) use ($filters) {
+                $q->where('jurusan_id', $filters['jurusan_id']);
+            });
+        }
+
+        return $query;
+    }
+
+    /**
+     * Get deleted siswa with filters and pagination.
+     *
+     * @param array $filters
+     * @return LengthAwarePaginator
+     */
+    public function getDeletedSiswa(array $filters = []): LengthAwarePaginator
+    {
+        $query = Siswa::onlyTrashed()
+            ->with(['kelas.jurusan', 'waliMurid'])
+            ->orderBy('deleted_at', 'desc');
+
+        $this->applyFilters($query, $filters);
+
         return $query->paginate(20);
+    }
+
+    /**
+     * Get all deleted siswa IDs based on filter criteria.
+     * 
+     * @param array $filters
+     * @return array
+     */
+    public function getDeletedIdsByFilter(array $filters): array
+    {
+        $query = Siswa::onlyTrashed();
+        $this->applyFilters($query, $filters);
+        
+        return $query->pluck('id')->toArray();
     }
 
     /**

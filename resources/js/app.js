@@ -36,6 +36,9 @@ Alpine.data("sidebar", () => ({
         // Enable transitions after a tick
         this.$nextTick(() => {
             this.animated = true;
+
+            // Restore sidebar scroll position
+            this.restoreScrollPosition();
         });
 
         // Watch for open state changes
@@ -46,6 +49,38 @@ Alpine.data("sidebar", () => ({
                 localStorage.setItem('sidebar_open', value);
             }
         });
+
+        // Save scroll position before page unload
+        window.addEventListener('beforeunload', () => {
+            this.saveScrollPosition();
+        });
+
+        // Also save on link click (for SPA-like navigation)
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) {
+            sidebar.addEventListener('click', (e) => {
+                if (e.target.closest('a')) {
+                    this.saveScrollPosition();
+                }
+            });
+        }
+    },
+
+    // Save sidebar scroll position to sessionStorage
+    saveScrollPosition() {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) {
+            sessionStorage.setItem('sidebar_scroll', sidebar.scrollTop);
+        }
+    },
+
+    // Restore sidebar scroll position from sessionStorage
+    restoreScrollPosition() {
+        const sidebar = document.getElementById('sidebar');
+        const savedScroll = sessionStorage.getItem('sidebar_scroll');
+        if (sidebar && savedScroll) {
+            sidebar.scrollTop = parseInt(savedScroll, 10);
+        }
     },
 
     // Lock/unlock body scroll based on sidebar state (mobile only)

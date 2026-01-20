@@ -194,29 +194,38 @@
 
     
     @if(method_exists($users, 'hasPages') && $users->hasPages())
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4">
-            <p class="text-sm text-gray-500">Menampilkan {{ $users->firstItem() }} - {{ $users->lastItem() }} dari {{ $users->total() }}</p>
-            <div class="pagination">
+        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex flex-col items-center justify-between gap-4 md:flex-row">
+            <p class="text-sm text-gray-500 text-center md:text-left">
+                Menampilkan <span class="font-semibold text-gray-900">{{ $users->firstItem() }}</span> 
+                sampai <span class="font-semibold text-gray-900">{{ $users->lastItem() }}</span> 
+                dari <span class="font-semibold text-gray-900">{{ $users->total() }}</span> data
+            </p>
+            
+            <div class="flex items-center gap-2">
                 {{-- Previous --}}
                 @if($users->onFirstPage())
-                    <span class="pagination-btn" disabled>
+                    <button type="button" class="btn btn-sm btn-secondary text-gray-400 cursor-not-allowed bg-white/50" disabled>
                         <x-ui.icon name="chevron-left" size="16" />
-                    </span>
+                        <span>Sebelumnya</span>
+                    </button>
                 @else
-                    <a href="{{ $users->previousPageUrl() }}" class="pagination-btn">
+                    <a href="{{ $users->previousPageUrl() }}" class="btn btn-sm btn-secondary hover:text-indigo-600 hover:border-indigo-200 bg-white">
                         <x-ui.icon name="chevron-left" size="16" />
+                        <span>Sebelumnya</span>
                     </a>
                 @endif
                 
                 {{-- Next --}}
                 @if($users->hasMorePages())
-                    <a href="{{ $users->nextPageUrl() }}" class="pagination-btn">
+                    <a href="{{ $users->nextPageUrl() }}" class="btn btn-sm btn-secondary hover:text-indigo-600 hover:border-indigo-200 bg-white">
+                        <span>Selanjutnya</span>
                         <x-ui.icon name="chevron-right" size="16" />
                     </a>
                 @else
-                    <span class="pagination-btn" disabled>
+                    <button type="button" class="btn btn-sm btn-secondary text-gray-400 cursor-not-allowed bg-white/50" disabled>
+                        <span>Selanjutnya</span>
                         <x-ui.icon name="chevron-right" size="16" />
-                    </span>
+                    </button>
                 @endif
             </div>
         </div>

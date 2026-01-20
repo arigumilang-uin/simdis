@@ -148,14 +148,15 @@ class SiswaRepository extends BaseRepository implements SiswaRepositoryInterface
      * @param SiswaFilterData $filters
      * @return LengthAwarePaginator
      */
-    public function filterAndPaginate(SiswaFilterData $filters): LengthAwarePaginator
+    /**
+     * Build query from filters (helper method).
+     */
+    private function buildFilterQuery(SiswaFilterData $filters)
     {
-        // Start building query with eager loading to prevent N+1 queries
         $query = $this->model
             ->newQuery()
             ->with(['kelas.jurusan', 'waliMurid']);
 
-        // Apply search filter (nama_siswa or nisn)
         if ($filters->search) {
             $query->where(function ($q) use ($filters) {
                 $q->where('nama_siswa', 'like', "%{$filters->search}%")
@@ -163,42 +164,66 @@ class SiswaRepository extends BaseRepository implements SiswaRepositoryInterface
             });
         }
 
-        // Apply kelas filter
         if ($filters->kelas_id) {
             $query->where('kelas_id', $filters->kelas_id);
         }
 
-        // Apply jurusan filter (via kelas relationship)
         if ($filters->jurusan_id) {
             $query->whereHas('kelas', function ($q) use ($filters) {
                 $q->where('jurusan_id', $filters->jurusan_id);
             });
         }
 
-        // Apply wali murid filter
+        if ($filters->konsentrasi_id) {
+            $query->whereHas('kelas', function ($q) use ($filters) {
+                $q->where('konsentrasi_id', $filters->konsentrasi_id);
+            });
+        }
+
+        if ($filters->tingkat) {
+            $query->whereHas('kelas', function ($q) use ($filters) {
+                $q->where('tingkat', $filters->tingkat);
+            });
+        }
+
         if ($filters->wali_murid_user_id) {
             $query->where('wali_murid_user_id', $filters->wali_murid_user_id);
         }
 
-        // Apply violations filter
         if ($filters->with_violations) {
             $query->has('riwayatPelanggaran');
         }
 
-        // Apply active cases filter
         if ($filters->with_active_cases) {
             $query->whereHas('tindakLanjut', function ($q) {
                 $q->whereIn('status', ['Baru', 'Menunggu Persetujuan', 'Disetujui', 'Ditangani']);
             });
         }
 
-        // Apply sorting
+        return $query;
+    }
+
+    public function filterAndPaginate(SiswaFilterData $filters): LengthAwarePaginator
+    {
+        $query = $this->buildFilterQuery($filters);
+
         $sortBy = $filters->sortBy ?: 'nama_siswa';
         $sortDirection = $filters->getSortDirection();
         $query->orderBy($sortBy, $sortDirection);
 
-        // Return paginated results
         return $query->paginate($filters->perPage);
+    }
+
+    /**
+     * Get all siswa IDs based on filter criteria.
+     *
+     * @param SiswaFilterData $filters
+     * @return array
+     */
+    public function getIdsByFilter(SiswaFilterData $filters): array
+    {
+        $query = $this->buildFilterQuery($filters);
+        return $query->pluck('id')->toArray();
     }
 
     /**

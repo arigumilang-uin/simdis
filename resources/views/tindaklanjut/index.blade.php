@@ -6,27 +6,20 @@
     <x-page-header 
         title="Daftar Kasus" 
         subtitle="Kelola tindak lanjut pelanggaran siswa."
-        :total="$tindakLanjut->total()"
     />
 @endsection
 
 @section('content')
 <div class="space-y-6">
-    {{-- Filter Card --}}
-    <div class="card" x-data="{ expanded: false }">
-        <div class="card-header cursor-pointer" @click="expanded = !expanded">
-            <div class="flex items-center gap-2">
-                <x-ui.icon name="filter" class="text-gray-400" size="18" />
-                <span class="card-title">Filter Data</span>
-            </div>
-            <x-ui.icon name="chevron-down" size="20" class="text-gray-400 transition-transform" ::class="{ 'rotate-180': expanded }" />
-        </div>
-        
-        <div x-show="expanded" x-collapse x-cloak>
-            <div class="card-body border-t border-gray-100">
-                <form method="GET" action="{{ route('tindak-lanjut.index') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="form-group">
-                        <x-forms.select name="status" label="Status">
+    
+    <div class="bg-white md:border md:border-gray-200 md:rounded-xl md:shadow-sm overflow-hidden mb-8 border-b border-gray-200 md:border-b-0">
+        {{-- Toolbar with action-bar --}}
+        <div class="px-4 md:px-6 py-5 border-b border-gray-100 bg-white">
+            <x-ui.action-bar :total="$tindakLanjut->total()" totalLabel="Kasus" class="!gap-4">
+                <x-slot:filters>
+                    <div class="space-y-3">
+                        <label class="text-xs font-semibold text-gray-500 uppercase">Status</label>
+                        <select name="status" class="form-select w-full" onchange="window.location.href='{{ route('tindak-lanjut.index') }}?status=' + this.value">
                             <option value="">Semua Status</option>
                             <option value="Baru" {{ request('status') == 'Baru' ? 'selected' : '' }}>Baru</option>
                             <option value="Menunggu Persetujuan" {{ request('status') == 'Menunggu Persetujuan' ? 'selected' : '' }}>Menunggu Persetujuan</option>
@@ -34,23 +27,19 @@
                             <option value="Ditangani" {{ request('status') == 'Ditangani' ? 'selected' : '' }}>Ditangani</option>
                             <option value="Selesai" {{ request('status') == 'Selesai' ? 'selected' : '' }}>Selesai</option>
                             <option value="Ditolak" {{ request('status') == 'Ditolak' ? 'selected' : '' }}>Ditolak</option>
-                        </x-forms.select>
+                        </select>
                     </div>
-                    
-                    <div class="form-group flex items-end gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <x-ui.icon name="search" size="16" />
-                            <span>Filter</span>
-                        </button>
-                        <a href="{{ route('tindak-lanjut.index') }}" class="btn btn-secondary">Reset</a>
-                    </div>
-                </form>
-            </div>
+                </x-slot:filters>
+                @if(request('status'))
+                <x-slot:reset>
+                    <a href="{{ route('tindak-lanjut.index') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">Reset</a>
+                </x-slot:reset>
+                @endif
+            </x-ui.action-bar>
         </div>
-    </div>
 
-    {{-- Table --}}
-    <div class="table-container">
+        {{-- Table --}}
+        <div class="table-container">
         <table class="table">
             <thead>
                 <tr>
@@ -138,13 +127,42 @@
                 @endforelse
             </tbody>
         </table>
-    </div>
-
-    {{-- Pagination --}}
-    @if($tindakLanjut->hasPages())
-        <div class="mt-4">
-            {{ $tindakLanjut->links() }}
         </div>
-    @endif
+        
+        {{-- Pagination Footer --}}
+        @if($tindakLanjut->hasPages())
+        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex flex-col items-center justify-between gap-4 md:flex-row">
+            <p class="text-sm text-gray-500 text-center md:text-left">
+                Menampilkan <span class="font-semibold text-gray-900">{{ $tindakLanjut->firstItem() }}</span> 
+                sampai <span class="font-semibold text-gray-900">{{ $tindakLanjut->lastItem() }}</span> 
+                dari <span class="font-semibold text-gray-900">{{ $tindakLanjut->total() }}</span> data
+            </p>
+            <div class="flex items-center gap-2">
+                @if($tindakLanjut->onFirstPage())
+                    <button type="button" class="btn btn-sm btn-secondary text-gray-400 cursor-not-allowed bg-white/50" disabled>
+                        <x-ui.icon name="chevron-left" size="16" />
+                        <span>Sebelumnya</span>
+                    </button>
+                @else
+                    <a href="{{ $tindakLanjut->previousPageUrl() }}" class="btn btn-sm btn-secondary hover:text-indigo-600 hover:border-indigo-200 bg-white">
+                        <x-ui.icon name="chevron-left" size="16" />
+                        <span>Sebelumnya</span>
+                    </a>
+                @endif
+                @if($tindakLanjut->hasMorePages())
+                    <a href="{{ $tindakLanjut->nextPageUrl() }}" class="btn btn-sm btn-secondary hover:text-indigo-600 hover:border-indigo-200 bg-white">
+                        <span>Selanjutnya</span>
+                        <x-ui.icon name="chevron-right" size="16" />
+                    </a>
+                @else
+                    <button type="button" class="btn btn-sm btn-secondary text-gray-400 cursor-not-allowed bg-white/50" disabled>
+                        <span>Selanjutnya</span>
+                        <x-ui.icon name="chevron-right" size="16" />
+                    </button>
+                @endif
+            </div>
+        </div>
+        @endif
+    </div>
 </div>
 @endsection

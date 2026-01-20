@@ -6,21 +6,18 @@
     <x-page-header 
         title="Aturan Pembinaan Internal" 
         subtitle="Threshold pembinaan berdasarkan akumulasi poin siswa."
-        :total="$rules->count()"
-        totalLabel="aturan"
-    />
+    >
+        <x-slot:actions>
+            <button type="button" @click="showAddModal = true" class="btn btn-primary">
+                <x-ui.icon name="plus" size="18" />
+                <span>Tambah Aturan Baru</span>
+            </button>
+        </x-slot:actions>
+    </x-page-header>
 @endsection
 
 @section('content')
-<div class="space-y-6" x-data="pembinaanRulesPage()">
-    {{-- Action Button (inside x-data scope) --}}
-    <div class="flex justify-end">
-        <button type="button" @click="showAddModal = true" class="btn btn-primary">
-            <x-ui.icon name="plus" size="18" />
-            <span>Tambah Aturan Baru</span>
-        </button>
-    </div>
-
+<div class="space-y-4" x-data="pembinaanRulesPage()">
     {{-- Info Banner --}}
     <div class="p-4 bg-indigo-50 border-l-4 border-indigo-500 rounded-r-xl">
         <div class="flex items-start gap-3">
@@ -31,29 +28,30 @@
         </div>
     </div>
 
-    {{-- Bulk Action Toolbar --}}
-    <div x-show="selected.length > 0" x-transition x-cloak class="bg-indigo-50 p-3 flex flex-col sm:flex-row justify-between items-center gap-3 mb-4 rounded-xl border border-indigo-100 shadow-sm">
-        <div class="flex items-center gap-2">
-            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold" x-text="selected.length"></span>
-            <span class="text-sm font-medium text-indigo-900">Aturan Terpilih</span>
+    <div class="bg-white md:border md:border-gray-200 md:rounded-xl md:shadow-sm overflow-hidden mb-8 border-b border-gray-200 md:border-b-0">
+        {{-- Toolbar --}}
+        <div class="px-4 md:px-6 py-5 border-b border-gray-100 bg-white">
+            <x-ui.action-bar :total="$rules->count()" totalLabel="Aturan" class="!gap-4" />
+            
+            {{-- Bulk Action Toolbar --}}
+            <div x-show="selected.length > 0" x-transition x-cloak class="mt-3 bg-indigo-50 p-2 flex flex-col sm:flex-row justify-between items-center gap-3 rounded-lg border border-indigo-100">
+                <div class="flex items-center gap-2 px-1">
+                    <span class="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] font-bold" x-text="selected.length"></span>
+                    <span class="text-sm font-medium text-indigo-900">Aturan Terpilih</span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" @click="if(confirm('Hapus ' + selected.length + ' aturan terpilih?')) { alert('Fitur bulk delete sedang dalam pengembangan.'); }" class="btn btn-sm btn-white text-red-600 border-red-200 hover:bg-red-50">
+                        <x-ui.icon name="trash" size="14" />
+                        Hapus Massal
+                    </button>
+                    <button type="button" @click="selected = []; selectionMode = false;" class="btn btn-sm btn-white">
+                        Batal
+                    </button>
+                </div>
+            </div>
         </div>
-        <div class="flex flex-wrap gap-2">
-            <button type="button" @click="if(confirm('Hapus ' + selected.length + ' aturan terpilih?')) { alert('Fitur bulk delete sedang dalam pengembangan.'); }" class="btn btn-sm btn-white text-red-600 border-red-200 hover:bg-red-50">
-                <x-ui.icon name="trash" size="14" />
-                Hapus Massal
-            </button>
-            <button type="button" @click="selected = []; selectionMode = false;" class="btn btn-sm btn-white">
-                Batal
-            </button>
-        </div>
-    </div>
 
-    {{-- Table --}}
-    <div class="card">
-        <div class="card-header">
-            <span class="card-title">Daftar Aturan Aktif</span>
-            <span class="badge badge-primary">Total: {{ $rules->count() }} Aturan</span>
-        </div>
+        {{-- Table --}}
         <div class="table-container">
             <table class="table">
                 <thead>

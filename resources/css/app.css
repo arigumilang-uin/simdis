@@ -118,7 +118,7 @@ body {
     width: var(--sidebar-width);
     background: #1e293b;
     /* Slate Blue-Grey (Professional) */
-    border-right: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
     color: #f8fafc;
     /* White Text */
     position: fixed;
@@ -255,7 +255,8 @@ body {
     .sidebar:hover .sidebar-brand,
     .sidebar.open .sidebar-brand {
         justify-content: flex-start;
-        padding: 1.25rem;
+        padding: 0 1.25rem;
+        /* Keep horizontal padding only, height is fixed 64px */
     }
 
     .sidebar:hover .sidebar-user,
@@ -317,7 +318,9 @@ body {
 }
 
 .sidebar-brand {
-    padding: 1.25rem;
+    height: 64px;
+    /* Match navbar h-16 exactly */
+    padding: 0 1.25rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     /* display controlled by Tailwind classes (hidden lg:flex) */
     align-items: center;
@@ -372,16 +375,28 @@ body {
     min-width: 0;
 }
 
+.sidebar-user-id {
+    font-size: 0.65rem;
+    opacity: 0.5;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+    margin-bottom: 2px;
+}
+
 .sidebar-user-name {
     font-size: 0.875rem;
     font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 1.2;
 }
 
 .sidebar-user-role {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     opacity: 0.6;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -712,9 +727,10 @@ body {
     justify-content: space-between;
     /* Space betwen title and stats */
     gap: 2rem;
-    padding-bottom: 1rem;
-    margin-bottom: 2rem;
-    border-bottom: 1px solid oklch(0.96 0.01 250);
+    /* Removing redundant spacing since wrapper handles it */
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border-bottom: none;
 }
 
 .page-header-stylish::after {
@@ -1102,7 +1118,7 @@ body {
     font-size: 0.875rem;
     font-weight: 600;
     border-radius: 12px;
-    /* Modern Pill/Squircle */
+    /* Soft Rounded Standard */
     border: none;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1186,7 +1202,7 @@ body {
 .btn-sm {
     padding: 0.5rem 0.875rem;
     font-size: 0.8125rem;
-    border-radius: 8px;
+    border-radius: 10px;
 }
 
 .btn-lg {
@@ -1199,7 +1215,7 @@ body {
     padding: 0;
     width: 38px;
     height: 38px;
-    border-radius: 10px;
+    border-radius: 12px;
     display: flex;
 }
 
@@ -1230,8 +1246,8 @@ body {
     /* More comfortable click area */
     font-size: 0.9375rem;
     border: 1px solid oklch(0.9 0.01 250);
-    border-radius: 10px;
-    /* Modern rounding */
+    border-radius: 12px;
+    /* Consistent Soft Rounding */
     background: oklch(0.995 0.002 250);
     color: oklch(0.2 0.02 250);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1420,6 +1436,20 @@ body {
     top: 0;
     z-index: 10;
     white-space: nowrap;
+
+    /* Separator lines */
+    border-right: 1px solid oklch(0.9 0.01 250);
+}
+
+.table th:last-child {
+    border-right: none;
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+.table th:first-child {
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
 }
 
 .table td {
@@ -1518,7 +1548,7 @@ body {
    ============================================ */
 .alert {
     padding: 1rem 1.25rem;
-    border-radius: 10px;
+    border-radius: 16px;
     display: flex;
     align-items: flex-start;
     gap: 0.75rem;

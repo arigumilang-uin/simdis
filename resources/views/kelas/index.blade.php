@@ -6,51 +6,64 @@
     <x-page-header 
         title="Manajemen Kelas" 
         subtitle="Kelola data rombongan belajar sekolah."
-        :total="$kelasList->count()"
-    />
+    >
+        <x-slot:actions>
+            <a href="{{ route('kelas.trash') }}" class="btn btn-white">
+                <x-ui.icon name="archive" size="16" />
+                <span>Arsip</span>
+            </a>
+            <a href="{{ route('kelas.create') }}" class="btn btn-primary">
+                <x-ui.icon name="plus" size="18" />
+                <span>Tambah Kelas</span>
+            </a>
+        </x-slot:actions>
+    </x-page-header>
 @endsection
 
 @section('content')
-<div class="space-y-6" x-data="{ selectionMode: false, selected: [], selectAll: false }">
-    {{-- Action Button --}}
-    <div class="flex justify-between items-center">
-        <a href="{{ route('kelas.trash') }}" class="btn btn-white">
-            <x-ui.icon name="archive" size="16" />
-            <span>Arsip</span>
-        </a>
-        <a href="{{ route('kelas.create') }}" class="btn btn-primary">
-            <x-ui.icon name="plus" size="18" />
-            <span>Tambah Kelas</span>
-        </a>
-    </div>
-
-    {{-- Auto-create wali kelas DIHAPUS - wali kelas harus dibuat manual via halaman User --}}
-
-    {{-- Bulk Action Toolbar --}}
-    <div x-show="selected.length > 0" x-transition x-cloak class="bg-indigo-50 p-3 flex flex-col sm:flex-row justify-between items-center gap-3 rounded-xl border border-indigo-100 shadow-sm">
-        <div class="flex items-center gap-2">
-            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold" x-text="selected.length"></span>
-            <span class="text-sm font-medium text-indigo-900">Kelas Terpilih</span>
-        </div>
-        <div class="flex flex-wrap gap-2">
-            <button type="button" @click="if(confirm('Hapus ' + selected.length + ' kelas terpilih?')) { alert('Fitur bulk delete sedang dalam pengembangan.'); }" class="btn btn-sm btn-white text-red-600 border-red-200 hover:bg-red-50">
-                <x-ui.icon name="trash" size="14" />
-                Hapus Massal
-            </button>
-            <button type="button" @click="selected = []; selectionMode = false;" class="btn btn-sm btn-white">
-                Batal
-            </button>
-        </div>
-    </div>
-
-    {{-- Stats --}}
-    <div class="flex justify-between items-center">
-        <span class="text-sm text-gray-500">
-            Total: <b class="text-blue-600">{{ method_exists($kelasList, 'total') ? $kelasList->total() : $kelasList->count() }}</b> kelas
-        </span>
-    </div>
+<div class="space-y-4" x-data='{ 
+    selectionMode: false, 
+    selected: [], 
+    selectAll: false,
+    pageIds: {{ json_encode($kelasList->pluck('id')->map(fn($id) => (string) $id)) }},
+    init() {
+         this.$watch("selectAll", val => {
+             this.selected = val ? [...this.pageIds] : [];
+         });
+         this.$watch("selected", val => {
+             if (val.length === 0) this.selectionMode = false;
+             if (this.pageIds.length > 0 && val.length !== this.pageIds.length) this.selectAll = false;
+             else if (this.pageIds.length > 0 && val.length === this.pageIds.length) this.selectAll = true;
+         });
+    }
+}' 
+@toggle-selection-mode.window="selectionMode = $event.detail !== undefined ? $event.detail : !selectionMode"
+>
     
-    <div class="table-container">
+    <div class="bg-white md:border md:border-gray-200 md:rounded-xl md:shadow-sm overflow-hidden mb-8 border-b border-gray-200 md:border-b-0">
+        {{-- Unified Toolbar --}}
+        <div class="px-4 md:px-6 py-5 border-b border-gray-100 bg-white">
+            <x-ui.action-bar :total="method_exists($kelasList, 'total') ? $kelasList->total() : $kelasList->count()" totalLabel="Kelas" class="!gap-4" />
+            
+            {{-- Bulk Action Toolbar --}}
+            <div x-show="selected.length > 0" x-transition x-cloak class="mt-3 bg-indigo-50 p-2 flex flex-col sm:flex-row justify-between items-center gap-3 rounded-lg border border-indigo-100">
+                <div class="flex items-center gap-2 px-1">
+                    <span class="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] font-bold" x-text="selected.length"></span>
+                    <span class="text-sm font-medium text-indigo-900">Kelas Terpilih</span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" @click="if(confirm('Hapus ' + selected.length + ' kelas terpilih?')) { alert('Fitur bulk delete sedang dalam pengembangan.'); }" class="btn btn-sm btn-white text-red-600 border-red-200 hover:bg-red-50 py-1">
+                        <x-ui.icon name="trash" size="14" />
+                        Hapus Massal
+                    </button>
+                    <button type="button" @click="selected = []; selectionMode = false;" class="btn btn-sm btn-white">
+                        Batal
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-container">
         <table class="table">
             <thead>
                 <tr>
@@ -60,26 +73,7 @@
                     <th>Konsentrasi</th>
                     <th>Wali Kelas</th>
                     <th class="text-center">Siswa</th>
-                    <th class="w-20 text-center cursor-pointer select-none hover:bg-gray-100 transition-colors group" @click="selectionMode = !selectionMode" title="Klik untuk memilih data">
-                        <div class="flex items-center justify-center">
-                            <template x-if="!selectionMode">
-                                <div class="flex items-center justify-center gap-2 text-gray-400 group-hover:text-indigo-600 transition-colors p-1">
-                                    <span class="text-[10px] font-bold uppercase tracking-wider">Pilih</span>
-                                    <x-ui.icon name="check-square" size="16" />
-                                </div>
-                            </template>
-                            <template x-if="selectionMode">
-                                <div class="flex items-center justify-center gap-1">
-                                    <input type="checkbox" x-model="selectAll"
-                                        @change="selectAll ? selected = {{ Js::from($kelasList->pluck('id')->map(fn($id) => (string)$id)->values()) }} : selected = []"
-                                        @click.stop class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer" title="Pilih Semua">
-                                    <button type="button" @click.stop="selectionMode = false; selected = []; selectAll = false;" class="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors" title="Batalkan Pilih">
-                                        <x-ui.icon name="x" size="14" />
-                                    </button>
-                                </div>
-                            </template>
-                        </div>
-                    </th>
+<x-table.action-header />
                 </tr>
             </thead>
             <tbody>
@@ -107,101 +101,32 @@
                         <td class="text-center">
                             <span class="badge badge-info">{{ $k->siswa_count ?? $k->siswa()->count() }}</span>
                         </td>
-                        <td class="text-center relative">
-                            {{-- Normal Mode: Kebab Dropdown --}}
-                            <template x-if="!selectionMode">
-                                <div x-data="{
-                                         open: false,
-                                         pressTimer: null,
-                                         isLongPress: false,
-                                         
-                                         startPress() {
-                                             this.isLongPress = false;
-                                             this.pressTimer = setTimeout(() => {
-                                                 this.isLongPress = true;
-                                                 this.selectionMode = true;
-                                                 if (!this.selected.includes('{{ $k->id }}')) {
-                                                     this.selected.push('{{ $k->id }}');
-                                                 }
-                                                 if (navigator.vibrate) navigator.vibrate(50);
-                                             }, 500);
-                                         },
-                                         endPress() {
-                                             clearTimeout(this.pressTimer);
-                                         },
-                                         handleClick() {
-                                             if (!this.isLongPress) {
-                                                 this.open = !this.open;
-                                             }
-                                             this.isLongPress = false;
-                                         }
-                                     }"
-                                     class="relative inline-block text-left"
-                                >
-                                    <button 
-                                        x-ref="trigger" 
-                                        @click="handleClick()" 
-                                        @mousedown="startPress()"
-                                        @touchstart.passive="startPress()"
-                                        @mouseup="endPress()"
-                                        @mouseleave="endPress()"
-                                        @touchend="endPress()"
-                                        type="button" 
-                                        class="p-1.5 text-gray-400 rounded-lg hover:bg-gray-100 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 select-none"
+                        <x-table.action-column :id="$k->id">
+                            <x-table.action-item icon="info" href="{{ route('kelas.show', $k->id) }}">
+                                Detail
+                            </x-table.action-item>
+                            
+                            @can('update', $k)
+                                <x-table.action-item icon="edit" href="{{ route('kelas.edit', $k->id) }}">
+                                    Edit
+                                </x-table.action-item>
+                            @endcan
+                            
+                            @can('delete', $k)
+                                <x-table.action-separator />
+                                <form action="{{ route('kelas.destroy', $k->id) }}" method="POST" onsubmit="return confirm('Hapus kelas ini?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <x-table.action-item 
+                                        type="submit" 
+                                        icon="trash" 
+                                        class="text-red-600 hover:bg-red-50 hover:text-red-700 w-full text-left"
                                     >
-                                        <x-ui.icon name="more-horizontal" size="18" />
-                                    </button>
-                                    
-                                    <template x-teleport="body">
-                                        <div x-show="open" 
-                                             @click.outside="open = false"
-                                             x-transition:enter="transition ease-out duration-100"
-                                             x-transition:enter-start="transform opacity-0 scale-95"
-                                             x-transition:enter-end="transform opacity-100 scale-100"
-                                             x-transition:leave="transition ease-in duration-75"
-                                             x-transition:leave-start="transform opacity-100 scale-100"
-                                             x-transition:leave-end="transform opacity-0 scale-95"
-                                             class="w-36 origin-top-right rounded-xl bg-white shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none border border-gray-100"
-                                             :style="open ? (() => {
-                                                 const rect = $refs.trigger.getBoundingClientRect();
-                                                 return `position: fixed; z-index: 9999; top: ${rect.bottom + 4}px; left: ${rect.right - 144}px;`;
-                                             })() : 'display: none;'"
-                                        >
-                                            <div class="py-1">
-                                                <a href="{{ route('kelas.show', $k->id) }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-indigo-600 transition-colors">
-                                                    <x-ui.icon name="info" size="14" />
-                                                    Detail
-                                                </a>
-                                                @can('update', $k)
-                                                <a href="{{ route('kelas.edit', $k->id) }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-indigo-600 transition-colors">
-                                                    <x-ui.icon name="edit" size="14" />
-                                                    Edit
-                                                </a>
-                                                @endcan
-                                                @can('delete', $k)
-                                                <div class="border-t border-gray-100 my-1"></div>
-                                                <form action="{{ route('kelas.destroy', $k->id) }}" method="POST" onsubmit="return confirm('Hapus kelas ini?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors">
-                                                        <x-ui.icon name="trash" size="14" />
-                                                        Hapus
-                                                    </button>
-                                                </form>
-                                                @endcan
-                                            </div>
-                                        </div>
-                                    </template>
-                                </div>
-                            </template>
-
-                            {{-- Selection Mode: Checkbox --}}
-                            <template x-if="selectionMode">
-                                <div class="flex justify-center">
-                                    <input type="checkbox" value="{{ $k->id }}" x-model="selected" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer">
-                                </div>
-                            </template>
-                        </td>
+                                        Hapus
+                                    </x-table.action-item>
+                                </form>
+                            @endcan
+                        </x-table.action-column>
                     </tr>
                 @empty
                     <tr>
@@ -225,6 +150,8 @@
                 @endforelse
             </tbody>
         </table>
+    </div>
+
     </div>
     
     {{-- Pagination --}}

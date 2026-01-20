@@ -204,6 +204,14 @@ class SiswaService
     }
 
     /**
+     * Get IDs of filtered siswa (for bulk operations).
+     */
+    public function getSiswaIdsByFilter(SiswaFilterData $filters): array
+    {
+        return $this->siswaRepository->getIdsByFilter($filters);
+    }
+
+    /**
      * Get siswa by kelas.
      */
     public function getSiswaByKelas(int $kelasId)
@@ -272,6 +280,17 @@ class SiswaService
         return DB::table('jurusan')
             ->select('id', 'nama_jurusan', 'kode_jurusan')
             ->orderBy('nama_jurusan')
+            ->get();
+    }
+
+    /**
+     * Get all konsentrasi for filter dropdown.
+     */
+    public function getAllKonsentrasiForFilter()
+    {
+        return DB::table('konsentrasi')
+            ->select('id', 'nama_konsentrasi')
+            ->orderBy('nama_konsentrasi')
             ->get();
     }
 
