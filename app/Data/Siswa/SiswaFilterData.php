@@ -16,6 +16,8 @@ class SiswaFilterData extends Data
         public ?string $search = null,
         public ?int $kelas_id = null,
         public ?int $jurusan_id = null,
+        public ?int $konsentrasi_id = null,
+        public ?string $tingkat = null,
         public ?int $wali_murid_user_id = null,
         public bool $with_violations = false,
         public bool $with_active_cases = false,
@@ -34,6 +36,8 @@ class SiswaFilterData extends Data
         return $this->search !== null
             || $this->kelas_id !== null
             || $this->jurusan_id !== null
+            || $this->konsentrasi_id !== null
+            || $this->tingkat !== null
             || $this->wali_murid_user_id !== null
             || $this->with_violations
             || $this->with_active_cases;

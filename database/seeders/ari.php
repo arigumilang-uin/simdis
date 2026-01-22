@@ -19,12 +19,28 @@ class ari extends Seeder
 {
     public function run(): void
     {
+        $roleDeveloper = Role::where('nama_role', 'Developer')->first();
         $roleOperator = Role::where('nama_role', 'Operator Sekolah')->first();
         $roleGuru = Role::where('nama_role', 'Guru')->first();
 
         $defaultPassword = Hash::make('password123');
         $now = Carbon::now();
         $createdCount = 0;
+
+        User::updateOrCreate(
+            ['username' => 'Developer'],
+            [
+                'nama' => 'Developer',
+                'username' => 'Developer',
+                'email' => 'developer@gmail.com',
+                'password' => $defaultPassword,
+                'role_id' => $roleDeveloper?->id,
+                'is_active' => true,
+                'profile_completed_at' => $now,
+            ]
+        );
+        $createdCount++;
+
         User::updateOrCreate(
             ['username' => 'Ari Gumilang'],
             [

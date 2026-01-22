@@ -3,18 +3,17 @@
 @section('title', 'Log Pelanggaran')
 
 @section('page-header')
-    <div class="page-header-stylish">
-        <div class="page-header-text">
-            <h1 class="page-header-title">Log Pelanggaran</h1>
-            <p class="page-header-subtitle">Riwayat pencatatan pelanggaran siswa</p>
-        </div>
-        <div class="page-header-stats" 
-             x-data="{ total: {{ $riwayat->total() }} }" 
-             @update-total-data.window="total = $event.detail.total">
-            <x-ui.icon name="database" size="16" />
-            <span>Total: <span class="count" x-text="total">{{ $riwayat->total() }}</span> data</span>
-        </div>
-    </div>
+    <x-page-header 
+        title="Log Pelanggaran" 
+        subtitle="Riwayat pencatatan pelanggaran siswa"
+    >
+        <x-slot:actions>
+            <a href="{{ route('riwayat.create') }}" class="btn btn-primary">
+                <x-ui.icon name="plus" size="18" />
+                <span>Catat Pelanggaran</span>
+            </a>
+        </x-slot:actions>
+    </x-page-header>
 @endsection
 
 @section('content')
@@ -40,110 +39,68 @@
     ];
 @endphp
 
-<div class="space-y-6" x-data="riwayatPage()" x-init="initPage()">
-    {{-- Action Button --}}
-    <div class="flex justify-end">
-        <a href="{{ route('riwayat.create') }}" class="btn btn-primary">
-            <x-ui.icon name="plus" size="18" />
-            <span>Catat Pelanggaran</span>
-        </a>
-    </div>
-    {{-- Filter Card --}}
-    <div class="card" x-data="{ expanded: {{ request()->hasAny(['search', 'jurusan_id', 'kelas_id']) ? 'true' : 'false' }} }">
-        <div class="card-header cursor-pointer" @click="expanded = !expanded">
-            <div class="flex items-center gap-2">
-                <x-ui.icon name="filter" class="text-gray-400" size="18" />
-                <span class="card-title">Filter Data</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <span class="text-xs text-gray-500" x-show="isLoading">Memuat...</span>
-                <x-ui.icon name="chevron-down" size="20" class="text-gray-400 transition-transform" ::class="{ 'rotate-180': expanded }" />
-            </div>
-        </div>
-        
-        <div x-show="expanded" x-collapse.duration.300ms x-cloak>
-            <div class="card-body">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    {{-- Search --}}
-                    <div class="form-group md:col-span-4">
-                        <x-forms.input 
-                            id="search_filter"
-                            name="search" 
-                            label="Cari" 
-                            x-model.debounce.500ms="filters.search"
-                            placeholder="Cari nama siswa, NISN, jenis pelanggaran, atau pencatat..."
-                        />
-                        <div class="absolute right-0 top-8 pr-3 pointer-events-none" x-show="isLoading">
-                            <x-ui.icon name="loader" class="animate-spin text-gray-400" size="16" />
+<div class="space-y-4" x-data="riwayatPage()" x-init="initPage()">
+    
+    <div class="bg-white md:border md:border-gray-200 md:rounded-xl md:shadow-sm overflow-hidden mb-8 border-b border-gray-200 md:border-b-0">
+        {{-- Unified Toolbar --}}
+        <div class="px-4 md:px-6 py-5 border-b border-gray-100 bg-white">
+            <x-ui.action-bar :total="$riwayat->total()" totalLabel="Log" class="!gap-4">
+                <x-slot:search>
+                    <input 
+                        type="text" 
+                        x-model.debounce.500ms="filters.search"
+                        class="w-full md:w-80 rounded-xl border-0 bg-gray-100/80 text-sm text-gray-800 py-2.5 pl-10 pr-4 hover:bg-gray-100 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:shadow-lg focus:shadow-indigo-500/5 transition-all duration-200 placeholder-gray-400"
+                        placeholder="Cari nama, NISN, jenis pelanggaran..."
+                    >
+                </x-slot:search>
+                <x-slot:filters>
+                    <div class="space-y-4">
+                        {{-- Dari Tanggal --}}
+                        <div class="space-y-1">
+                            <label class="text-xs font-semibold text-gray-500 uppercase">Dari Tanggal</label>
+                            <input type="date" x-model="filters.start_date" @change="fetchData()" class="form-input w-full text-sm rounded-lg">
+                        </div>
+                        
+                        {{-- Sampai Tanggal --}}
+                        <div class="space-y-1">
+                            <label class="text-xs font-semibold text-gray-500 uppercase">Sampai Tanggal</label>
+                            <input type="date" x-model="filters.end_date" @change="fetchData()" class="form-input w-full text-sm rounded-lg">
+                        </div>
+                        
+                        {{-- Jurusan --}}
+                        <div class="space-y-1">
+                            <label class="text-xs font-semibold text-gray-500 uppercase">Jurusan</label>
+                            <select x-model="filters.jurusan_id" @change="onJurusanChange()" class="form-select w-full text-sm rounded-lg">
+                                <option value="">Semua Jurusan</option>
+                                @foreach($allJurusan ?? [] as $jurusan)
+                                    <option value="{{ $jurusan->id }}">{{ $jurusan->nama_jurusan }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        
+                        {{-- Kelas (Dynamic) --}}
+                        <div class="space-y-1">
+                            <label class="text-xs font-semibold text-gray-500 uppercase">Kelas</label>
+                            <select x-model="filters.kelas_id" @change="fetchData()" class="form-select w-full text-sm rounded-lg" :disabled="loadingKelas">
+                                <option value="">Semua Kelas</option>
+                                <template x-for="kelas in kelasList" :key="kelas.id">
+                                    <option :value="kelas.id" x-text="kelas.nama_kelas"></option>
+                                </template>
+                            </select>
+                            <p class="text-xs text-blue-500" x-show="loadingKelas">Memuat kelas...</p>
                         </div>
                     </div>
-                    
-                    {{-- Dari Tanggal --}}
-                    <div class="form-group">
-                        <x-forms.input 
-                            id="start_date"
-                            type="date"
-                            name="start_date"
-                            label="Dari Tanggal"
-                            x-model="filters.start_date"
-                            @change="fetchData()"
-                        />
-                    </div>
-                    
-                    {{-- Sampai Tanggal --}}
-                    <div class="form-group">
-                        <x-forms.input 
-                            id="end_date"
-                            type="date"
-                            name="end_date"
-                            label="Sampai Tanggal"
-                            x-model="filters.end_date"
-                            @change="fetchData()"
-                        />
-                    </div>
-                    
-                    {{-- Jurusan Dropdown --}}
-                    <div class="form-group">
-                        <x-forms.select 
-                            id="jurusan_id"
-                            name="jurusan_id" 
-                            label="Jurusan"
-                            x-model="filters.jurusan_id"
-                            @change="onJurusanChange()"
-                            :options="$allJurusan ?? []"
-                            optionValue="id"
-                            optionLabel="nama_jurusan"
-                            placeholder="Semua Jurusan"
-                        />
-                    </div>
-                    
-                    {{-- Kelas Dropdown (Dynamic with x-for because options change dynamically) --}}
-                    <div class="form-group">
-                        <label for="kelas_id" class="form-label">Kelas</label>
-                        <select id="kelas_id" name="kelas_id" x-model="filters.kelas_id" @change="fetchData()" class="form-input form-select w-full" :disabled="loadingKelas">
-                            <option value="">Semua Kelas</option>
-                            <template x-for="kelas in kelasList" :key="kelas.id">
-                                <option :value="kelas.id" x-text="kelas.nama_kelas"></option>
-                            </template>
-                        </select>
-                        <p class="text-xs text-blue-500 mt-1" x-show="loadingKelas">Memuat kelas...</p>
-                    </div>
-                    
-                    {{-- Reset Button --}}
-                    <div class="md:col-span-4 flex justify-end">
-                        <button type="button" @click="resetFilters()" class="btn btn-secondary">
-                            <x-ui.icon name="refresh-cw" size="14" />
-                            <span>Reset Filter</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
+                </x-slot:filters>
+                <x-slot:reset>
+                    <button type="button" @click="resetFilters()" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">Reset</button>
+                </x-slot:reset>
+            </x-ui.action-bar>
         </div>
-    </div>
-    
-    {{-- Table Container --}}
-    <div id="riwayat-table-container" class="transition-opacity duration-200" :class="{ 'opacity-50': isLoading }">
-        @include('riwayat._table')
+
+        {{-- Table Container --}}
+        <div id="riwayat-table-container" class="transition-opacity duration-200" :class="{ 'opacity-50': isLoading }">
+            @include('riwayat._table')
+        </div>
     </div>
 </div>
 

@@ -6,9 +6,18 @@
     <x-page-header 
         title="Manajemen User" 
         subtitle="Kelola akun pengguna sistem."
-        :total="$users->total()"
-        icon="users"
-    />
+    >
+        <x-slot:actions>
+            <a href="{{ route('users.trash') }}" class="btn btn-white">
+                <x-ui.icon name="archive" size="16" />
+                <span>Arsip</span>
+            </a>
+            <a href="{{ route('users.create') }}" class="btn btn-primary">
+                <x-ui.icon name="plus" size="18" />
+                <span>Tambah User</span>
+            </a>
+        </x-slot:actions>
+    </x-page-header>
 @endsection
 
 @section('content')
@@ -23,74 +32,42 @@
     ];
 @endphp
 
-<div class="space-y-6" x-data='dataTable(@json($tableConfig))'>
-    {{-- Action Button --}}
-    <div class="flex justify-between items-center">
-        <a href="{{ route('users.trash') }}" class="btn btn-white">
-            <x-ui.icon name="archive" size="16" />
-            <span>Arsip</span>
-        </a>
-        <a href="{{ route('users.create') }}" class="btn btn-primary">
-            <x-ui.icon name="plus" size="18" />
-            <span>Tambah User</span>
-        </a>
-    </div>
-    {{-- Filter --}}
-    <div class="card" x-data="{ expanded: {{ request()->hasAny(['search', 'role_id']) ? 'true' : 'false' }} }">
-        <div class="card-header cursor-pointer" @click="expanded = !expanded">
-            <div class="flex items-center gap-2">
-                <x-ui.icon name="filter" size="18" class="text-gray-400" />
-                <span class="card-title">Filter Data</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <span class="text-xs text-gray-500" x-show="isLoading">Memuat...</span>
-                <x-ui.icon name="chevron-down" size="20" class="text-gray-400 transition-transform" ::class="{ 'rotate-180': expanded }" />
-            </div>
+<div class="space-y-4" x-data='dataTable(@json($tableConfig))'>
+    
+    <div class="bg-white md:border md:border-gray-200 md:rounded-xl md:shadow-sm overflow-hidden mb-8 border-b border-gray-200 md:border-b-0">
+        {{-- Unified Toolbar --}}
+        <div class="px-4 md:px-6 py-5 border-b border-gray-100 bg-white">
+            <x-ui.action-bar :total="$users->total()" totalLabel="User" class="!gap-4">
+                <x-slot:search>
+                    <input 
+                        type="text" 
+                        x-model.debounce.500ms="filters.search"
+                        class="w-full md:w-80 rounded-xl border-0 bg-gray-100/80 text-sm text-gray-800 py-2.5 pl-10 pr-4 hover:bg-gray-100 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:shadow-lg focus:shadow-indigo-500/5 transition-all duration-200 placeholder-gray-400"
+                        placeholder="Cari username atau keterangan..."
+                    >
+                </x-slot:search>
+                
+                <x-slot:filters>
+                    <x-ui.filter-select 
+                        label="Peran"
+                        x-model="filters.role_id"
+                        :options="$roles ?? []"
+                        optionValue="id"
+                        optionLabel="nama_role"
+                        placeholder="Semua Peran"
+                    />
+                </x-slot:filters>
+                
+                <x-slot:reset>
+                    <x-ui.filter-reset @click="resetFilters(); filterOpen = false" />
+                </x-slot:reset>
+            </x-ui.action-bar>
         </div>
         
-        <div x-show="expanded" x-collapse.duration.300ms x-cloak>
-            <div class="card-body border-t border-gray-100">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="form-group md:col-span-2">
-                        <label for="search" class="form-label">Cari</label>
-                        <div class="relative">
-                            <input 
-                                type="text" 
-                                id="search" 
-                                x-model.debounce.500ms="filters.search" 
-                                class="form-input pr-10 w-full" 
-                                placeholder="Cari username atau keterangan..."
-                            >
-                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none" x-show="isLoading">
-                                <x-ui.icon name="loader" size="16" class="animate-spin text-gray-400" />
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="role" class="form-label">Peran</label>
-                        <select id="role" x-model="filters.role_id" class="form-input form-select w-full">
-                            <option value="">Semua Peran</option>
-                            @foreach($roles ?? [] as $role)
-                                <option value="{{ $role->id }}">{{ $role->nama_role }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    
-                    <div class="md:col-span-3 flex justify-end">
-                        <button type="button" @click="resetFilters()" class="btn btn-secondary text-xs">
-                            <x-ui.icon name="refresh-cw" size="14" />
-                            <span>Reset Filter</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
+        {{-- Table --}}
+        <div id="users-table-container" class="transition-opacity duration-200" :class="{ 'opacity-50': isLoading }">
+            @include('users._table')
         </div>
-    </div>
-    
-    {{-- Table --}}
-    <div id="users-table-container" class="transition-opacity duration-200" :class="{ 'opacity-50': isLoading }">
-        @include('users._table')
     </div>
 </div>
 @endsection

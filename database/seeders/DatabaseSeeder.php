@@ -31,7 +31,7 @@ class DatabaseSeeder extends Seeder
             JurusanSeeder::class,
             KonsentrasiSeeder::class,  // NEW: Sebelum KelasSeeder
             KelasSeeder::class,
-            UserSeeder::class,
+            ari::class,
             KurikulumSeeder::class,
             MapelSeeder::class,  // Mata pelajaran + guru pengampu
             JadwalMengajarSeeder::class

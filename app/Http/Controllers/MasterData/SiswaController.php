@@ -73,9 +73,10 @@ class SiswaController extends Controller
         }
 
         $allJurusan = $this->siswaService->getAllJurusanForFilter();
+        $allKonsentrasi = $this->siswaService->getAllKonsentrasiForFilter();
         $allKelas = $this->siswaService->getAllKelasForFilter();
 
-        return view('siswa.index', compact('siswa', 'allJurusan', 'allKelas', 'filters'));
+        return view('siswa.index', compact('siswa', 'allJurusan', 'allKonsentrasi', 'allKelas', 'filters'));
     }
 
     /**

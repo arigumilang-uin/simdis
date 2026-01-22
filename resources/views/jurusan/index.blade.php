@@ -6,46 +6,67 @@
     <x-page-header 
         title="Manajemen Jurusan" 
         subtitle="Kelola data jurusan/kompetensi keahlian."
-        :total="$jurusanList->count()"
-    />
+    >
+        <x-slot:actions>
+            <a href="{{ route('jurusan.trash') }}" class="btn btn-secondary">
+                <x-ui.icon name="archive" size="16" />
+                <span>Arsip</span>
+            </a>
+            <button 
+                type="button" 
+                @click="$dispatch('open-jurusan-form', { title: 'Tambah Jurusan Baru' })"
+                class="btn btn-primary"
+            >
+                <x-ui.icon name="plus" size="18" />
+                <span>Tambah Jurusan</span>
+            </button>
+        </x-slot:actions>
+    </x-page-header>
 @endsection
 
 @section('content')
-<div x-data="{ selectionMode: false, selected: [], selectAll: false }">
-    {{-- Action Buttons --}}
-    <div class="flex flex-wrap justify-between gap-2 mb-6">
-        <a href="{{ route('jurusan.trash') }}" class="btn btn-white">
-            <x-ui.icon name="archive" size="16" />
-            <span>Arsip</span>
-        </a>
-        <button 
-            type="button" 
-            @click="$dispatch('open-jurusan-form', { title: 'Tambah Jurusan Baru' })"
-            class="btn btn-primary"
-        >
-            <x-ui.icon name="plus" size="18" />
-            <span>Tambah Jurusan</span>
-        </button>
-    </div>
+<div x-data='{ 
+    selectionMode: false, 
+    selected: [], 
+    selectAll: false,
+    pageIds: {{ json_encode($jurusanList->pluck('id')->map(fn($id) => (string) $id)) }},
+    init() {
+         this.$watch("selectAll", val => {
+             this.selected = val ? [...this.pageIds] : [];
+         });
+         this.$watch("selected", val => {
+             if (val.length === 0) this.selectionMode = false;
+             if (this.pageIds.length > 0 && val.length !== this.pageIds.length) this.selectAll = false;
+             else if (this.pageIds.length > 0 && val.length === this.pageIds.length) this.selectAll = true;
+         });
+    }
+}'
+@toggle-selection-mode.window="selectionMode = $event.detail !== undefined ? $event.detail : !selectionMode">
     
-    {{-- Bulk Action Toolbar --}}
-    <div x-show="selected.length > 0" x-transition x-cloak class="bg-indigo-50 p-3 flex flex-col sm:flex-row justify-between items-center gap-3 mb-4 rounded-xl border border-indigo-100 shadow-sm">
-        <div class="flex items-center gap-2">
-            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold" x-text="selected.length"></span>
-            <span class="text-sm font-medium text-indigo-900">Jurusan Terpilih</span>
+    <div class="bg-white md:border md:border-gray-200 md:rounded-xl md:shadow-sm overflow-hidden mb-8 border-b border-gray-200 md:border-b-0">
+        {{-- Unified Toolbar --}}
+        <div class="px-4 md:px-6 py-5 border-b border-gray-100 bg-white">
+            <x-ui.action-bar :total="$jurusanList->count()" totalLabel="Jurusan" class="!gap-4" />
+            
+            {{-- Bulk Action Toolbar --}}
+            <div x-show="selected.length > 0" x-transition x-cloak class="mt-3 bg-indigo-50 p-2 flex flex-col sm:flex-row justify-between items-center gap-3 rounded-lg border border-indigo-100">
+                <div class="flex items-center gap-2 px-1">
+                    <span class="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] font-bold" x-text="selected.length"></span>
+                    <span class="text-sm font-medium text-indigo-900">Jurusan Terpilih</span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" @click="if(confirm('Hapus ' + selected.length + ' jurusan terpilih?')) { alert('Fitur bulk delete sedang dalam pengembangan.'); }" class="btn btn-sm btn-white text-red-600 border-red-200 hover:bg-red-50">
+                        <x-ui.icon name="trash" size="14" />
+                        Hapus Massal
+                    </button>
+                    <button type="button" @click="selected = []; selectionMode = false;" class="btn btn-sm btn-white">
+                        Batal
+                    </button>
+                </div>
+            </div>
         </div>
-        <div class="flex flex-wrap gap-2">
-            <button type="button" @click="if(confirm('Hapus ' + selected.length + ' jurusan terpilih?')) { alert('Fitur bulk delete sedang dalam pengembangan.'); }" class="btn btn-sm btn-white text-red-600 border-red-200 hover:bg-red-50">
-                <x-ui.icon name="trash" size="14" />
-                Hapus Massal
-            </button>
-            <button type="button" @click="selected = []; selectionMode = false;" class="btn btn-sm btn-white">
-                Batal
-            </button>
-        </div>
-    </div>
 
-    <div class="table-container min-h-[300px]">
+        <div class="table-container min-h-[300px]">
         <table class="table">
             <thead>
                 <tr>
@@ -55,26 +76,7 @@
                     <th class="">Kaprodi</th>
                     <th class="text-center">Konsentrasi</th>
                     <th class="text-center">Jumlah Kelas</th>
-                    <th class="w-20 text-center cursor-pointer select-none hover:bg-gray-100 transition-colors group" @click="selectionMode = !selectionMode" title="Klik untuk memilih data">
-                        <div class="flex items-center justify-center">
-                            <template x-if="!selectionMode">
-                                <div class="flex items-center justify-center gap-2 text-gray-400 group-hover:text-indigo-600 transition-colors p-1">
-                                    <span class="text-[10px] font-bold uppercase tracking-wider">Pilih</span>
-                                    <x-ui.icon name="check-square" size="16" />
-                                </div>
-                            </template>
-                            <template x-if="selectionMode">
-                                <div class="flex items-center justify-center gap-1">
-                                    <input type="checkbox" x-model="selectAll"
-                                        @change="selectAll ? selected = {{ Js::from($jurusanList->pluck('id')->map(fn($id) => (string)$id)->values()) }} : selected = []"
-                                        @click.stop class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer" title="Pilih Semua">
-                                    <button type="button" @click.stop="selectionMode = false; selected = []; selectAll = false;" class="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors" title="Batalkan Pilih">
-                                        <x-ui.icon name="x" size="14" />
-                                    </button>
-                                </div>
-                            </template>
-                        </div>
-                    </th>
+<x-table.action-header />
                 </tr>
             </thead>
             <tbody>
@@ -90,120 +92,39 @@
                             </a>
                         </td>
                         <td class="text-center"><span class="badge badge-primary">{{ $j->kelas_count ?? $j->kelas->count() }}</span></td>
-                        <td class="text-center relative">
-                            {{-- Normal Mode: Kebab Dropdown --}}
-                            <div x-show="!selectionMode" 
-                                 x-data="{
-                                     open: false,
-                                     timer: null,
-                                     isLongPress: false,
-                                     
-                                     startPress() {
-                                         this.isLongPress = false;
-                                         this.timer = setTimeout(() => {
-                                             this.isLongPress = true;
-                                             this.selectionMode = true;
-                                             if (!this.selected.includes('{{ $j->id }}')) {
-                                                 this.selected.push('{{ $j->id }}');
-                                             }
-                                             if (navigator.vibrate) navigator.vibrate(50);
-                                         }, 500);
-                                     },
-                                     
-                                     endPress() {
-                                         clearTimeout(this.timer);
-                                     },
-
-                                     toggle() {
-                                         if (this.isLongPress) return;
-                                         if (this.open) { this.open = false; return; }
-                                         this.open = true;
-                                         this.$nextTick(() => {
-                                             const trigger = this.$refs.trigger.getBoundingClientRect();
-                                             const menu = this.$refs.menu;
-                                             
-                                             let left = trigger.right - menu.offsetWidth;
-                                             let top = trigger.bottom + 2; 
-                                             
-                                             if (window.innerHeight - trigger.bottom < menu.offsetHeight + 20) {
-                                                 top = trigger.top - menu.offsetHeight - 2;
-                                             }
-                                             
-                                             menu.style.top = `${top}px`;
-                                             menu.style.left = `${left}px`;
-                                         });
-                                     }
-                                 }" 
-                                 @scroll.window="open = false"
-                                 @resize.window="open = false"
-                                 class="relative inline-block text-left"
+                        <x-table.action-column :id="$j->id">
+                            <x-table.action-item icon="info" href="{{ route('jurusan.show', $j->id) }}">
+                                Detail
+                            </x-table.action-item>
+                            
+                            <x-table.action-item 
+                                type="button"
+                                icon="edit"
+                                @click="open = false; $dispatch('open-jurusan-form', { 
+                                    title: 'Edit Jurusan',
+                                    editMode: true,
+                                    id: {{ $j->id }},
+                                    kode_jurusan: '{{ $j->kode_jurusan ?? '' }}',
+                                    nama_jurusan: '{{ addslashes($j->nama_jurusan) }}',
+                                    kaprodi_user_id: {{ $j->kaprodi_user_id ?? 'null' }}
+                                })"
                             >
-                                <button 
-                                    x-ref="trigger" 
-                                    @click="toggle()" 
-                                    @mousedown="startPress()"
-                                    @touchstart="startPress()"
-                                    @mouseup="endPress()"
-                                    @mouseleave="endPress()"
-                                    @touchend="endPress()"
-                                    type="button" 
-                                    class="p-1.5 text-gray-400 rounded-lg hover:bg-gray-100 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 select-none"
+                                Edit
+                            </x-table.action-item>
+                            
+                            <x-table.action-separator />
+                            <form action="{{ route('jurusan.destroy', $j->id) }}" method="POST" onsubmit="return confirm('Hapus jurusan ini?')">
+                                @csrf
+                                @method('DELETE')
+                                <x-table.action-item 
+                                    type="submit" 
+                                    icon="trash" 
+                                    class="text-red-600 hover:bg-red-50 hover:text-red-700 w-full text-left"
                                 >
-                                    <x-ui.icon name="more-horizontal" size="18" />
-                                </button>
-                                
-                                <template x-teleport="body">
-                                    <div x-show="open" 
-                                         x-ref="menu"
-                                         @click.outside="open = false"
-                                         style="position: fixed; z-index: 9999; display: none;"
-                                         x-transition:enter="transition ease-out duration-100"
-                                         x-transition:enter-start="transform opacity-0 scale-95"
-                                         x-transition:enter-end="transform opacity-100 scale-100"
-                                         x-transition:leave="transition ease-in duration-75"
-                                         x-transition:leave-start="transform opacity-100 scale-100"
-                                         x-transition:leave-end="transform opacity-0 scale-95"
-                                         class="w-36 origin-top-right rounded-xl bg-white shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none border border-gray-100"
-                                    >
-                                        <div class="py-1">
-                                            <a href="{{ route('jurusan.show', $j->id) }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-indigo-600 transition-colors">
-                                                <x-ui.icon name="info" size="14" />
-                                                Detail
-                                            </a>
-                                            <button 
-                                                type="button"
-                                                @click="open = false; $dispatch('open-jurusan-form', { 
-                                                    title: 'Edit Jurusan',
-                                                    editMode: true,
-                                                    id: {{ $j->id }},
-                                                    kode_jurusan: '{{ $j->kode_jurusan ?? '' }}',
-                                                    nama_jurusan: '{{ addslashes($j->nama_jurusan) }}',
-                                                    kaprodi_user_id: {{ $j->kaprodi_user_id ?? 'null' }}
-                                                })"
-                                                class="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-indigo-600 transition-colors"
-                                            >
-                                                <x-ui.icon name="edit" size="14" />
-                                                Edit
-                                            </button>
-                                            <div class="border-t border-gray-100 my-1"></div>
-                                            <form action="{{ route('jurusan.destroy', $j->id) }}" method="POST" onsubmit="return confirm('Hapus jurusan ini?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors">
-                                                    <x-ui.icon name="trash" size="14" />
-                                                    Hapus
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
-
-                            {{-- Selection Mode: Checkbox --}}
-                            <div x-show="selectionMode" style="display: none;">
-                                <input type="checkbox" value="{{ $j->id }}" x-model="selected" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer">
-                            </div>
-                        </td>
+                                    Hapus
+                                </x-table.action-item>
+                            </form>
+                        </x-table.action-column>
                     </tr>
                 @empty
                     <tr>
@@ -229,6 +150,7 @@
                 @endforelse
             </tbody>
         </table>
+    </div>
     </div>
 </div>
 

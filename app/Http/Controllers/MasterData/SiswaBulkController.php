@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Services\Siswa\SiswaBulkService;
 use App\Services\Siswa\SiswaService;
 use App\Exceptions\BusinessValidationException;
+use App\Data\Siswa\SiswaFilterData;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Siswa Bulk Controller - Bulk Import/Delete Operations
@@ -144,29 +146,72 @@ class SiswaBulkController extends Controller
     /**
      * Bulk delete selected siswa (checkbox selection).
      */
+    /**
+     * Bulk delete selected siswa (checkbox selection or filter-based).
+     */
     public function deleteSelected(Request $request): RedirectResponse
     {
-        // Parse ids from comma-separated string to array
-        $idsRaw = $request->input('ids');
-        $siswaIds = is_array($idsRaw) ? $idsRaw : array_filter(explode(',', $idsRaw ?? ''));
-        $request->merge(['siswa_ids' => array_map('intval', $siswaIds)]);
-
         $validated = $request->validate([
-            'siswa_ids' => 'required|array|min:1',
-            'siswa_ids.*' => 'exists:siswa,id',
+            'ids' => 'nullable',
+            'all_selected' => 'nullable|boolean',
+            'filters' => 'nullable|array',
             'alasan_keluar' => 'required|in:Alumni,Dikeluarkan,Pindah Sekolah,Lainnya',
             'keterangan_keluar' => 'nullable|string|max:500',
         ]);
 
         try {
+            $idsToDelete = [];
+
+            if ($request->boolean('all_selected')) {
+                // Select All Mode: Get IDs from filters
+                $filtersData = SiswaFilterData::from($request->input('filters', []));
+                
+                // SECURITY: Apply role-based restrictions
+                $user = auth()->user();
+                if ($user->hasRole('Kaprodi') && $user->jurusan) {
+                    $filtersData->jurusan_id = $user->jurusan->id;
+                }
+                if ($user->hasRole('Wali Kelas') && $user->kelasDiampu) {
+                    $filtersData->kelas_id = $user->kelasDiampu->id;
+                }
+
+                $idsToDelete = $this->siswaService->getSiswaIdsByFilter($filtersData);
+
+            } else {
+                // Selection Mode: Get IDs from input
+                $idsRaw = $request->input('ids');
+                $siswaIds = is_array($idsRaw) ? $idsRaw : array_filter(explode(',', $idsRaw ?? ''));
+                $idsToDelete = array_map('intval', $siswaIds);
+                
+                // Basic validation for manual IDs
+                if (empty($idsToDelete)) {
+                     throw new \Exception('Tidak ada siswa yang dipilih.');
+                }
+            }
+
+            if (empty($idsToDelete)) {
+                 return back()->with('error', 'Tidak ada data siswa yang sesuai untuk dihapus.');
+            }
+
             $successCount = 0;
-            foreach ($validated['siswa_ids'] as $siswaId) {
-                $this->siswaService->deleteSiswa(
-                    $siswaId,
-                    $validated['alasan_keluar'],
-                    $validated['keterangan_keluar'] ?? null
-                );
-                $successCount++;
+            DB::beginTransaction(); // Wrap in transaction for safety
+            
+            try {
+                foreach ($idsToDelete as $siswaId) {
+                    // Periksa kepemilikan jika perlu, tapi deleteSiswa() core harusnya handle atau kita percaya IDs dari filter secure
+                    // (Filter secure karena kita inject role restrictions di atas)
+                    
+                    $this->siswaService->deleteSiswa(
+                        $siswaId,
+                        $validated['alasan_keluar'],
+                        $validated['keterangan_keluar'] ?? null
+                    );
+                    $successCount++;
+                }
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollBack();
+                throw $e;
             }
 
             return redirect()

@@ -36,6 +36,7 @@ class FilterSiswaRequest extends FormRequest
             'search' => ['nullable', 'string', 'max:255'], // Alias untuk cari
             'kelas_id' => ['nullable', 'integer', 'exists:kelas,id'],
             'jurusan_id' => ['nullable', 'integer', 'exists:jurusan,id'],
+            'konsentrasi_id' => ['nullable', 'integer', 'exists:konsentrasi,id'],
             'wali_murid_user_id' => ['nullable', 'integer', 'exists:users,id'],
             'tingkat' => ['nullable', 'string', 'in:X,XI,XII'],
             'with_violations' => ['nullable', 'boolean'],
@@ -61,7 +62,9 @@ class FilterSiswaRequest extends FormRequest
             'search' => $validated['search'] ?? $validated['cari'] ?? null,
             'kelas_id' => $validated['kelas_id'] ?? null,
             'jurusan_id' => $validated['jurusan_id'] ?? null,
+            'konsentrasi_id' => $validated['konsentrasi_id'] ?? null,
             'wali_murid_user_id' => $validated['wali_murid_user_id'] ?? null,
+            'tingkat' => $validated['tingkat'] ?? null,
             'with_violations' => $validated['with_violations'] ?? false,
             'with_active_cases' => $validated['with_active_cases'] ?? false,
             'perPage' => $validated['perPage'] ?? 20,
@@ -80,6 +83,7 @@ class FilterSiswaRequest extends FormRequest
         return [
             'kelas_id.exists' => 'Kelas yang dipilih tidak valid.',
             'jurusan_id.exists' => 'Jurusan yang dipilih tidak valid.',
+            'konsentrasi_id.exists' => 'Konsentrasi yang dipilih tidak valid.',
             'wali_murid_user_id.exists' => 'Wali murid yang dipilih tidak valid.',
             'tingkat.in' => 'Tingkat harus salah satu dari: X, XI, XII.',
             'perPage.min' => 'Jumlah data per halaman minimal 5.',
