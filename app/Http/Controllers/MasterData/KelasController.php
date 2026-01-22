@@ -169,6 +169,64 @@ class KelasController extends Controller
             ->route('kelas.trash')
             ->with('success', "Kelas '{$nama}' berhasil dihapus secara permanen.");
     }
+
+    /**
+     * Bulk restore kelas
+     */
+    public function bulkRestore(Request $request)
+    {
+        $request->validate(['ids' => 'required|array', 'ids.*' => 'integer']);
+        
+        $count = 0;
+        foreach ($request->ids as $id) {
+            $kelas = Kelas::onlyTrashed()->find($id);
+            if ($kelas) {
+                $kelas->restore();
+                $count++;
+            }
+        }
+        
+        return redirect()
+            ->route('kelas.trash')
+            ->with('success', "{$count} kelas berhasil dipulihkan.");
+    }
+
+    /**
+     * Bulk force delete kelas
+     */
+    public function bulkForceDelete(Request $request)
+    {
+        $request->validate(['ids' => 'required|array', 'ids.*' => 'integer']);
+        
+        $count = 0;
+        $skipped = 0;
+        
+        foreach ($request->ids as $id) {
+            $kelas = Kelas::onlyTrashed()->find($id);
+            if ($kelas) {
+                $hasSiswa = \App\Models\Siswa::withTrashed()
+                    ->where('kelas_id', $kelas->id)
+                    ->exists();
+                    
+                if ($hasSiswa) {
+                    $skipped++;
+                    continue;
+                }
+                
+                $kelas->forceDelete();
+                $count++;
+            }
+        }
+        
+        $message = "{$count} kelas berhasil dihapus permanen.";
+        if ($skipped > 0) {
+            $message .= " {$skipped} kelas dilewati karena masih memiliki data siswa.";
+        }
+        
+        return redirect()
+            ->route('kelas.trash')
+            ->with($count > 0 ? 'success' : 'warning', $message);
+    }
     
     /**
      * Index view for monitoring (Kepala Sekolah & Waka Kesiswaan)

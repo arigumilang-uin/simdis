@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Tambah User')
+@section('title', 'Tambah Pengguna')
 
 @section('page-header')
     <x-page-header 
-        title="Tambah User Baru" 
+        title="Tambah Pengguna Baru" 
         subtitle="Buat akun untuk Guru, Staff, atau Administrator."
         :backUrl="route('users.index')"
     />
@@ -48,7 +48,7 @@
                             label="Nama Lengkap" 
                             placeholder="Ari Gumilang, S.T., M.Kom"
                             required 
-                            help="Nama asli user (bisa dengan gelar). Digunakan untuk login & ditampilkan di sistem." 
+                            help="Nama asli pengguna (bisa dengan gelar). Digunakan untuk login & ditampilkan di sistem." 
                         />
                         
                         <x-forms.input 
@@ -175,7 +175,7 @@
                             <x-forms.checkbox 
                                 name="is_active" 
                                 label="Aktifkan Akun Langsung" 
-                                description="User dapat login segera setelah dibuat." 
+                                description="Pengguna dapat login segera setelah dibuat." 
                                 checked 
                             />
                         </div>
@@ -186,7 +186,7 @@
             {{-- FOOTER --}}
             <div class="form-actions-footer">
                 <a href="{{ route('users.index') }}" class="btn btn-secondary">Batal</a>
-                <button type="submit" class="btn btn-primary px-6">Simpan User Baru</button>
+                <button type="submit" class="btn btn-primary px-6">Simpan Pengguna Baru</button>
             </div>
         </div>
         

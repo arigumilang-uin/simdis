@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Edit User')
+@section('title', 'Edit Pengguna')
 
 @section('page-header')
     <x-page-header 
-        title="Edit User" 
+        title="Edit Pengguna" 
         subtitle="Perbarui data pengguna."
     />
 @endsection
@@ -13,7 +13,7 @@
 <div class="max-w-3xl">
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Form Edit User</h3>
+            <h3 class="card-title">Form Edit Pengguna</h3>
         </div>
         <div class="card-body">
             {{-- Role mapping from PHP to JS --}}
@@ -74,7 +74,7 @@
                             label="Nama Lengkap" 
                             :value="$user->username"
                             required 
-                            help="Nama asli user (bisa dengan gelar). Untuk login & ditampilkan."
+                            help="Nama asli pengguna (bisa dengan gelar). Untuk login & ditampilkan."
                         />
                     </div>
                     

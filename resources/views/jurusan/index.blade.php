@@ -8,10 +8,6 @@
         subtitle="Kelola data jurusan/kompetensi keahlian."
     >
         <x-slot:actions>
-            <a href="{{ route('jurusan.trash') }}" class="btn btn-secondary">
-                <x-ui.icon name="archive" size="16" />
-                <span>Arsip</span>
-            </a>
             <button 
                 type="button" 
                 @click="$dispatch('open-jurusan-form', { title: 'Tambah Jurusan Baru' })"

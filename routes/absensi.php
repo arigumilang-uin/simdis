@@ -60,6 +60,8 @@ Route::middleware(['auth', 'profile.completed'])->group(function () {
         Route::prefix('kurikulum')->name('kurikulum.')->group(function () {
             Route::get('/', [KurikulumController::class, 'index'])->name('index');
             Route::get('/trash', [KurikulumController::class, 'trash'])->name('trash');
+            Route::post('/bulk-restore', [KurikulumController::class, 'bulkRestore'])->name('bulk-restore');
+            Route::delete('/bulk-force-delete', [KurikulumController::class, 'bulkForceDelete'])->name('bulk-force-delete');
             Route::get('/create', [KurikulumController::class, 'create'])->name('create');
             Route::post('/', [KurikulumController::class, 'store'])->name('store');
             Route::get('/{id}/edit', [KurikulumController::class, 'edit'])->name('edit');
@@ -73,6 +75,8 @@ Route::middleware(['auth', 'profile.completed'])->group(function () {
         Route::prefix('periode-semester')->name('periode-semester.')->group(function () {
             Route::get('/', [PeriodeSemesterController::class, 'index'])->name('index');
             Route::get('/trash', [PeriodeSemesterController::class, 'trash'])->name('trash');
+            Route::post('/bulk-restore', [PeriodeSemesterController::class, 'bulkRestore'])->name('bulk-restore');
+            Route::delete('/bulk-force-delete', [PeriodeSemesterController::class, 'bulkForceDelete'])->name('bulk-force-delete');
             Route::get('/create', [PeriodeSemesterController::class, 'create'])->name('create');
             Route::post('/', [PeriodeSemesterController::class, 'store'])->name('store');
             Route::get('/{id}/edit', [PeriodeSemesterController::class, 'edit'])->name('edit');

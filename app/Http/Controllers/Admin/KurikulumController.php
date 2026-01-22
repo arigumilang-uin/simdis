@@ -176,5 +176,69 @@ class KurikulumController extends Controller
             ->route('admin.kurikulum.trash')
             ->with('success', 'Kurikulum berhasil dihapus secara permanen.');
     }
+
+    /**
+     * Bulk restore archived kurikulum.
+     */
+    public function bulkRestore(Request $request): RedirectResponse
+    {
+        $request->validate(['ids' => 'required|string']);
+        $ids = explode(',', $request->input('ids'));
+
+        $kurikulums = Kurikulum::onlyTrashed()->whereIn('id', $ids)->get();
+        $restoredCount = 0;
+
+        foreach ($kurikulums as $kurikulum) {
+            $kurikulum->restore();
+            // Also restore related mata pelajaran
+            $kurikulum->mataPelajaran()->onlyTrashed()->restore();
+            $restoredCount++;
+        }
+
+        return redirect()
+            ->route('admin.kurikulum.trash')
+            ->with('success', "{$restoredCount} kurikulum berhasil dipulihkan beserta mata pelajaran di dalamnya.");
+    }
+
+    /**
+     * Bulk force delete archived kurikulum.
+     */
+    public function bulkForceDelete(Request $request): RedirectResponse
+    {
+        $request->validate(['ids' => 'required|string']);
+        $ids = explode(',', $request->input('ids'));
+
+        $kurikulums = Kurikulum::onlyTrashed()->whereIn('id', $ids)->get();
+        $deletedCount = 0;
+        $skippedCount = 0;
+
+        foreach ($kurikulums as $kurikulum) {
+            // Check if has jadwal mengajar (even trashed)
+            $hasJadwal = \App\Models\JadwalMengajar::withTrashed()
+                ->whereIn('mata_pelajaran_id', $kurikulum->mataPelajaran()->withTrashed()->pluck('id'))
+                ->exists();
+                
+            if ($hasJadwal) {
+                $skippedCount++;
+                continue;
+            }
+            
+            // Force delete mata pelajaran first
+            $kurikulum->mataPelajaran()->withTrashed()->forceDelete();
+            
+            // Force delete kurikulum
+            $kurikulum->forceDelete();
+            $deletedCount++;
+        }
+
+        $message = "{$deletedCount} kurikulum berhasil dihapus permanen.";
+        if ($skippedCount > 0) {
+            $message .= " {$skippedCount} kurikulum dilewati karena memiliki data jadwal mengajar.";
+        }
+
+        return redirect()
+            ->route('admin.kurikulum.trash')
+            ->with($deletedCount > 0 ? 'success' : 'error', $message);
+    }
 }
 

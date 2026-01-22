@@ -8,10 +8,6 @@
         subtitle="Kelola data master kurikulum yang digunakan di sekolah"
     >
         <x-slot:actions>
-            <a href="{{ route('admin.kurikulum.trash') }}" class="btn btn-secondary">
-                <x-ui.icon name="archive" size="16" />
-                <span>Arsip</span>
-            </a>
             <a href="{{ route('admin.kurikulum.create') }}" class="btn btn-primary">
                 <x-ui.icon name="plus" size="16" />
                 <span>Tambah Kurikulum</span>

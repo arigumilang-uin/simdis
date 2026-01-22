@@ -47,7 +47,7 @@
         @if($userIdentifier)
             <div class="sidebar-user-id">{{ $userIdentifier }}</div>
         @endif
-        <div class="sidebar-user-name">{{ Str::limit($user->username ?? 'User', 18) }}</div>
+        <div class="sidebar-user-name">{{ Str::limit($user->username ?? 'Pengguna', 18) }}</div>
         <div class="sidebar-user-role">{{ $role }}</div>
     </div>
 </div>
@@ -142,8 +142,8 @@
         <ul class="sidebar-menu">
             @if(in_array($role, ['Operator Sekolah', 'Waka Kesiswaan', 'Wali Kelas', 'Kaprodi']) || $isDeveloper)
                 {{-- Data Siswa with Submenu --}}
-                <li class="sidebar-menu-item" x-data="{ open: {{ Request::routeIs('siswa.*') ? 'true' : 'false' }} }">
-                    <button type="button" @click="open = !open" class="sidebar-menu-link w-full justify-between {{ Request::routeIs('siswa.*') ? 'active' : '' }}">
+                <li class="sidebar-menu-item" x-data="{ open: {{ Request::routeIs('siswa.*') && !Request::routeIs('siswa.deleted') ? 'true' : 'false' }} }">
+                    <button type="button" @click="open = !open" class="sidebar-menu-link w-full justify-between {{ Request::routeIs('siswa.*') && !Request::routeIs('siswa.deleted') ? 'active' : '' }}">
                         <span class="flex items-center gap-3">
                             <x-ui.icon name="users" class="sidebar-menu-icon" />
                             <span>{{ $role === 'Wali Kelas' ? 'Siswa Kelas' : 'Data Siswa' }}</span>
@@ -168,12 +168,6 @@
                             <a href="{{ route('siswa.transfer') }}" class="sidebar-submenu-link {{ Request::routeIs('siswa.transfer') ? 'active' : '' }}">
                                 <x-ui.icon name="arrow-right" size="14" />
                                 <span>Kenaikan Kelas</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('siswa.deleted') }}" class="sidebar-submenu-link {{ Request::routeIs('siswa.deleted') ? 'active' : '' }}">
-                                <x-ui.icon name="archive" size="14" />
-                                <span>Arsip Siswa</span>
                             </a>
                         </li>
                         @endif
@@ -213,19 +207,19 @@
         <div class="sidebar-section">Master Data</div>
         <ul class="sidebar-menu">
             <li class="sidebar-menu-item">
-                <a href="{{ route('jurusan.index') }}" class="sidebar-menu-link {{ Request::routeIs('jurusan.*') ? 'active' : '' }}">
+                <a href="{{ route('jurusan.index') }}" class="sidebar-menu-link {{ Request::routeIs('jurusan.*') && !Request::routeIs('jurusan.trash') ? 'active' : '' }}">
                     <x-ui.icon name="hexagon" class="sidebar-menu-icon" />
                     <span>Data Jurusan</span>
                 </a>
             </li>
             <li class="sidebar-menu-item">
-                <a href="{{ route('konsentrasi.index') }}" class="sidebar-menu-link {{ Request::routeIs('konsentrasi.*') ? 'active' : '' }}">
+                <a href="{{ route('konsentrasi.index') }}" class="sidebar-menu-link {{ Request::routeIs('konsentrasi.*') && !Request::routeIs('konsentrasi.trash') ? 'active' : '' }}">
                     <x-ui.icon name="layers" class="sidebar-menu-icon" />
                     <span>Data Konsentrasi</span>
                 </a>
             </li>
             <li class="sidebar-menu-item">
-                <a href="{{ route('kelas.index') }}" class="sidebar-menu-link {{ Request::routeIs('kelas.*') ? 'active' : '' }}">
+                <a href="{{ route('kelas.index') }}" class="sidebar-menu-link {{ Request::routeIs('kelas.*') && !Request::routeIs('kelas.trash') ? 'active' : '' }}">
                     <x-ui.icon name="layout" class="sidebar-menu-icon" />
                     <span>Data Kelas</span>
                 </a>
@@ -238,13 +232,13 @@
         <div class="sidebar-section">Admin Pelajaran</div>
         <ul class="sidebar-menu">
             <li class="sidebar-menu-item">
-                <a href="{{ route('admin.kurikulum.index') }}" class="sidebar-menu-link {{ Request::routeIs('admin.kurikulum.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.kurikulum.index') }}" class="sidebar-menu-link {{ Request::routeIs('admin.kurikulum.*') && !Request::routeIs('admin.kurikulum.trash') ? 'active' : '' }}">
                     <x-ui.icon name="layers" class="sidebar-menu-icon" />
                     <span>Kurikulum</span>
                 </a>
             </li>
             <li class="sidebar-menu-item">
-                <a href="{{ route('admin.periode-semester.index') }}" class="sidebar-menu-link {{ Request::routeIs('admin.periode-semester.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.periode-semester.index') }}" class="sidebar-menu-link {{ Request::routeIs('admin.periode-semester.*') && !Request::routeIs('admin.periode-semester.trash') ? 'active' : '' }}">
                     <x-ui.icon name="calendar" class="sidebar-menu-icon" />
                     <span>Periode Semester</span>
                 </a>
@@ -282,31 +276,31 @@
                 </a>
             </li>
             <li class="sidebar-menu-item">
-                <a href="{{ route('jurusan.index') }}" class="sidebar-menu-link {{ Request::routeIs('jurusan.*') ? 'active' : '' }}">
+                <a href="{{ route('jurusan.index') }}" class="sidebar-menu-link {{ Request::routeIs('jurusan.*') && !Request::routeIs('jurusan.trash') ? 'active' : '' }}">
                     <x-ui.icon name="hexagon" class="sidebar-menu-icon" />
                     <span>Data Jurusan</span>
                 </a>
             </li>
             <li class="sidebar-menu-item">
-                <a href="{{ route('konsentrasi.index') }}" class="sidebar-menu-link {{ Request::routeIs('konsentrasi.*') ? 'active' : '' }}">
+                <a href="{{ route('konsentrasi.index') }}" class="sidebar-menu-link {{ Request::routeIs('konsentrasi.*') && !Request::routeIs('konsentrasi.trash') ? 'active' : '' }}">
                     <x-ui.icon name="layers" class="sidebar-menu-icon" />
                     <span>Data Konsentrasi</span>
                 </a>
             </li>
             <li class="sidebar-menu-item">
-                <a href="{{ route('kelas.index') }}" class="sidebar-menu-link {{ Request::routeIs('kelas.*') ? 'active' : '' }}">
+                <a href="{{ route('kelas.index') }}" class="sidebar-menu-link {{ Request::routeIs('kelas.*') && !Request::routeIs('kelas.trash') ? 'active' : '' }}">
                     <x-ui.icon name="layout" class="sidebar-menu-icon" />
                     <span>Data Kelas</span>
                 </a>
             </li>
             <li class="sidebar-menu-item">
-                <a href="{{ route('admin.kurikulum.index') }}" class="sidebar-menu-link {{ Request::routeIs('admin.kurikulum.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.kurikulum.index') }}" class="sidebar-menu-link {{ Request::routeIs('admin.kurikulum.*') && !Request::routeIs('admin.kurikulum.trash') ? 'active' : '' }}">
                     <x-ui.icon name="book" class="sidebar-menu-icon" />
                     <span>Kurikulum</span>
                 </a>
             </li>
             <li class="sidebar-menu-item">
-                <a href="{{ route('admin.periode-semester.index') }}" class="sidebar-menu-link {{ Request::routeIs('admin.periode-semester.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.periode-semester.index') }}" class="sidebar-menu-link {{ Request::routeIs('admin.periode-semester.*') && !Request::routeIs('admin.periode-semester.trash') ? 'active' : '' }}">
                     <x-ui.icon name="calendar" class="sidebar-menu-icon" />
                     <span>Periode Semester</span>
                 </a>
@@ -332,24 +326,91 @@
         </ul>
     @endif
     
-    {{-- Administration Menu (Operator Sekolah) --}}
+    {{-- Arsip Data Menu (Operator Only) --}}
     @if($role === 'Operator Sekolah' || $isDeveloper)
-        <div class="sidebar-section">Pengaturan Sistem</div>
+        <div class="sidebar-section">Arsip Data</div>
         <ul class="sidebar-menu">
-            {{-- Manajemen User with Submenu --}}
-            <li class="sidebar-menu-item" x-data="{ open: {{ Request::routeIs('users.*') || (Request::routeIs('audit.activity.index') && in_array(request('tab'), ['last-login', 'status'])) ? 'true' : 'false' }} }">
-                <button type="button" @click="open = !open" class="sidebar-menu-link w-full justify-between {{ Request::routeIs('users.*') || (Request::routeIs('audit.activity.index') && in_array(request('tab'), ['last-login', 'status'])) ? 'active' : '' }}">
+            {{-- Arsip Data with Submenu --}}
+            <li class="sidebar-menu-item" x-data="{ open: {{ Request::routeIs('siswa.deleted', 'jurusan.trash', 'kelas.trash', 'konsentrasi.trash', 'users.trash', 'admin.kurikulum.trash', 'admin.periode-semester.trash') ? 'true' : 'false' }} }">
+                <button type="button" @click="open = !open" class="sidebar-menu-link w-full justify-between {{ Request::routeIs('siswa.deleted', 'jurusan.trash', 'kelas.trash', 'konsentrasi.trash', 'users.trash', 'admin.kurikulum.trash', 'admin.periode-semester.trash') ? 'active' : '' }}">
                     <span class="flex items-center gap-3">
-                        <x-ui.icon name="users" class="sidebar-menu-icon" />
-                        <span>Manajemen User</span>
+                        <x-ui.icon name="archive" class="sidebar-menu-icon" />
+                        <span>Data Terhapus</span>
                     </span>
                     <x-ui.icon name="chevron-down" size="16" class="transition-transform duration-200" ::class="{ 'rotate-180': open }" />
                 </button>
                 <ul x-show="open" x-collapse x-cloak class="sidebar-submenu">
                     <li>
-                        <a href="{{ route('users.index') }}" class="sidebar-submenu-link {{ Request::routeIs('users.*') ? 'active' : '' }}">
+                        <a href="{{ route('siswa.deleted') }}" class="sidebar-submenu-link {{ Request::routeIs('siswa.deleted') ? 'active' : '' }}">
+                            <x-ui.icon name="users" size="14" />
+                            <span>Arsip Siswa</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('jurusan.trash') }}" class="sidebar-submenu-link {{ Request::routeIs('jurusan.trash') ? 'active' : '' }}">
+                            <x-ui.icon name="hexagon" size="14" />
+                            <span>Arsip Jurusan</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('konsentrasi.trash') }}" class="sidebar-submenu-link {{ Request::routeIs('konsentrasi.trash') ? 'active' : '' }}">
+                            <x-ui.icon name="layers" size="14" />
+                            <span>Arsip Konsentrasi</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('kelas.trash') }}" class="sidebar-submenu-link {{ Request::routeIs('kelas.trash') ? 'active' : '' }}">
+                            <x-ui.icon name="layout" size="14" />
+                            <span>Arsip Kelas</span>
+                        </a>
+                    </li>
+                    @if(Route::has('admin.kurikulum.trash'))
+                    <li>
+                        <a href="{{ route('admin.kurikulum.trash') }}" class="sidebar-submenu-link {{ Request::routeIs('admin.kurikulum.trash') ? 'active' : '' }}">
+                            <x-ui.icon name="book" size="14" />
+                            <span>Arsip Kurikulum</span>
+                        </a>
+                    </li>
+                    @endif
+                    @if(Route::has('admin.periode-semester.trash'))
+                    <li>
+                        <a href="{{ route('admin.periode-semester.trash') }}" class="sidebar-submenu-link {{ Request::routeIs('admin.periode-semester.trash') ? 'active' : '' }}">
+                            <x-ui.icon name="calendar" size="14" />
+                            <span>Arsip Periode</span>
+                        </a>
+                    </li>
+                    @endif
+                    @if(Route::has('users.trash'))
+                    <li>
+                        <a href="{{ route('users.trash') }}" class="sidebar-submenu-link {{ Request::routeIs('users.trash') ? 'active' : '' }}">
+                            <x-ui.icon name="user-x" size="14" />
+                            <span>Arsip Pengguna</span>
+                        </a>
+                    </li>
+                    @endif
+                </ul>
+            </li>
+        </ul>
+    @endif
+    
+    {{-- Administration Menu (Operator Sekolah) --}}
+    @if($role === 'Operator Sekolah' || $isDeveloper)
+        <div class="sidebar-section">Pengaturan Sistem</div>
+        <ul class="sidebar-menu">
+            {{-- Manajemen User with Submenu --}}
+            <li class="sidebar-menu-item" x-data="{ open: {{ Request::routeIs('users.*') && !Request::routeIs('users.trash') || (Request::routeIs('audit.activity.index') && in_array(request('tab'), ['last-login', 'status'])) ? 'true' : 'false' }} }">
+                <button type="button" @click="open = !open" class="sidebar-menu-link w-full justify-between {{ Request::routeIs('users.*') && !Request::routeIs('users.trash') || (Request::routeIs('audit.activity.index') && in_array(request('tab'), ['last-login', 'status'])) ? 'active' : '' }}">
+                    <span class="flex items-center gap-3">
+                        <x-ui.icon name="users" class="sidebar-menu-icon" />
+                        <span>Manajemen Pengguna</span>
+                    </span>
+                    <x-ui.icon name="chevron-down" size="16" class="transition-transform duration-200" ::class="{ 'rotate-180': open }" />
+                </button>
+                <ul x-show="open" x-collapse x-cloak class="sidebar-submenu">
+                    <li>
+                        <a href="{{ route('users.index') }}" class="sidebar-submenu-link {{ Request::routeIs('users.*') && !Request::routeIs('users.trash') ? 'active' : '' }}">
                             <x-ui.icon name="list" size="14" />
-                            <span>Daftar User</span>
+                            <span>Daftar Pengguna</span>
                         </a>
                     </li>
                     <li>

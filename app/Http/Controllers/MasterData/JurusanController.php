@@ -190,6 +190,69 @@ class JurusanController extends Controller
     }
 
     /**
+     * Bulk restore jurusan
+     */
+    public function bulkRestore(Request $request)
+    {
+        $request->validate(['ids' => 'required|array', 'ids.*' => 'integer']);
+        
+        $count = 0;
+        foreach ($request->ids as $id) {
+            $jurusan = Jurusan::onlyTrashed()->find($id);
+            if ($jurusan) {
+                $jurusan->restore();
+                $jurusan->kelas()->onlyTrashed()->restore();
+                $jurusan->konsentrasi()->onlyTrashed()->restore();
+                $count++;
+            }
+        }
+        
+        return redirect()
+            ->route('jurusan.trash')
+            ->with('success', "{$count} jurusan berhasil dipulihkan beserta kelas dan konsentrasi.");
+    }
+
+    /**
+     * Bulk force delete jurusan
+     */
+    public function bulkForceDelete(Request $request)
+    {
+        $request->validate(['ids' => 'required|array', 'ids.*' => 'integer']);
+        
+        $count = 0;
+        $skipped = 0;
+        
+        foreach ($request->ids as $id) {
+            $jurusan = Jurusan::onlyTrashed()->find($id);
+            if ($jurusan) {
+                // Check if has siswa
+                $hasSiswa = \App\Models\Siswa::withTrashed()
+                    ->whereIn('kelas_id', $jurusan->kelas()->withTrashed()->pluck('id'))
+                    ->exists();
+                    
+                if ($hasSiswa) {
+                    $skipped++;
+                    continue;
+                }
+                
+                $jurusan->kelas()->withTrashed()->forceDelete();
+                $jurusan->konsentrasi()->withTrashed()->forceDelete();
+                $jurusan->forceDelete();
+                $count++;
+            }
+        }
+        
+        $message = "{$count} jurusan berhasil dihapus permanen.";
+        if ($skipped > 0) {
+            $message .= " {$skipped} jurusan dilewati karena masih memiliki data siswa.";
+        }
+        
+        return redirect()
+            ->route('jurusan.trash')
+            ->with($count > 0 ? 'success' : 'warning', $message);
+    }
+
+    /**
      * Index view for monitoring (Kepala Sekolah & Waka Kesiswaan)
      * Shows jurusan with enriched statistics, not CRUD interface
      * 

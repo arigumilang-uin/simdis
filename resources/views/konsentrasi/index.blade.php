@@ -8,10 +8,6 @@
         subtitle="Kelola data konsentrasi keahlian per jurusan."
     >
         <x-slot:actions>
-            <a href="{{ route('konsentrasi.trash') }}" class="btn btn-secondary">
-                <x-ui.icon name="archive" size="16" />
-                <span>Arsip</span>
-            </a>
             <button 
                 type="button" 
                 @click="$dispatch('open-konsentrasi-form', { title: 'Tambah Konsentrasi Baru' })"

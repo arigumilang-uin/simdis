@@ -197,6 +197,64 @@ class KonsentrasiController extends Controller
     }
 
     /**
+     * Bulk restore konsentrasi
+     */
+    public function bulkRestore(Request $request)
+    {
+        $request->validate(['ids' => 'required|array', 'ids.*' => 'integer']);
+        
+        $count = 0;
+        foreach ($request->ids as $id) {
+            $konsentrasi = Konsentrasi::onlyTrashed()->find($id);
+            if ($konsentrasi) {
+                $konsentrasi->restore();
+                $count++;
+            }
+        }
+        
+        return redirect()
+            ->route('konsentrasi.trash')
+            ->with('success', "{$count} konsentrasi berhasil dipulihkan.");
+    }
+
+    /**
+     * Bulk force delete konsentrasi
+     */
+    public function bulkForceDelete(Request $request)
+    {
+        $request->validate(['ids' => 'required|array', 'ids.*' => 'integer']);
+        
+        $count = 0;
+        $skipped = 0;
+        
+        foreach ($request->ids as $id) {
+            $konsentrasi = Konsentrasi::onlyTrashed()->find($id);
+            if ($konsentrasi) {
+                $hasKelas = Kelas::withTrashed()
+                    ->where('konsentrasi_id', $konsentrasi->id)
+                    ->exists();
+                    
+                if ($hasKelas) {
+                    $skipped++;
+                    continue;
+                }
+                
+                $konsentrasi->forceDelete();
+                $count++;
+            }
+        }
+        
+        $message = "{$count} konsentrasi berhasil dihapus permanen.";
+        if ($skipped > 0) {
+            $message .= " {$skipped} konsentrasi dilewati karena masih memiliki data kelas.";
+        }
+        
+        return redirect()
+            ->route('konsentrasi.trash')
+            ->with($count > 0 ? 'success' : 'warning', $message);
+    }
+
+    /**
      * API: Get konsentrasi by jurusan (for dynamic dropdown)
      */
     public function getByJurusan(Request $request)

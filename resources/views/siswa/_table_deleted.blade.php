@@ -1,3 +1,5 @@
+{{-- Dispatch total count and page IDs to parent for Select All functionality --}}
+<div x-data x-init="$dispatch('update-total-data', { total: {{ $deletedSiswa->total() }} }); $dispatch('update-page-ids', {{ json_encode($deletedSiswa->pluck('id')->map(fn($id) => (string) $id)) }})"></div>
 
 {{-- Data Table --}}
 <div class="table-container">
@@ -10,26 +12,7 @@
                 <th>Kelas Terakhir</th>
                 <th>Alasan Keluar</th>
                 <th>Tanggal Dihapus</th>
-                <th class="w-20 text-center cursor-pointer select-none hover:bg-gray-100 transition-colors group" @click="selectionMode = !selectionMode" title="Klik untuk memilih data">
-                    <div class="flex items-center justify-center">
-                        <template x-if="!selectionMode">
-                            <div class="flex items-center justify-center gap-2 text-gray-400 group-hover:text-indigo-600 transition-colors p-1">
-                                <span class="text-[10px] font-bold uppercase tracking-wider">Pilih</span>
-                                <x-ui.icon name="check-square" size="16" />
-                            </div>
-                        </template>
-                        <template x-if="selectionMode">
-                            <div class="flex items-center justify-center gap-1">
-                                <input type="checkbox" x-model="selectAll"
-                                    @change="selectAll ? selected = {{ Js::from(($deletedSiswa ?? collect())->pluck('id')->map(fn($id) => (string)$id)->values()) }} : selected = []"
-                                    @click.stop class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer" title="Pilih Semua">
-                                <button type="button" @click.stop="selectionMode = false; selected = []; selectAll = false;" class="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors" title="Batalkan Pilih">
-                                    <x-ui.icon name="x" size="14" />
-                                </button>
-                            </div>
-                        </template>
-                    </div>
-                </th>
+                <x-table.action-header />
             </tr>
         </thead>
         <tbody>
@@ -58,39 +41,35 @@
                         @endif
                     </td>
                     <td class="text-gray-500 text-sm">{{ $s->deleted_at ? $s->deleted_at->format('d M Y H:i') : '-' }}</td>
-                    <td class="text-center relative">
-                        {{-- Normal Mode --}}
-                        <template x-if="!selectionMode">
-                            <div class="flex items-center justify-center gap-1">
-                                {{-- Restore Button --}}
-                                <form action="{{ route('siswa.restore', $s->id) }}" method="POST" class="inline" onsubmit="return confirm('Restore siswa ini ke daftar aktif?')">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-outline text-emerald-600 border-emerald-200 hover:bg-emerald-50">
-                                        <x-ui.icon name="rotate-ccw" size="14" />
-                                        <span class="hidden sm:inline">Restore</span>
-                                    </button>
-                                </form>
-                                
-                                {{-- Permanent Delete Button --}}
-                                <button 
-                                    type="button" 
-                                    class="btn btn-sm btn-outline text-red-600 border-red-200 hover:bg-red-50" 
-                                    @click="$dispatch('open-permanent-delete-modal', { id: {{ $s->id }}, nama: '{{ addslashes($s->nama_siswa) }}', nisn: '{{ $s->nisn }}' })"
-                                >
-                                    <x-ui.icon name="trash" size="14" />
-                                    <span class="hidden sm:inline">Hapus</span>
-                                </button>
-                            </div>
-                        </template>
-
-                        {{-- Selection Mode: Checkbox --}}
-                        <template x-if="selectionMode">
-                            <div class="flex justify-center">
-                                <input type="checkbox" value="{{ $s->id }}" x-model="selected" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer">
-                            </div>
-                        </template>
-                    </td>
+                    
+                    {{-- Action Column using Reusable Component --}}
+                    <x-table.action-column :id="$s->id">
+                        {{-- Restore Action --}}
+                        <x-table.action-item 
+                            icon="rotate-ccw" 
+                            class="text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+                            @click="open = false; if(confirm('Restore siswa ini ke daftar aktif?')) { document.getElementById('restore-form-{{ $s->id }}').submit(); }"
+                        >
+                            Restore
+                        </x-table.action-item>
+                        
+                        <x-table.action-separator />
+                        
+                        {{-- Permanent Delete Action --}}
+                        <x-table.action-item 
+                            icon="trash" 
+                            class="text-red-600 hover:bg-red-50 hover:text-red-700"
+                            @click="open = false; $dispatch('open-permanent-delete-modal', { id: {{ $s->id }}, nama: '{{ addslashes($s->nama_siswa) }}', nisn: '{{ $s->nisn }}' })"
+                        >
+                            Hapus Permanen
+                        </x-table.action-item>
+                    </x-table.action-column>
                 </tr>
+                
+                {{-- Hidden Restore Form --}}
+                <form id="restore-form-{{ $s->id }}" action="{{ route('siswa.restore', $s->id) }}" method="POST" class="hidden">
+                    @csrf
+                </form>
             @empty
                 <tr>
                     <td colspan="7">
@@ -106,33 +85,40 @@
     </table>
 </div>
 
-{{-- Pagination --}}
+{{-- Pagination Footer --}}
 @if(method_exists($deletedSiswa ?? [], 'hasPages') && $deletedSiswa->hasPages())
-    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4">
-        <p class="text-sm text-gray-500">
-            Menampilkan {{ $deletedSiswa->firstItem() }} sampai {{ $deletedSiswa->lastItem() }} dari {{ $deletedSiswa->total() }} data
+    <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex flex-col items-center justify-between gap-4 md:flex-row">
+        <p class="text-sm text-gray-500 text-center md:text-left">
+            Menampilkan <span class="font-semibold text-gray-900">{{ $deletedSiswa->firstItem() }}</span> 
+            sampai <span class="font-semibold text-gray-900">{{ $deletedSiswa->lastItem() }}</span> 
+            dari <span class="font-semibold text-gray-900">{{ $deletedSiswa->total() }}</span> data
         </p>
-        <div class="pagination">
+        
+        <div class="flex items-center gap-2">
             {{-- Previous --}}
             @if($deletedSiswa->onFirstPage())
-                <span class="pagination-btn" disabled>
+                <button type="button" class="btn btn-sm btn-secondary text-gray-400 cursor-not-allowed bg-white/50" disabled>
                     <x-ui.icon name="chevron-left" size="16" />
-                </span>
+                    <span>Sebelumnya</span>
+                </button>
             @else
-                <a href="{{ $deletedSiswa->previousPageUrl() }}" class="pagination-btn">
+                <a href="{{ $deletedSiswa->previousPageUrl() }}" class="btn btn-sm btn-secondary hover:text-indigo-600 hover:border-indigo-200 bg-white">
                     <x-ui.icon name="chevron-left" size="16" />
+                    <span>Sebelumnya</span>
                 </a>
             @endif
             
             {{-- Next --}}
             @if($deletedSiswa->hasMorePages())
-                <a href="{{ $deletedSiswa->nextPageUrl() }}" class="pagination-btn">
+                <a href="{{ $deletedSiswa->nextPageUrl() }}" class="btn btn-sm btn-secondary hover:text-indigo-600 hover:border-indigo-200 bg-white">
+                    <span>Selanjutnya</span>
                     <x-ui.icon name="chevron-right" size="16" />
                 </a>
             @else
-                <span class="pagination-btn" disabled>
+                <button type="button" class="btn btn-sm btn-secondary text-gray-400 cursor-not-allowed bg-white/50" disabled>
+                    <span>Selanjutnya</span>
                     <x-ui.icon name="chevron-right" size="16" />
-                </span>
+                </button>
             @endif
         </div>
     </div>

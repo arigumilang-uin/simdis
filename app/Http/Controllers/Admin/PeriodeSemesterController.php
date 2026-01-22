@@ -253,6 +253,85 @@ class PeriodeSemesterController extends Controller
     }
 
     /**
+     * Bulk restore archived periodes.
+     */
+    public function bulkRestore(Request $request): RedirectResponse
+    {
+        $request->validate(['ids' => 'required|string']);
+        $ids = explode(',', $request->input('ids'));
+
+        $periodes = PeriodeSemester::onlyTrashed()->whereIn('id', $ids)->get();
+        $restoredCount = 0;
+
+        foreach ($periodes as $periode) {
+            // Restore cascade: template_jam, jadwal_mengajar
+            $periode->restore();
+            $periode->templateJam()->onlyTrashed()->restore();
+            $periode->jadwalMengajar()->onlyTrashed()->restore();
+            
+            // Restore pertemuan via jadwal
+            \App\Models\Pertemuan::withTrashed()
+                ->whereIn('jadwal_mengajar_id', $periode->jadwalMengajar()->pluck('id'))
+                ->restore();
+                
+            $restoredCount++;
+        }
+
+        return redirect()
+            ->route('admin.periode-semester.trash')
+            ->with('success', "{$restoredCount} periode semester berhasil dipulihkan.");
+    }
+
+    /**
+     * Bulk force delete archived periodes.
+     */
+    public function bulkForceDelete(Request $request): RedirectResponse
+    {
+        $request->validate(['ids' => 'required|string']);
+        $ids = explode(',', $request->input('ids'));
+
+        $periodes = PeriodeSemester::onlyTrashed()->whereIn('id', $ids)->get();
+        $deletedCount = 0;
+        $skippedCount = 0;
+
+        foreach ($periodes as $periode) {
+            // Check if has absensi (even on trashed jadwal)
+            $hasAbsensi = \App\Models\Absensi::whereIn('jadwal_mengajar_id', 
+                $periode->jadwalMengajar()->withTrashed()->pluck('id')
+            )->exists();
+                
+            if ($hasAbsensi) {
+                $skippedCount++;
+                continue;
+            }
+            
+            // Force delete pertemuan
+            \App\Models\Pertemuan::withTrashed()
+                ->whereIn('jadwal_mengajar_id', $periode->jadwalMengajar()->withTrashed()->pluck('id'))
+                ->forceDelete();
+            
+            // Force delete jadwal
+            $periode->jadwalMengajar()->withTrashed()->forceDelete();
+            
+            // Force delete template_jam
+            $periode->templateJam()->withTrashed()->forceDelete();
+            
+            // Force delete periode
+            $periode->forceDelete();
+            $deletedCount++;
+        }
+
+        $message = "{$deletedCount} periode semester berhasil dihapus permanen.";
+        if ($skippedCount > 0) {
+            $message .= " {$skippedCount} periode dilewati karena memiliki data absensi.";
+        }
+
+        return redirect()
+            ->route('admin.periode-semester.trash')
+            ->with($deletedCount > 0 ? 'success' : 'error', $message);
+    }
+
+    /**
      * Show tingkat kurikulum configuration for a period
      */
     public function tingkatKurikulum(int $id): View

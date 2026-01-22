@@ -44,7 +44,7 @@
                     <x-ui.icon name="users" size="24" />
             </div>
             <div class="stat-card-content">
-                <p class="stat-card-label">Total User</p>
+                <p class="stat-card-label">Total Pengguna</p>
                 <p class="stat-card-value">{{ $totalUser ?? 0 }}</p>
                 <p class="text-xs text-gray-500 mt-1">Akun Terdaftar</p>
             </div>
@@ -98,7 +98,7 @@
                     <x-ui.icon name="user-plus" size="24" />
                 </div>
                 <div class="flex-1 min-w-0">
-                    <h4 class="font-semibold text-gray-800 group-hover:text-primary-600 transition-colors">Tambah User Baru</h4>
+                    <h4 class="font-semibold text-gray-800 group-hover:text-primary-600 transition-colors">Tambah Pengguna Baru</h4>
                     <p class="text-sm text-gray-500">Guru, Staff, atau Wali Murid</p>
                 </div>
                 <x-ui.icon name="chevron-right" size="20" class="text-gray-300 group-hover:text-primary-500 group-hover:translate-x-1 transition-all" />

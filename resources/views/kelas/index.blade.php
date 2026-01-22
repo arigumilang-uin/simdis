@@ -8,10 +8,6 @@
         subtitle="Kelola data rombongan belajar sekolah."
     >
         <x-slot:actions>
-            <a href="{{ route('kelas.trash') }}" class="btn btn-white">
-                <x-ui.icon name="archive" size="16" />
-                <span>Arsip</span>
-            </a>
             <a href="{{ route('kelas.create') }}" class="btn btn-primary">
                 <x-ui.icon name="plus" size="18" />
                 <span>Tambah Kelas</span>

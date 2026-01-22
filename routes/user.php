@@ -28,6 +28,13 @@ Route::middleware(['auth', 'profile.completed'])->group(function () {
         Route::delete('/{id}/force-delete', [UserController::class, 'forceDelete'])
             ->name('forceDelete');
 
+        // Bulk archive operations
+        Route::post('/bulk-restore', [UserController::class, 'bulkRestore'])
+            ->name('bulk-restore');
+
+        Route::delete('/bulk-force-delete', [UserController::class, 'bulkForceDelete'])
+            ->name('bulk-force-delete');
+
         // Bulk operations (must be before /{id} routes)
         Route::post('/bulk-activate', [UserController::class, 'bulkActivate'])
             ->name('bulk-activate');

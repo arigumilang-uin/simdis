@@ -1,20 +1,16 @@
 @extends('layouts.app')
 
-@section('title', 'Manajemen User')
+@section('title', 'Manajemen Pengguna')
 
 @section('page-header')
     <x-page-header 
-        title="Manajemen User" 
+        title="Manajemen Pengguna" 
         subtitle="Kelola akun pengguna sistem."
     >
         <x-slot:actions>
-            <a href="{{ route('users.trash') }}" class="btn btn-white">
-                <x-ui.icon name="archive" size="16" />
-                <span>Arsip</span>
-            </a>
             <a href="{{ route('users.create') }}" class="btn btn-primary">
                 <x-ui.icon name="plus" size="18" />
-                <span>Tambah User</span>
+                <span>Tambah Pengguna</span>
             </a>
         </x-slot:actions>
     </x-page-header>
@@ -37,7 +33,7 @@
     <div class="bg-white md:border md:border-gray-200 md:rounded-xl md:shadow-sm overflow-hidden mb-8 border-b border-gray-200 md:border-b-0">
         {{-- Unified Toolbar --}}
         <div class="px-4 md:px-6 py-5 border-b border-gray-100 bg-white">
-            <x-ui.action-bar :total="$users->total()" totalLabel="User" class="!gap-4">
+            <x-ui.action-bar :total="$users->total()" totalLabel="Pengguna" class="!gap-4">
                 <x-slot:search>
                     <input 
                         type="text" 

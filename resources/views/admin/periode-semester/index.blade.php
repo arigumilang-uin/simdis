@@ -8,10 +8,6 @@
         subtitle="Kelola tanggal mulai dan selesai semester tahun ajaran."
     >
         <x-slot:actions>
-            <a href="{{ route('admin.periode-semester.trash') }}" class="btn btn-secondary">
-                <x-ui.icon name="archive" size="16" />
-                <span>Arsip</span>
-            </a>
             <a href="{{ route('admin.periode-semester.create') }}" class="btn btn-primary">
                 <x-ui.icon name="plus" size="18" />
                 <span>Tambah Periode</span>

@@ -148,16 +148,38 @@ class UserController extends Controller
     /**
      * Display archived users.
      */
-    public function trash(): View
+    public function trash(Request $request): View
     {
-        $users = \App\Models\User::onlyTrashed()
+        $query = \App\Models\User::onlyTrashed()
             ->with('role')
-            ->orderBy('deleted_at', 'desc')
-            ->get();
+            ->orderBy('deleted_at', 'desc');
 
-        return view('users.trash', [
-            'users' => $users,
-        ]);
+        // Filter: Search (Username or Name)
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('username', 'like', "%{$search}%")
+                  ->orWhere('nama', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter: Role
+        if ($roleId = $request->input('role_id')) {
+            $query->where('role_id', $roleId);
+        }
+
+        // Filter: Date Range (deleted_at)
+        if ($startDate = $request->input('start_date')) {
+            $query->whereDate('deleted_at', '>=', $startDate);
+        }
+
+        if ($endDate = $request->input('end_date')) {
+            $query->whereDate('deleted_at', '<=', $endDate);
+        }
+
+        $users = $query->get();
+        $roles = $this->userService->getAllRoles();
+
+        return view('users.trash', compact('users', 'roles'));
     }
 
     /**
@@ -435,6 +457,91 @@ class UserController extends Controller
         return redirect()
             ->back()
             ->with('success', count($ids) . ' user berhasil dihapus.');
+    }
+
+    /**
+     * Bulk restore archived users.
+     */
+    public function bulkRestore(Request $request): RedirectResponse
+    {
+        $request->validate(['ids' => 'required|string']);
+        $ids = explode(',', $request->input('ids'));
+
+        $users = \App\Models\User::onlyTrashed()->whereIn('id', $ids)->get();
+        $restoredCount = 0;
+        $skippedCount = 0;
+        $errors = [];
+
+        foreach ($users as $user) {
+            // Check if email/username (without suffix) already exists
+            $cleanEmail = preg_replace('/_deleted_\d+$/', '', $user->email);
+            $cleanUsername = preg_replace('/_deleted_\d+$/', '', $user->username);
+            
+            if (\App\Models\User::where('email', $cleanEmail)->exists()) {
+                $skippedCount++;
+                $errors[] = "Email '{$cleanEmail}' sudah digunakan.";
+                continue;
+            }
+            
+            if (\App\Models\User::where('username', $cleanUsername)->exists()) {
+                $skippedCount++;
+                $errors[] = "Username '{$cleanUsername}' sudah digunakan.";
+                continue;
+            }
+            
+            $user->restore();
+            $restoredCount++;
+        }
+
+        $message = "{$restoredCount} user berhasil dipulihkan.";
+        if ($skippedCount > 0) {
+            $message .= " {$skippedCount} user dilewati karena konflik email/username.";
+        }
+
+        return redirect()
+            ->route('users.trash')
+            ->with($restoredCount > 0 ? 'success' : 'error', $message);
+    }
+
+    /**
+     * Bulk force delete archived users.
+     */
+    public function bulkForceDelete(Request $request): RedirectResponse
+    {
+        $request->validate(['ids' => 'required|string']);
+        $ids = explode(',', $request->input('ids'));
+
+        $users = \App\Models\User::onlyTrashed()->whereIn('id', $ids)->get();
+        $deletedCount = 0;
+        $skippedCount = 0;
+
+        foreach ($users as $user) {
+            // Check if user has related records that prevent deletion
+            $hasJadwal = \App\Models\JadwalMengajar::withTrashed()
+                ->where('user_id', $user->id)
+                ->exists();
+                
+            $hasRiwayat = \App\Models\RiwayatPelanggaran::withTrashed()
+                ->where('guru_pencatat_user_id', $user->id)
+                ->exists();
+                
+            if ($hasJadwal || $hasRiwayat) {
+                $skippedCount++;
+                continue;
+            }
+            
+            $user->forceDelete();
+            $deletedCount++;
+        }
+
+        $message = "{$deletedCount} user berhasil dihapus permanen.";
+        if ($skippedCount > 0) {
+            $message .= " {$skippedCount} user dilewati karena memiliki data terkait.";
+        }
+
+        return redirect()
+            ->route('users.trash')
+            ->with($deletedCount > 0 ? 'success' : 'error', $message);
     }
 
     /**

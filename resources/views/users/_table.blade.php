@@ -5,18 +5,18 @@
     <div x-show="selected.length > 0" x-transition x-cloak class="bg-indigo-50 p-3 flex flex-col sm:flex-row justify-between items-center gap-3 mb-4 rounded-xl border border-indigo-100 shadow-sm">
         <div class="flex items-center gap-2">
             <span class="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold" x-text="selected.length"></span>
-            <span class="text-sm font-medium text-indigo-900">User Terpilih</span>
+            <span class="text-sm font-medium text-indigo-900">Pengguna Terpilih</span>
         </div>
         <div class="flex flex-wrap gap-2">
-            <button type="button" @click="submitBulkAction('{{ route('users.bulk-activate') }}', 'Aktifkan user terpilih?')" class="btn btn-sm btn-white text-emerald-600 border-emerald-200 hover:bg-emerald-50">
+            <button type="button" @click="submitBulkAction('{{ route('users.bulk-activate') }}', 'Aktifkan pengguna terpilih?')" class="btn btn-sm btn-white text-emerald-600 border-emerald-200 hover:bg-emerald-50">
                 <x-ui.icon name="user-check" size="14" />
                 Aktifkan
             </button>
-            <button type="button" @click="submitBulkAction('{{ route('users.bulk-deactivate') }}', 'Nonaktifkan user terpilih?')" class="btn btn-sm btn-white text-orange-600 border-orange-200 hover:bg-orange-50">
+            <button type="button" @click="submitBulkAction('{{ route('users.bulk-deactivate') }}', 'Nonaktifkan pengguna terpilih?')" class="btn btn-sm btn-white text-orange-600 border-orange-200 hover:bg-orange-50">
                 <x-ui.icon name="user-x" size="14" />
                 Suspend
             </button>
-            <button type="button" @click="submitBulkAction('{{ route('users.bulk-delete') }}', 'Hapus user terpilih? Tindakan ini tidak dapat dibatalkan!')" class="btn btn-sm btn-white text-red-600 border-red-200 hover:bg-red-50">
+            <button type="button" @click="submitBulkAction('{{ route('users.bulk-delete') }}', 'Hapus pengguna terpilih? Tindakan ini tidak dapat dibatalkan!')" class="btn btn-sm btn-white text-red-600 border-red-200 hover:bg-red-50">
                 <x-ui.icon name="trash" size="14" />
                 Hapus
             </button>
@@ -158,7 +158,7 @@
                                                 Edit
                                             </a>
                                             <div class="border-t border-gray-100 my-1"></div>
-                                            <form action="{{ route('users.destroy', $user->id) }}" method="POST" onsubmit="return confirm('Hapus user {{ $user->username }}?')">
+                                            <form action="{{ route('users.destroy', $user->id) }}" method="POST" onsubmit="return confirm('Hapus pengguna {{ $user->username }}?')">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors">
@@ -182,8 +182,8 @@
                         <td colspan="5">
                             <x-ui.empty-state 
                                 icon="users" 
-                                title="Tidak Ada User" 
-                                message="Belum ada user yang terdaftar." 
+                                title="Tidak Ada Pengguna" 
+                                message="Belum ada pengguna yang terdaftar." 
                             />
                         </td>
                     </tr>
