@@ -17,7 +17,7 @@
 @endsection
 
 @section('content')
-<div class="space-y-4">
+<div class="space-y-4" x-data="{ selectionMode: false, selected: [] }">
 
     <div class="bg-white md:border md:border-gray-200 md:rounded-xl md:shadow-sm overflow-hidden mb-8 border-b border-gray-200 md:border-b-0">
         {{-- Toolbar --}}
@@ -36,7 +36,7 @@
                             <th class="w-24">Tahun</th>
                             <th class="w-28 text-center">Mapel</th>
                             <th class="w-24 text-center">Status</th>
-                            <th class="w-28 text-center">Aksi</th>
+                            <x-table.action-header />
                         </tr>
                     </thead>
                     <tbody>
@@ -68,23 +68,19 @@
                                         <span class="badge badge-secondary">Nonaktif</span>
                                     @endif
                                 </td>
-                                <td>
-                                    <div class="flex items-center justify-center gap-1">
-                                        <a href="{{ route('admin.kurikulum.edit', $kurikulum->id) }}" 
-                                           class="btn btn-sm btn-icon btn-white" title="Edit">
-                                            <x-ui.icon name="edit" size="14" />
-                                        </a>
-                                        <form action="{{ route('admin.kurikulum.destroy', $kurikulum->id) }}" 
-                                              method="POST" 
-                                              onsubmit="return confirm('Arsipkan kurikulum ini beserta {{ $kurikulum->mata_pelajaran_count }} mata pelajaran?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-icon btn-white text-amber-600 hover:text-amber-700" title="Arsipkan">
-                                                <x-ui.icon name="archive" size="14" />
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
+                                <x-table.action-column :id="$kurikulum->id">
+                                    <x-table.action-item icon="edit" :href="route('admin.kurikulum.edit', $kurikulum->id)">
+                                        Edit
+                                    </x-table.action-item>
+                                    <x-table.action-separator />
+                                    <form action="{{ route('admin.kurikulum.destroy', $kurikulum->id) }}" method="POST" onsubmit="return confirm('Arsipkan kurikulum ini beserta {{ $kurikulum->mata_pelajaran_count }} mata pelajaran?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <x-table.action-item icon="archive" type="submit" class="text-amber-600 hover:text-amber-700 hover:bg-amber-50">
+                                            Arsipkan
+                                        </x-table.action-item>
+                                    </form>
+                                </x-table.action-column>
                             </tr>
                         @endforeach
                     </tbody>

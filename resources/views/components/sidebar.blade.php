@@ -1,4 +1,4 @@
-{{-- Sidebar Component --}}
+{{-- Sidebar Component - Clean & Well-Organized --}}
 @php
     $user = Auth::user();
     $role = $user?->effectiveRoleName() ?? $user?->role?->nama_role ?? 'Guest';
@@ -18,6 +18,11 @@
             $userIdentifier = $user->no_hp;
         }
     }
+    
+    // Check conditions
+    $hasJadwal = $user ? \App\Models\JadwalMengajar::where('user_id', $user->id)->where('is_active', true)->exists() : false;
+    $canAccessReport = in_array($role, ['Wali Kelas', 'Kaprodi', 'Waka Kurikulum', 'Waka Kesiswaan', 'Operator Sekolah', 'Kepala Sekolah']) || $isDeveloper;
+    $canCatatPelanggaran = in_array($role, ['Guru', 'Wali Kelas', 'Waka Kesiswaan', 'Waka Kurikulum', 'Kaprodi', 'Waka Sarana']) || $isDeveloper;
 @endphp
 
 <!-- Brand (Hidden on mobile, shown in navbar instead) -->
@@ -56,7 +61,7 @@
 <!-- Navigation -->
 <nav class="sidebar-nav">
     
-    {{-- Developer Switch Role (if applicable) --}}
+    {{-- ========== DEVELOPER CONSOLE ========== --}}
     @if($isDeveloper)
         <div class="sidebar-section">Developer</div>
         <ul class="sidebar-menu">
@@ -69,7 +74,7 @@
         </ul>
     @endif
     
-    {{-- Dashboard --}}
+    {{-- ========== DASHBOARD ========== --}}
     @unless($isDeveloper && !$override)
         <div class="sidebar-section">Menu Utama</div>
         <ul class="sidebar-menu">
@@ -88,96 +93,76 @@
             @endphp
             <li class="sidebar-menu-item">
                 <a href="{{ $dashRoute }}" class="sidebar-menu-link {{ Request::is('dashboard*') ? 'active' : '' }}">
-                    <x-ui.icon name="grid" class="sidebar-menu-icon" />
+                    <x-ui.icon name="home" class="sidebar-menu-icon" />
                     <span>Dashboard</span>
                 </a>
             </li>
         </ul>
     @endunless
     
-    {{-- Operational Menu (Guru, Wali Kelas, Waka, Kaprodi, Waka Sarana, Waka Kurikulum) --}}
-    @if(in_array($role, ['Guru', 'Wali Kelas', 'Waka Kesiswaan', 'Waka Kurikulum', 'Kaprodi', 'Waka Sarana']) || $isDeveloper)
-        <div class="sidebar-section">Operasional</div>
+    {{-- ========== ABSENSI ========== --}}
+    @if($hasJadwal || $canAccessReport || $isDeveloper)
+        <div class="sidebar-section">Absensi</div>
+        <ul class="sidebar-menu">
+            @if($hasJadwal || $isDeveloper)
+                <li class="sidebar-menu-item">
+                    <a href="{{ route('absensi.index') }}" class="sidebar-menu-link {{ Request::routeIs('absensi.index', 'absensi.grid') ? 'active' : '' }}">
+                        <x-ui.icon name="calendar" class="sidebar-menu-icon" />
+                        <span>Jadwal Mengajar</span>
+                    </a>
+                </li>
+            @endif
+            
+            @if($canAccessReport)
+                <li class="sidebar-menu-item">
+                    <a href="{{ route('absensi.report') }}" class="sidebar-menu-link {{ Request::routeIs('absensi.report') ? 'active' : '' }}">
+                        <x-ui.icon name="bar-chart" class="sidebar-menu-icon" />
+                        <span>Rekap Absensi</span>
+                    </a>
+                </li>
+            @endif
+        </ul>
+    @endif
+    
+    {{-- ========== PELANGGARAN & PEMBINAAN ========== --}}
+    @if($canCatatPelanggaran)
+        <div class="sidebar-section">Pelanggaran & Pembinaan</div>
         <ul class="sidebar-menu">
             <li class="sidebar-menu-item">
                 <a href="{{ route('riwayat.create') }}" class="sidebar-menu-link {{ Request::routeIs('riwayat.create', 'pelanggaran.create') ? 'active' : '' }}">
-                    <x-ui.icon name="edit" class="sidebar-menu-icon" />
+                    <x-ui.icon name="alert-triangle" class="sidebar-menu-icon" />
                     <span>Catat Pelanggaran</span>
                 </a>
             </li>
             <li class="sidebar-menu-item">
                 <a href="{{ route('my-riwayat.index') }}" class="sidebar-menu-link {{ Request::routeIs('my-riwayat.*', 'riwayat.my') ? 'active' : '' }}">
-                    <x-ui.icon name="file-text" class="sidebar-menu-icon" />
-                    <span>Riwayat Saya</span>
+                    <x-ui.icon name="file" class="sidebar-menu-icon" />
+                    <span>Riwayat Pencatatan Saya</span>
                 </a>
             </li>
         </ul>
     @endif
     
-    {{-- Absensi Menu (Users with Jadwal Mengajar) --}}
-    @php
-        $hasJadwal = $user ? \App\Models\JadwalMengajar::where('user_id', $user->id)->where('is_active', true)->exists() : false;
-    @endphp
-    @if($hasJadwal || $isDeveloper)
-        <div class="sidebar-section">Absensi</div>
+    {{-- ========== DATA SISWA (Wali Kelas, Kaprodi) ========== --}}
+    @if(in_array($role, ['Wali Kelas', 'Kaprodi']) || $isDeveloper)
+        <div class="sidebar-section">{{ $role === 'Wali Kelas' ? 'Siswa Kelas Saya' : 'Data Siswa' }}</div>
         <ul class="sidebar-menu">
             <li class="sidebar-menu-item">
-                <a href="{{ route('absensi.index') }}" class="sidebar-menu-link {{ Request::routeIs('absensi.index', 'absensi.grid') ? 'active' : '' }}">
-                    <x-ui.icon name="clipboard" class="sidebar-menu-icon" />
-                    <span>Jadwal Mengajar</span>
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="{{ route('absensi.report') }}" class="sidebar-menu-link {{ Request::routeIs('absensi.report') ? 'active' : '' }}">
-                    <x-ui.icon name="bar-chart-2" class="sidebar-menu-icon" />
-                    <span>Rekap Absensi</span>
+                <a href="{{ route('siswa.index') }}" class="sidebar-menu-link {{ Request::routeIs('siswa.*') && !Request::routeIs('siswa.deleted') ? 'active' : '' }}">
+                    <x-ui.icon name="users" class="sidebar-menu-icon" />
+                    <span>Daftar Siswa</span>
                 </a>
             </li>
         </ul>
     @endif
     
-    {{-- Monitoring Menu (Operator, Waka, Wali Kelas, Kaprodi, Kepala Sekolah) --}}
+    {{-- ========== MONITORING SISWA ========== --}}
     @if(in_array($role, ['Operator Sekolah', 'Waka Kesiswaan', 'Wali Kelas', 'Kaprodi', 'Kepala Sekolah']) || $isDeveloper)
-        <div class="sidebar-section">Monitoring</div>
+        <div class="sidebar-section">Monitoring Siswa</div>
         <ul class="sidebar-menu">
-            @if(in_array($role, ['Operator Sekolah', 'Waka Kesiswaan', 'Wali Kelas', 'Kaprodi']) || $isDeveloper)
-                {{-- Data Siswa with Submenu --}}
-                <li class="sidebar-menu-item" x-data="{ open: {{ Request::routeIs('siswa.*') && !Request::routeIs('siswa.deleted') ? 'true' : 'false' }} }">
-                    <button type="button" @click="open = !open" class="sidebar-menu-link w-full justify-between {{ Request::routeIs('siswa.*') && !Request::routeIs('siswa.deleted') ? 'active' : '' }}">
-                        <span class="flex items-center gap-3">
-                            <x-ui.icon name="users" class="sidebar-menu-icon" />
-                            <span>{{ $role === 'Wali Kelas' ? 'Siswa Kelas' : 'Data Siswa' }}</span>
-                        </span>
-                        <x-ui.icon name="chevron-down" size="16" class="transition-transform duration-200" ::class="{ 'rotate-180': open }" />
-                    </button>
-                    <ul x-show="open" x-collapse x-cloak class="sidebar-submenu">
-                        <li>
-                            <a href="{{ route('siswa.index') }}" class="sidebar-submenu-link {{ Request::routeIs('siswa.index', 'siswa.show', 'siswa.edit', 'siswa.create') ? 'active' : '' }}">
-                                <x-ui.icon name="list" size="14" />
-                                <span>Daftar Siswa</span>
-                            </a>
-                        </li>
-                        @if($role === 'Operator Sekolah' || $isDeveloper)
-                        <li>
-                            <a href="{{ route('siswa.bulk-create') }}" class="sidebar-submenu-link {{ Request::routeIs('siswa.bulk-create') ? 'active' : '' }}">
-                                <x-ui.icon name="upload" size="14" />
-                                <span>Import Data</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('siswa.transfer') }}" class="sidebar-submenu-link {{ Request::routeIs('siswa.transfer') ? 'active' : '' }}">
-                                <x-ui.icon name="arrow-right" size="14" />
-                                <span>Kenaikan Kelas</span>
-                            </a>
-                        </li>
-                        @endif
-                    </ul>
-                </li>
-            @endif
-            
             <li class="sidebar-menu-item">
                 <a href="{{ route('riwayat.index') }}" class="sidebar-menu-link {{ Request::routeIs('riwayat.index', 'riwayat.show', 'riwayat.edit') ? 'active' : '' }}">
-                    <x-ui.icon name="list" class="sidebar-menu-icon" />
+                    <x-ui.icon name="file-text" class="sidebar-menu-icon" />
                     <span>Log Pelanggaran</span>
                 </a>
             </li>
@@ -185,7 +170,7 @@
             @if(in_array($role, ['Wali Kelas', 'Kaprodi', 'Waka Kesiswaan', 'Kepala Sekolah', 'Operator Sekolah']) || $isDeveloper)
                 <li class="sidebar-menu-item">
                     <a href="{{ route('tindak-lanjut.index') }}" class="sidebar-menu-link {{ Request::routeIs('tindak-lanjut.*') ? 'active' : '' }}">
-                        <x-ui.icon name="clipboard" class="sidebar-menu-icon" />
+                        <x-ui.icon name="alert-circle" class="sidebar-menu-icon" />
                         <span>Daftar Kasus</span>
                     </a>
                 </li>
@@ -202,10 +187,76 @@
         </ul>
     @endif
     
-    {{-- Master Data Menu (Operator Only) --}}
-    @if($role === 'Operator Sekolah' || $isDeveloper)
+    {{-- ========== MASTER DATA (Operator, Waka Kurikulum) ========== --}}
+    @if(in_array($role, ['Operator Sekolah', 'Waka Kurikulum']) || $isDeveloper)
         <div class="sidebar-section">Master Data</div>
         <ul class="sidebar-menu">
+            {{-- Data Siswa with Submenu --}}
+            <li class="sidebar-menu-item" x-data="{ open: {{ Request::routeIs('siswa.*') && !Request::routeIs('siswa.deleted') ? 'true' : 'false' }} }">
+                <button type="button" @click="open = !open" class="sidebar-menu-link w-full justify-between {{ Request::routeIs('siswa.*') && !Request::routeIs('siswa.deleted') ? 'active' : '' }}">
+                    <span class="flex items-center gap-3">
+                        <x-ui.icon name="users" class="sidebar-menu-icon" />
+                        <span>Data Siswa</span>
+                    </span>
+                    <x-ui.icon name="chevron-down" size="16" class="transition-transform duration-200" ::class="{ 'rotate-180': open }" />
+                </button>
+                <ul x-show="open" x-collapse x-cloak class="sidebar-submenu">
+                    <li>
+                        <a href="{{ route('siswa.index') }}" class="sidebar-submenu-link {{ Request::routeIs('siswa.index', 'siswa.show', 'siswa.edit', 'siswa.create') ? 'active' : '' }}">
+                            <x-ui.icon name="list" size="14" />
+                            <span>Daftar Siswa</span>
+                        </a>
+                    </li>
+                    @if($role === 'Operator Sekolah' || $isDeveloper)
+                    <li>
+                        <a href="{{ route('siswa.bulk-create') }}" class="sidebar-submenu-link {{ Request::routeIs('siswa.bulk-create') ? 'active' : '' }}">
+                            <x-ui.icon name="upload" size="14" />
+                            <span>Import Data</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('siswa.transfer') }}" class="sidebar-submenu-link {{ Request::routeIs('siswa.transfer') ? 'active' : '' }}">
+                            <x-ui.icon name="trending-up" size="14" />
+                            <span>Kenaikan Kelas</span>
+                        </a>
+                    </li>
+                    @endif
+                </ul>
+            </li>
+            
+            @if($role === 'Operator Sekolah' || $isDeveloper)
+                {{-- Data Pengguna with Submenu --}}
+                <li class="sidebar-menu-item" x-data="{ open: {{ Request::routeIs('users.*') && !Request::routeIs('users.trash') || (Request::routeIs('audit.activity.index') && in_array(request('tab'), ['last-login', 'status'])) ? 'true' : 'false' }} }">
+                    <button type="button" @click="open = !open" class="sidebar-menu-link w-full justify-between {{ Request::routeIs('users.*') && !Request::routeIs('users.trash') || (Request::routeIs('audit.activity.index') && in_array(request('tab'), ['last-login', 'status'])) ? 'active' : '' }}">
+                        <span class="flex items-center gap-3">
+                            <x-ui.icon name="user" class="sidebar-menu-icon" />
+                            <span>Data Pengguna</span>
+                        </span>
+                        <x-ui.icon name="chevron-down" size="16" class="transition-transform duration-200" ::class="{ 'rotate-180': open }" />
+                    </button>
+                    <ul x-show="open" x-collapse x-cloak class="sidebar-submenu">
+                        <li>
+                            <a href="{{ route('users.index') }}" class="sidebar-submenu-link {{ Request::routeIs('users.*') && !Request::routeIs('users.trash') ? 'active' : '' }}">
+                                <x-ui.icon name="list" size="14" />
+                                <span>Daftar Pengguna</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('audit.activity.index', ['tab' => 'last-login']) }}" class="sidebar-submenu-link {{ Request::routeIs('audit.activity.index') && request('tab') == 'last-login' ? 'active' : '' }}">
+                                <x-ui.icon name="clock" size="14" />
+                                <span>Log Login Terakhir</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('audit.activity.index', ['tab' => 'status']) }}" class="sidebar-submenu-link {{ Request::routeIs('audit.activity.index') && request('tab') == 'status' ? 'active' : '' }}">
+                                <x-ui.icon name="shield" size="14" />
+                                <span>Status Akun</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            @endif
+            
             <li class="sidebar-menu-item">
                 <a href="{{ route('jurusan.index') }}" class="sidebar-menu-link {{ Request::routeIs('jurusan.*') && !Request::routeIs('jurusan.trash') ? 'active' : '' }}">
                     <x-ui.icon name="hexagon" class="sidebar-menu-icon" />
@@ -227,72 +278,10 @@
         </ul>
     @endif
     
-    {{-- Admin Pelajaran Menu (Operator Only) --}}
-    @if($role === 'Operator Sekolah' || $isDeveloper)
-        <div class="sidebar-section">Admin Pelajaran</div>
+    {{-- ========== KURIKULUM & JADWAL (Operator, Waka Kurikulum) ========== --}}
+    @if(in_array($role, ['Operator Sekolah', 'Waka Kurikulum']) || $isDeveloper)
+        <div class="sidebar-section">Kurikulum & Jadwal</div>
         <ul class="sidebar-menu">
-            <li class="sidebar-menu-item">
-                <a href="{{ route('admin.kurikulum.index') }}" class="sidebar-menu-link {{ Request::routeIs('admin.kurikulum.*') && !Request::routeIs('admin.kurikulum.trash') ? 'active' : '' }}">
-                    <x-ui.icon name="layers" class="sidebar-menu-icon" />
-                    <span>Kurikulum</span>
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="{{ route('admin.periode-semester.index') }}" class="sidebar-menu-link {{ Request::routeIs('admin.periode-semester.*') && !Request::routeIs('admin.periode-semester.trash') ? 'active' : '' }}">
-                    <x-ui.icon name="calendar" class="sidebar-menu-icon" />
-                    <span>Periode Semester</span>
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="{{ route('admin.mata-pelajaran.index') }}" class="sidebar-menu-link {{ Request::routeIs('admin.mata-pelajaran.*') ? 'active' : '' }}">
-                    <x-ui.icon name="book-open" class="sidebar-menu-icon" />
-                    <span>Mata Pelajaran</span>
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="{{ route('admin.template-jam.index') }}" class="sidebar-menu-link {{ Request::routeIs('admin.template-jam.*') ? 'active' : '' }}">
-                    <x-ui.icon name="clock" class="sidebar-menu-icon" />
-                    <span>Template Jam</span>
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="{{ route('admin.jadwal-mengajar.index') }}" class="sidebar-menu-link {{ Request::routeIs('admin.jadwal-mengajar.*') ? 'active' : '' }}">
-                    <x-ui.icon name="grid" class="sidebar-menu-icon" />
-                    <span>Jadwal Mengajar</span>
-                </a>
-            </li>
-        </ul>
-    @endif
-    
-    {{-- Kurikulum Menu (Waka Kurikulum) --}}
-    @if($role === 'Waka Kurikulum' || $isDeveloper)
-        <div class="sidebar-section">Kurikulum</div>
-        <ul class="sidebar-menu">
-            {{-- Data Siswa (list only) --}}
-            <li class="sidebar-menu-item">
-                <a href="{{ route('siswa.index') }}" class="sidebar-menu-link {{ Request::routeIs('siswa.index', 'siswa.show') ? 'active' : '' }}">
-                    <x-ui.icon name="users" class="sidebar-menu-icon" />
-                    <span>Daftar Siswa</span>
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="{{ route('jurusan.index') }}" class="sidebar-menu-link {{ Request::routeIs('jurusan.*') && !Request::routeIs('jurusan.trash') ? 'active' : '' }}">
-                    <x-ui.icon name="hexagon" class="sidebar-menu-icon" />
-                    <span>Data Jurusan</span>
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="{{ route('konsentrasi.index') }}" class="sidebar-menu-link {{ Request::routeIs('konsentrasi.*') && !Request::routeIs('konsentrasi.trash') ? 'active' : '' }}">
-                    <x-ui.icon name="layers" class="sidebar-menu-icon" />
-                    <span>Data Konsentrasi</span>
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="{{ route('kelas.index') }}" class="sidebar-menu-link {{ Request::routeIs('kelas.*') && !Request::routeIs('kelas.trash') ? 'active' : '' }}">
-                    <x-ui.icon name="layout" class="sidebar-menu-icon" />
-                    <span>Data Kelas</span>
-                </a>
-            </li>
             <li class="sidebar-menu-item">
                 <a href="{{ route('admin.kurikulum.index') }}" class="sidebar-menu-link {{ Request::routeIs('admin.kurikulum.*') && !Request::routeIs('admin.kurikulum.trash') ? 'active' : '' }}">
                     <x-ui.icon name="book" class="sidebar-menu-icon" />
@@ -307,7 +296,7 @@
             </li>
             <li class="sidebar-menu-item">
                 <a href="{{ route('admin.mata-pelajaran.index') }}" class="sidebar-menu-link {{ Request::routeIs('admin.mata-pelajaran.*') ? 'active' : '' }}">
-                    <x-ui.icon name="book-open" class="sidebar-menu-icon" />
+                    <x-ui.icon name="book" class="sidebar-menu-icon" />
                     <span>Mata Pelajaran</span>
                 </a>
             </li>
@@ -326,16 +315,79 @@
         </ul>
     @endif
     
-    {{-- Arsip Data Menu (Operator Only) --}}
-    @if($role === 'Operator Sekolah' || $isDeveloper)
-        <div class="sidebar-section">Arsip Data</div>
+    {{-- ========== TATA TERTIB (Waka Kesiswaan, Operator) ========== --}}
+    @if(in_array($role, ['Waka Kesiswaan', 'Operator Sekolah']) || $isDeveloper)
+        <div class="sidebar-section">Tata Tertib</div>
         <ul class="sidebar-menu">
+            <li class="sidebar-menu-item">
+                <a href="{{ route('frequency-rules.index') }}" class="sidebar-menu-link {{ Request::routeIs('frequency-rules.*') ? 'active' : '' }}">
+                    <x-ui.icon name="shield-alert" class="sidebar-menu-icon" />
+                    <span>Aturan & Poin Pelanggaran</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{{ route('pembinaan-internal-rules.index') }}" class="sidebar-menu-link {{ Request::routeIs('pembinaan-internal-rules.*') ? 'active' : '' }}">
+                    <x-ui.icon name="shield" class="sidebar-menu-icon" />
+                    <span>Pembinaan Internal</span>
+                </a>
+            </li>
+        </ul>
+    @endif
+    
+    {{-- ========== KEPALA SEKOLAH ========== --}}
+    @if($role === 'Kepala Sekolah' || $isDeveloper)
+        @php
+            $pendingCount = \App\Models\TindakLanjut::where('status', 'Menunggu Persetujuan')->count();
+        @endphp
+        <div class="sidebar-section">Kepala Sekolah</div>
+        <ul class="sidebar-menu">
+            <li class="sidebar-menu-item">
+                <a href="{{ route('kepala-sekolah.data.siswa') }}" class="sidebar-menu-link {{ Request::routeIs('kepala-sekolah.data.siswa*') ? 'active' : '' }}">
+                    <x-ui.icon name="users" class="sidebar-menu-icon" />
+                    <span>Data Siswa</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{{ route('kepala-sekolah.approvals.index') }}" class="sidebar-menu-link {{ Request::routeIs('kepala-sekolah.approvals.*') ? 'active' : '' }}">
+                    <x-ui.icon name="check-square" class="sidebar-menu-icon" />
+                    <span>Persetujuan</span>
+                    @if($pendingCount > 0)
+                        <span class="sidebar-menu-badge">{{ $pendingCount }}</span>
+                    @endif
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{{ route('kepala-sekolah.reports.index') }}" class="sidebar-menu-link {{ Request::routeIs('kepala-sekolah.reports.*') ? 'active' : '' }}">
+                    <x-ui.icon name="file-text" class="sidebar-menu-icon" />
+                    <span>Laporan</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{{ route('kepala-sekolah.siswa-perlu-pembinaan.index') }}" class="sidebar-menu-link {{ Request::routeIs('kepala-sekolah.siswa-perlu-pembinaan.*') ? 'active' : '' }}">
+                    <x-ui.icon name="user-check" class="sidebar-menu-icon" />
+                    <span>Siswa Pembinaan</span>
+                </a>
+            </li>
+        </ul>
+    @endif
+    
+    {{-- ========== PENGATURAN SISTEM (Operator) ========== --}}
+    @if($role === 'Operator Sekolah' || $isDeveloper)
+        <div class="sidebar-section">Pengaturan Sistem</div>
+        <ul class="sidebar-menu">
+            <li class="sidebar-menu-item">
+                <a href="{{ route('audit.activity.index') }}" class="sidebar-menu-link {{ Request::routeIs('audit.activity.index') && !request('tab') ? 'active' : '' }}">
+                    <x-ui.icon name="activity" class="sidebar-menu-icon" />
+                    <span>Audit Log</span>
+                </a>
+            </li>
+            
             {{-- Arsip Data with Submenu --}}
             <li class="sidebar-menu-item" x-data="{ open: {{ Request::routeIs('siswa.deleted', 'jurusan.trash', 'kelas.trash', 'konsentrasi.trash', 'users.trash', 'admin.kurikulum.trash', 'admin.periode-semester.trash') ? 'true' : 'false' }} }">
                 <button type="button" @click="open = !open" class="sidebar-menu-link w-full justify-between {{ Request::routeIs('siswa.deleted', 'jurusan.trash', 'kelas.trash', 'konsentrasi.trash', 'users.trash', 'admin.kurikulum.trash', 'admin.periode-semester.trash') ? 'active' : '' }}">
                     <span class="flex items-center gap-3">
                         <x-ui.icon name="archive" class="sidebar-menu-icon" />
-                        <span>Data Terhapus</span>
+                        <span>Arsip Data</span>
                     </span>
                     <x-ui.icon name="chevron-down" size="16" class="transition-transform duration-200" ::class="{ 'rotate-180': open }" />
                 </button>
@@ -393,120 +445,8 @@
         </ul>
     @endif
     
-    {{-- Administration Menu (Operator Sekolah) --}}
-    @if($role === 'Operator Sekolah' || $isDeveloper)
-        <div class="sidebar-section">Pengaturan Sistem</div>
-        <ul class="sidebar-menu">
-            {{-- Manajemen User with Submenu --}}
-            <li class="sidebar-menu-item" x-data="{ open: {{ Request::routeIs('users.*') && !Request::routeIs('users.trash') || (Request::routeIs('audit.activity.index') && in_array(request('tab'), ['last-login', 'status'])) ? 'true' : 'false' }} }">
-                <button type="button" @click="open = !open" class="sidebar-menu-link w-full justify-between {{ Request::routeIs('users.*') && !Request::routeIs('users.trash') || (Request::routeIs('audit.activity.index') && in_array(request('tab'), ['last-login', 'status'])) ? 'active' : '' }}">
-                    <span class="flex items-center gap-3">
-                        <x-ui.icon name="users" class="sidebar-menu-icon" />
-                        <span>Manajemen Pengguna</span>
-                    </span>
-                    <x-ui.icon name="chevron-down" size="16" class="transition-transform duration-200" ::class="{ 'rotate-180': open }" />
-                </button>
-                <ul x-show="open" x-collapse x-cloak class="sidebar-submenu">
-                    <li>
-                        <a href="{{ route('users.index') }}" class="sidebar-submenu-link {{ Request::routeIs('users.*') && !Request::routeIs('users.trash') ? 'active' : '' }}">
-                            <x-ui.icon name="list" size="14" />
-                            <span>Daftar Pengguna</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('audit.activity.index', ['tab' => 'last-login']) }}" class="sidebar-submenu-link {{ Request::routeIs('audit.activity.index') && request('tab') == 'last-login' ? 'active' : '' }}">
-                            <x-ui.icon name="clock" size="14" />
-                            <span>Log Login Terakhir</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('audit.activity.index', ['tab' => 'status']) }}" class="sidebar-submenu-link {{ Request::routeIs('audit.activity.index') && request('tab') == 'status' ? 'active' : '' }}">
-                            <x-ui.icon name="shield" size="14" />
-                            <span>Status Akun</span>
-                        </a>
-                    </li>
-                </ul>
-            </li>
-
-            <li class="sidebar-menu-item">
-                <a href="{{ route('frequency-rules.index') }}" class="sidebar-menu-link {{ Request::routeIs('frequency-rules.*') ? 'active' : '' }}">
-                    <x-ui.icon name="book" class="sidebar-menu-icon" />
-                    <span>Aturan & Poin</span>
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="{{ route('pembinaan-internal-rules.index') }}" class="sidebar-menu-link {{ Request::routeIs('pembinaan-internal-rules.*') ? 'active' : '' }}">
-                    <x-ui.icon name="shield" class="sidebar-menu-icon" />
-                    <span>Pembinaan Internal</span>
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="{{ route('audit.activity.index') }}" class="sidebar-menu-link {{ Request::routeIs('audit.activity.index') && !request('tab') ? 'active' : '' }}">
-                    <x-ui.icon name="activity" class="sidebar-menu-icon" />
-                    <span>Audit Log</span>
-                </a>
-            </li>
-        </ul>
-    @endif
-    
-    {{-- Kesiswaan Menu (Waka Kesiswaan) --}}
-    @if($role === 'Waka Kesiswaan' || $isDeveloper)
-        <div class="sidebar-section">Kesiswaan</div>
-        <ul class="sidebar-menu">
-            <li class="sidebar-menu-item">
-                <a href="{{ route('frequency-rules.index') }}" class="sidebar-menu-link {{ Request::routeIs('frequency-rules.*') ? 'active' : '' }}">
-                    <x-ui.icon name="alert-circle" class="sidebar-menu-icon" />
-                    <span>Aturan Tata Tertib</span>
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="{{ route('pembinaan-internal-rules.index') }}" class="sidebar-menu-link {{ Request::routeIs('pembinaan-internal-rules.*') ? 'active' : '' }}">
-                    <x-ui.icon name="shield" class="sidebar-menu-icon" />
-                    <span>Pembinaan Internal</span>
-                </a>
-            </li>
-        </ul>
-    @endif
-    
-    {{-- Kepala Sekolah Menu --}}
-    @if($role === 'Kepala Sekolah' || $isDeveloper)
-        @php
-            $pendingCount = \App\Models\TindakLanjut::where('status', 'Menunggu Persetujuan')->count();
-        @endphp
-        <div class="sidebar-section">Kepala Sekolah</div>
-        <ul class="sidebar-menu">
-            <li class="sidebar-menu-item">
-                <a href="{{ route('kepala-sekolah.data.siswa') }}" class="sidebar-menu-link {{ Request::routeIs('kepala-sekolah.data.siswa*') ? 'active' : '' }}">
-                    <x-ui.icon name="users" class="sidebar-menu-icon" />
-                    <span>Data Siswa</span>
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="{{ route('kepala-sekolah.approvals.index') }}" class="sidebar-menu-link {{ Request::routeIs('kepala-sekolah.approvals.*') ? 'active' : '' }}">
-                    <x-ui.icon name="check-square" class="sidebar-menu-icon" />
-                    <span>Persetujuan</span>
-                    @if($pendingCount > 0)
-                        <span class="sidebar-menu-badge">{{ $pendingCount }}</span>
-                    @endif
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="{{ route('kepala-sekolah.reports.index') }}" class="sidebar-menu-link {{ Request::routeIs('kepala-sekolah.reports.*') ? 'active' : '' }}">
-                    <x-ui.icon name="file-text" class="sidebar-menu-icon" />
-                    <span>Laporan</span>
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="{{ route('kepala-sekolah.siswa-perlu-pembinaan.index') }}" class="sidebar-menu-link {{ Request::routeIs('kepala-sekolah.siswa-perlu-pembinaan.*') ? 'active' : '' }}">
-                    <x-ui.icon name="user-check" class="sidebar-menu-icon" />
-                    <span>Siswa Pembinaan</span>
-                </a>
-            </li>
-        </ul>
-    @endif
-    
-    {{-- Settings (All Users) --}}
-    <div class="sidebar-section">Pengaturan</div>
+    {{-- ========== AKUN SAYA ========== --}}
+    <div class="sidebar-section">Akun Saya</div>
     <ul class="sidebar-menu">
         <li class="sidebar-menu-item">
             <a href="{{ route('account.edit') }}" class="sidebar-menu-link {{ Request::routeIs('account.*', 'profile.*') ? 'active' : '' }}">
@@ -517,3 +457,32 @@
     </ul>
     
 </nav>
+
+{{-- Sidebar Scroll Position Persistence --}}
+<script>
+    // Save scroll position when navigating away
+    document.addEventListener('DOMContentLoaded', function() {
+        const sidebar = document.querySelector('.sidebar-nav');
+        if (!sidebar) return;
+        
+        // Restore scroll position on page load
+        const savedScrollPos = sessionStorage.getItem('sidebarScrollPos');
+        if (savedScrollPos !== null) {
+            sidebar.scrollTop = parseInt(savedScrollPos, 10);
+        }
+        
+        // Save scroll position on scroll
+        let scrollTimeout;
+        sidebar.addEventListener('scroll', function() {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(function() {
+                sessionStorage.setItem('sidebarScrollPos', sidebar.scrollTop);
+            }, 100);
+        });
+        
+        // Save scroll position before page unload
+        window.addEventListener('beforeunload', function() {
+            sessionStorage.setItem('sidebarScrollPos', sidebar.scrollTop);
+        });
+    });
+</script>

@@ -20,6 +20,7 @@
 @props([
     'total' => null,
     'totalLabel' => 'data',
+    'showFilterButton' => true,
 ])
 
 <div {{ $attributes->merge(['class' => 'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4']) }} x-data="{ filterOpen: false }">
@@ -59,7 +60,7 @@
         </div>
         
         {{-- Standalone Filter Button & Dropdown --}}
-        @if(isset($filters))
+        @if(isset($filters) && $showFilterButton)
         <div class="relative shrink-0" 
              x-data="{ 
                  filterOpen: false,

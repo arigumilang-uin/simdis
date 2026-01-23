@@ -84,6 +84,39 @@ enum Semester: string
     }
 
     /**
+     * Get current period start and end dates from active PeriodeSemester
+     * Returns array with 'start' and 'end' keys
+     */
+    public static function currentPeriodDates(): array
+    {
+        $periode = current_periode();
+        if ($periode && $periode->tanggal_mulai && $periode->tanggal_selesai) {
+            return [
+                'start' => $periode->tanggal_mulai->format('Y-m-d'),
+                'end' => $periode->tanggal_selesai->format('Y-m-d'),
+            ];
+        }
+        
+        // Fallback: use current academic semester dates
+        $year = (int) date('Y');
+        $month = (int) date('n');
+        
+        if ($month >= 7) {
+            // Semester Ganjil (July - December)
+            return [
+                'start' => $year . '-07-01',
+                'end' => $year . '-12-31',
+            ];
+        } else {
+            // Semester Genap (January - June)
+            return [
+                'start' => $year . '-01-01',
+                'end' => $year . '-06-30',
+            ];
+        }
+    }
+
+    /**
      * Get all values for dropdown/select
      */
     public static function forSelect(): array

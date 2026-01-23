@@ -207,6 +207,37 @@ class JadwalMengajarController extends Controller
             return response()->json(['success' => true, 'action' => 'deleted']);
         }
 
+        // === VALIDASI BENTROK ===
+        // Cek apakah guru sudah punya jadwal di slot waktu yang sama (di kelas lain)
+        $conflictQuery = JadwalMengajar::where('periode_semester_id', $validated['periode_semester_id'])
+            ->where('template_jam_id', $validated['template_jam_id'])
+            ->where('user_id', $validated['user_id'])
+            ->where('kelas_id', '!=', $validated['kelas_id']); // Di kelas lain
+
+        // Jika update, exclude jadwal yang sedang diedit
+        if ($existingJadwal) {
+            $conflictQuery->where('id', '!=', $existingJadwal->id);
+        }
+
+        $conflictJadwal = $conflictQuery->with(['kelas', 'mataPelajaran'])->first();
+
+        if ($conflictJadwal) {
+            $templateJam = TemplateJam::find($validated['template_jam_id']);
+            $guru = User::find($validated['user_id']);
+            
+            return response()->json([
+                'success' => false,
+                'message' => sprintf(
+                    'Guru %s sudah mengajar di kelas %s (%s) pada waktu %s %s. Satu guru hanya dapat mengajar di satu kelas pada satu waktu.',
+                    $guru->username ?? 'Unknown',
+                    $conflictJadwal->kelas->nama_kelas ?? 'Unknown',
+                    $conflictJadwal->mataPelajaran->nama_mapel ?? 'Unknown',
+                    $templateJam->hari ?? '',
+                    $templateJam->waktu ?? ''
+                )
+            ], 400);
+        }
+
         // Create or update
         $data = [
             'periode_semester_id' => $validated['periode_semester_id'],

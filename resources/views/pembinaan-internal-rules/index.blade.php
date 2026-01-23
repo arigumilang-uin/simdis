@@ -8,7 +8,7 @@
         subtitle="Threshold pembinaan berdasarkan akumulasi poin siswa."
     >
         <x-slot:actions>
-            <button type="button" @click="showAddModal = true" class="btn btn-primary">
+            <button type="button" @click="$dispatch('open-add-modal')" class="btn btn-primary">
                 <x-ui.icon name="plus" size="18" />
                 <span>Tambah Aturan Baru</span>
             </button>
@@ -17,7 +17,7 @@
 @endsection
 
 @section('content')
-<div class="space-y-4" x-data="pembinaanRulesPage()">
+<div class="space-y-4" x-data="pembinaanRulesPage()" @open-add-modal.window="showAddModal = true">
     {{-- Info Banner --}}
     <div class="p-4 bg-indigo-50 border-l-4 border-indigo-500 rounded-r-xl">
         <div class="flex items-start gap-3">

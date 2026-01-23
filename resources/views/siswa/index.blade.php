@@ -3,17 +3,33 @@
 @section('title', 'Data Siswa')
 
 @section('page-header')
+    @php
+        $headerTitle = match($userRole ?? 'Operator Sekolah') {
+            'Wali Kelas' => 'Siswa Kelas Saya',
+            'Kaprodi' => 'Data Siswa Jurusan',
+            default => 'Data Siswa'
+        };
+        
+        $headerSubtitle = match($userRole ?? 'Operator Sekolah') {
+            'Wali Kelas' => 'Kelola data siswa di kelas yang Anda ampu.',
+            'Kaprodi' => 'Kelola data siswa di jurusan dan konsentrasi yang Anda kelola.',
+            default => 'Kelola data seluruh siswa di sekolah Anda.'
+        };
+    @endphp
+    
     <x-page-header 
-        title="Data Siswa" 
-        subtitle="Kelola data seluruh siswa di sekolah Anda."
+        :title="$headerTitle" 
+        :subtitle="$headerSubtitle"
     >
         <x-slot:actions>
-            @can('create', App\Models\Siswa::class)
-            <a href="{{ route('siswa.create') }}" class="btn btn-primary">
-                <x-ui.icon name="plus" size="18" />
-                <span>Tambah Siswa</span>
-            </a>
-            @endcan
+            @if(!in_array($userRole ?? '', ['Wali Kelas', 'Kaprodi']))
+                @can('create', App\Models\Siswa::class)
+                <a href="{{ route('siswa.create') }}" class="btn btn-primary">
+                    <x-ui.icon name="plus" size="18" />
+                    <span>Tambah Siswa</span>
+                </a>
+                @endcan
+            @endif
         </x-slot:actions>
     </x-page-header>
 @endsection
@@ -27,7 +43,8 @@
             'jurusan_id' => request('jurusan_id'),
             'konsentrasi_id' => request('konsentrasi_id'),
             'tingkat' => request('tingkat'),
-            'kelas_id' => request('kelas_id')
+            'kelas_id' => request('kelas_id'),
+            'user_role' => $userRole ?? 'Operator Sekolah' // Pass role to partial
         ],
         'containerId' => 'siswa-table-container'
     ];
@@ -77,7 +94,7 @@
     <div class="bg-white md:border md:border-gray-200 md:rounded-xl md:shadow-sm overflow-hidden mb-8 border-b border-gray-200 md:border-b-0">
         {{-- Unified Toolbar --}}
         <div class="px-4 md:px-6 py-5 border-b border-gray-100 bg-white">
-            <x-ui.action-bar :total="$siswa->total()" totalLabel="Siswa" class="!gap-4">
+            <x-ui.action-bar :total="$siswa->total()" totalLabel="Siswa" class="!gap-4" :showFilterButton="!in_array($userRole ?? '', ['Wali Kelas'])">
                 <x-slot:search>
                     <input 
                         type="text" 
@@ -88,48 +105,58 @@
                 </x-slot:search>
                 
                 <x-slot:filters>
-                    <x-ui.filter-select 
-                        label="Jurusan"
-                        x-model="filters.jurusan_id"
-                        :options="$allJurusan"
-                        optionValue="id"
-                        optionLabel="nama_jurusan"
-                        placeholder="Semua Jurusan"
-                    />
+                    {{-- Wali Kelas: Only search, no dropdowns --}}
+                    @if(($userRole ?? '') !== 'Wali Kelas')
+                        {{-- Kaprodi: No Jurusan filter (auto-applied) --}}
+                        @if(($userRole ?? '') !== 'Kaprodi')
+                            <x-ui.filter-select 
+                                label="Jurusan"
+                                x-model="filters.jurusan_id"
+                                :options="$allJurusan"
+                                optionValue="id"
+                                optionLabel="nama_jurusan"
+                                placeholder="Semua Jurusan"
+                            />
+                        @endif
 
-                    <x-ui.filter-select 
-                        label="Konsentrasi"
-                        x-model="filters.konsentrasi_id"
-                        :options="$allKonsentrasi"
-                        optionValue="id"
-                        optionLabel="nama_konsentrasi"
-                        placeholder="Semua Konsentrasi"
-                    />
+                        <x-ui.filter-select 
+                            label="Konsentrasi"
+                            x-model="filters.konsentrasi_id"
+                            :options="$allKonsentrasi"
+                            optionValue="id"
+                            optionLabel="nama_konsentrasi"
+                            placeholder="Semua Konsentrasi"
+                        />
 
-                    <x-ui.filter-select 
-                        label="Tingkat"
-                        x-model="filters.tingkat"
-                        :options="$tingkatOptions"
-                        optionValue="id"
-                        optionLabel="label"
-                        placeholder="Semua Tingkat"
-                    />
-                    <x-ui.filter-select 
-                        label="Kelas"
-                        x-model="filters.kelas_id"
-                        :options="$allKelas"
-                        optionValue="id"
-                        optionLabel="nama_kelas"
-                        placeholder="Semua Kelas"
-                    />
+                        <x-ui.filter-select 
+                            label="Tingkat"
+                            x-model="filters.tingkat"
+                            :options="$tingkatOptions"
+                            optionValue="id"
+                            optionLabel="label"
+                            placeholder="Semua Tingkat"
+                        />
+                        
+                        <x-ui.filter-select 
+                            label="Kelas"
+                            x-model="filters.kelas_id"
+                            :options="$allKelas"
+                            optionValue="id"
+                            optionLabel="nama_kelas"
+                            placeholder="Semua Kelas"
+                        />
+                    @endif
                 </x-slot:filters>
                 
                 <x-slot:reset>
-                    <x-ui.filter-reset @click="resetFilters(); filterOpen = false" />
+                    @if(($userRole ?? '') !== 'Wali Kelas')
+                        <x-ui.filter-reset @click="resetFilters(); filterOpen = false" />
+                    @endif
                 </x-slot:reset>
             </x-ui.action-bar>
             
-            {{-- Bulk Action Toolbar (inside toolbar) --}}
+            {{-- Bulk Action Toolbar - Only for Operator/Waka (not for Wali Kelas/Kaprodi) --}}
+            @if(!in_array($userRole ?? '', ['Wali Kelas', 'Kaprodi']))
             <div x-show="selected.length > 0" x-transition x-cloak class="mt-3 bg-indigo-50 p-2 flex flex-col sm:flex-row justify-between items-center gap-3 rounded-lg border border-indigo-100">
                 <div class="flex items-center gap-2 px-1">
                     <span class="flex items-center justify-center w-auto min-w-[1.25rem] px-1 h-5 rounded-full bg-indigo-600 text-white text-[10px] font-bold" x-text="allSelected ? totalItems : selected.length"></span>
@@ -153,6 +180,7 @@
                     </button>
                 </div>
             </div>
+            @endif
         </div>
         
         

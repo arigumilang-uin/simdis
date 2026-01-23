@@ -1,19 +1,22 @@
 @props([
     'id', 
     'selectionMode' => 'selectionMode', 
-    'selected' => 'selected'
+    'selected' => 'selected',
+    'allowSelection' => true
 ])
 
 <td class="text-center relative">
+    @if($allowSelection)
     {{-- Selection Mode: Checkbox --}}
     <template x-if="{{ $selectionMode }}">
         <div class="flex justify-center">
             <input type="checkbox" value="{{ $id }}" x-model="{{ $selected }}" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer">
         </div>
     </template>
+    @endif
 
     {{-- Normal Mode: Kebab Dropdown --}}
-    <template x-if="!{{ $selectionMode }}">
+    <template x-if="{{ $allowSelection ? '!' . $selectionMode : 'true' }}">
         <div 
              x-data="{ 
                  open: false,
@@ -21,16 +24,16 @@
                  isLongPress: false,
                  
                  startPress() {
+                     if (!{{ $allowSelection ? 'true' : 'false' }}) return;
                      this.isLongPress = false;
                      this.timer = setTimeout(() => {
                          this.isLongPress = true;
-                         // Dispatch event to enter selection mode
                          $dispatch('enter-selection', { id: '{{ $id }}' });
                      }, 500);
                  },
                  
                  endPress() {
-                     clearTimeout(this.timer);
+                     if (this.timer) clearTimeout(this.timer);
                  },
 
                  toggle() {
@@ -50,6 +53,7 @@
                          
                          menu.style.top = `${top}px`;
                          menu.style.left = `${left}px`;
+                         menu.style.zIndex = '99999'; // Ensure it's on top
                      });
                  }
              }"

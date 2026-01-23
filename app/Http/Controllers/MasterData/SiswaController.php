@@ -55,13 +55,14 @@ class SiswaController extends Controller
     public function index(FilterSiswaRequest $request): View
     {
         $filters = SiswaFilterData::from($request->validated());
+        $user = auth()->user();
+        $role = $user->effectiveRoleName();
         
         // Apply role-based auto-filters
-        $user = auth()->user();
-        if ($user->hasRole('Kaprodi') && $user->jurusan) {
-            $filters->jurusan_id = $user->jurusan->id;
+        if ($role === 'Kaprodi' && $user->jurusanDiampu) {
+            $filters->jurusan_id = $user->jurusanDiampu->id;
         }
-        if ($user->hasRole('Wali Kelas') && $user->kelasDiampu) {
+        if ($role === 'Wali Kelas' && $user->kelasDiampu) {
             $filters->kelas_id = $user->kelasDiampu->id;
         }
 
@@ -72,11 +73,24 @@ class SiswaController extends Controller
             return view('siswa._table', compact('siswa'));
         }
 
-        $allJurusan = $this->siswaService->getAllJurusanForFilter();
-        $allKonsentrasi = $this->siswaService->getAllKonsentrasiForFilter();
-        $allKelas = $this->siswaService->getAllKelasForFilter();
+        // Get filter options based on role
+        $allJurusan = [];
+        $allKonsentrasi = [];
+        $allKelas = [];
+        
+        if ($role === 'Kaprodi' && $user->jurusanDiampu) {
+            // Kaprodi: filter hanya konsentrasi dan kelas di jurusannya
+            $allKonsentrasi = $this->siswaService->getKonsentrasiByJurusan($user->jurusanDiampu->id);
+            $allKelas = $this->siswaService->getKelasByJurusan($user->jurusanDiampu->id);
+        } elseif ($role !== 'Wali Kelas') {
+            // Operator/Waka: semua filter
+            $allJurusan = $this->siswaService->getAllJurusanForFilter();
+            $allKonsentrasi = $this->siswaService->getAllKonsentrasiForFilter();
+            $allKelas = $this->siswaService->getAllKelasForFilter();
+        }
+        // Wali Kelas: no filters needed (already auto-filtered)
 
-        return view('siswa.index', compact('siswa', 'allJurusan', 'allKonsentrasi', 'allKelas', 'filters'));
+        return view('siswa.index', compact('siswa', 'allJurusan', 'allKonsentrasi', 'allKelas', 'filters'))->with('userRole', $role);
     }
 
     /**

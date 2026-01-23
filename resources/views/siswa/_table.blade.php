@@ -1,4 +1,19 @@
 {{-- Dispatch total count and page IDs to parent --}}
+@php
+    // Priority: 
+    // 1. Variable passed from Controller/Parent View ($userRole)
+    // 2. Request parameter (AJAX refresh)
+    // 3. Auth user check (Fallback)
+    // 4. Default 'Operator Sekolah'
+    
+    if (!isset($userRole)) {
+        $userRole = request('user_role');
+        if (!$userRole && auth()->check()) {
+            $userRole = auth()->user()->effectiveRoleName();
+        }
+    }
+    $userRole = $userRole ?? 'Operator Sekolah';
+@endphp
 <div x-data x-init="$dispatch('update-total-data', { total: {{ $siswa->total() }} }); $dispatch('update-page-ids', {{ json_encode($siswa->pluck('id')->map(fn($id) => (string) $id)) }})"></div>
 
     {{-- Data Table --}}
@@ -11,7 +26,15 @@
                     <th>Nama Siswa</th>
                     <th>Kelas</th>
                     <th>Kontak Wali</th>
-                <x-table.action-header />
+                    @if(in_array($userRole, ['Wali Kelas', 'Kaprodi']))
+                        {{-- Simple "Aksi" header for Wali Kelas & Kaprodi (no selection mode) --}}
+                        <th class="w-20 text-center">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-gray-500">Aksi</span>
+                        </th>
+                    @else
+                        {{-- Selection mode header for Operator/Waka --}}
+                        <x-table.action-header />
+                    @endif
             </tr>
         </thead>
         <tbody>
@@ -51,27 +74,37 @@
                             <span class="text-gray-400 text-sm">-</span>
                         @endif
                     </td>
-                    <x-table.action-column :id="$s->id">
+                    <x-table.action-column :id="$s->id" :allow-selection="!in_array($userRole, ['Wali Kelas', 'Kaprodi'])">
                         <x-table.action-item icon="eye" href="{{ route('siswa.show', $s->id) }}">
                             Detail
                         </x-table.action-item>
                         
-                        @can('update', $s)
+                        {{-- Edit: Available for Wali Kelas (HP only) and Operator/Waka --}}
+                        @if($userRole === 'Wali Kelas')
                             <x-table.action-item icon="edit" href="{{ route('siswa.edit', $s->id) }}">
-                                Edit
+                                Edit No HP
                             </x-table.action-item>
-                        @endcan
+                        @elseif(!in_array($userRole, ['Kaprodi']))
+                            @can('update', $s)
+                                <x-table.action-item icon="edit" href="{{ route('siswa.edit', $s->id) }}">
+                                    Edit
+                                </x-table.action-item>
+                            @endcan
+                        @endif
                         
-                        @can('delete', $s)
-                            <x-table.action-separator />
-                            <x-table.action-item 
-                                icon="trash" 
-                                class="text-red-600 hover:bg-red-50 hover:text-red-700"
-                                @click="open = false; $dispatch('open-delete-modal', { id: {{ $s->id }}, nama: '{{ $s->nama_siswa }}', nisn: '{{ $s->nisn }}' })"
-                            >
-                                Hapus
-                            </x-table.action-item>
-                        @endcan
+                        {{-- Delete: Only for Operator/Waka (not for Wali Kelas/Kaprodi) --}}
+                        @if(!in_array($userRole, ['Wali Kelas', 'Kaprodi']))
+                            @can('delete', $s)
+                                <x-table.action-separator />
+                                <x-table.action-item 
+                                    icon="trash" 
+                                    class="text-red-600 hover:bg-red-50 hover:text-red-700"
+                                    @click="open = false; $dispatch('open-delete-modal', { id: {{ $s->id }}, nama: '{{ $s->nama_siswa }}', nisn: '{{ $s->nisn }}' })"
+                                >
+                                    Hapus
+                                </x-table.action-item>
+                            @endcan
+                        @endif
                     </x-table.action-column>
                 </tr>
                 @empty

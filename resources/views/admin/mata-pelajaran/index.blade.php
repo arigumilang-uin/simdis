@@ -11,7 +11,7 @@
 @endsection
 
 @section('content')
-<div class="space-y-6">
+<div class="space-y-6" x-data="{ selectionMode: false, selected: [] }">
 
     {{-- Filter Kurikulum (Tabs Style) --}}
     <div class="border-b border-slate-200">
@@ -95,7 +95,7 @@
                                 <th>Mata Pelajaran</th>
                                 <th>Guru Pengampu</th>
                                 <th class="w-24 text-center">Status</th>
-                                <th class="w-28 text-center pr-6">Aksi</th>
+                                <x-table.action-header />
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 bg-white">
@@ -141,26 +141,19 @@
                                             </span>
                                         @endif
                                     </td>
-                                    <td class="text-center pr-6">
-                                        <div class="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <a href="{{ route('admin.mata-pelajaran.edit', $mp->id) }}" 
-                                               class="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" 
-                                               title="Edit">
-                                                <x-ui.icon name="edit-2" size="16" />
-                                            </a>
-                                            <form action="{{ route('admin.mata-pelajaran.destroy', $mp->id) }}" 
-                                                  method="POST" 
-                                                  onsubmit="return confirm('Hapus mata pelajaran ini?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" 
-                                                        class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" 
-                                                        title="Hapus">
-                                                    <x-ui.icon name="trash-2" size="16" />
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
+                                    <x-table.action-column :id="$mp->id">
+                                        <x-table.action-item icon="edit" :href="route('admin.mata-pelajaran.edit', $mp->id)">
+                                            Edit
+                                        </x-table.action-item>
+                                        <x-table.action-separator />
+                                        <form action="{{ route('admin.mata-pelajaran.destroy', $mp->id) }}" method="POST" onsubmit="return confirm('Hapus mata pelajaran ini?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <x-table.action-item icon="trash" type="submit" class="text-red-600 hover:text-red-700 hover:bg-red-50">
+                                                Hapus
+                                            </x-table.action-item>
+                                        </form>
+                                    </x-table.action-column>
                                 </tr>
                             @endforeach
                         </tbody>

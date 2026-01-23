@@ -306,6 +306,33 @@ class SiswaService
     }
 
     /**
+     * Get konsentrasi by jurusan ID for Kaprodi filter.
+     */
+    public function getKonsentrasiByJurusan(int $jurusanId)
+    {
+        return DB::table('konsentrasi')
+            ->select('id', 'nama_konsentrasi')
+            ->where('jurusan_id', $jurusanId)
+            ->orderBy('nama_konsentrasi')
+            ->get();
+    }
+
+    /**
+     * Get kelas by jurusan ID for Kaprodi filter.
+     */
+    public function getKelasByJurusan(int $jurusanId)
+    {
+        return DB::table('kelas')
+            ->select('id', 'nama_kelas')
+            ->where(function($query) use ($jurusanId) {
+                $query->where('jurusan_id', $jurusanId)
+                      ->orWhere('konsentrasi_id', $jurusanId);
+            })
+            ->orderBy('nama_kelas')
+            ->get();
+    }
+
+    /**
      * Get all kelas with details.
      */
     public function getAllKelas()

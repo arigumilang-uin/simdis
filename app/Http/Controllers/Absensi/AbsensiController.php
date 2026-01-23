@@ -283,29 +283,92 @@ class AbsensiController extends Controller
 
     /**
      * Laporan rekap absensi per kelas
+     * 
+     * Access Control:
+     * - Wali Kelas: hanya kelas yang diampu
+     * - Kaprodi: semua kelas di jurusan/konsentrasinya
+     * - Waka Kurikulum, Waka Kesiswaan, Operator: semua kelas
+     * - Guru: TIDAK BISA AKSES (redirect)
      */
-    public function report(Request $request): View
+    public function report(Request $request): View|RedirectResponse
     {
+        $user = auth()->user();
+        
+        // Get accessible classes based on role
+        $accessibleKelas = $this->getAccessibleKelasForReport($user);
+        
+        // If user has no access (regular guru), redirect
+        if ($accessibleKelas->isEmpty()) {
+            return redirect()
+                ->route('absensi.index')
+                ->with('error', 'Anda tidak memiliki akses ke fitur rekap absensi.');
+        }
+        
         $kelasId = $request->input('kelas_id');
         $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
         $endDate = $request->input('end_date', now()->endOfMonth()->toDateString());
+        
+        // Validate that selected kelas is accessible
+        if ($kelasId && !$accessibleKelas->pluck('id')->contains($kelasId)) {
+            $kelasId = null; // Reset if trying to access unauthorized kelas
+        }
         
         $rekap = null;
         if ($kelasId) {
             $rekap = $this->absensiService->getRekapKelas($kelasId, $startDate, $endDate);
         }
         
-        $kelasList = \App\Models\Kelas::with('jurusan')
-            ->orderBy('tingkat')
-            ->orderBy('nama_kelas')
-            ->get();
-        
         return view('absensi.report', [
             'rekap' => $rekap,
-            'kelasList' => $kelasList,
+            'kelasList' => $accessibleKelas,
             'selectedKelasId' => $kelasId,
             'startDate' => $startDate,
             'endDate' => $endDate,
+            'userRole' => $user->effectiveRoleName(),
+            'currentSemester' => \App\Enums\Semester::current(),
+            'semesterDates' => \App\Enums\Semester::currentPeriodDates(),
         ]);
+    }
+    
+    /**
+     * Get list of kelas that user can access for report
+     */
+    private function getAccessibleKelasForReport($user): \Illuminate\Support\Collection
+    {
+        $roleName = $user->effectiveRoleName();
+        
+        // Wali Kelas: only their class
+        if ($roleName === 'Wali Kelas') {
+            $kelas = $user->kelasDiampu;
+            return $kelas ? collect([$kelas]) : collect([]);
+        }
+        
+        // Kaprodi: all classes in their jurusan and konsentrasi
+        if ($roleName === 'Kaprodi') {
+            $jurusan = $user->jurusanDiampu;
+            if (!$jurusan) {
+                return collect([]);
+            }
+            
+            return \App\Models\Kelas::with('jurusan')
+                ->where(function($query) use ($jurusan) {
+                    $query->where('jurusan_id', $jurusan->id)
+                          ->orWhere('konsentrasi_id', $jurusan->id);
+                })
+                ->orderBy('tingkat')
+                ->orderBy('nama_kelas')
+                ->get();
+        }
+        
+        // Waka Kurikulum, Waka Kesiswaan, Operator, Kepala Sekolah: all classes
+        if (in_array($roleName, ['Waka Kurikulum', 'Waka Kesiswaan', 'Operator Sekolah', 'Kepala Sekolah'])) {
+            return \App\Models\Kelas::with('jurusan')
+                ->orderBy('tingkat')
+                ->orderBy('nama_kelas')
+                ->get();
+        }
+        
+        // Regular Guru: no access
+        return collect([]);
     }
 }

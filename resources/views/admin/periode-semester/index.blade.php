@@ -17,7 +17,7 @@
 @endsection
 
 @section('content')
-<div class="space-y-4">
+<div class="space-y-4" x-data="{ selectionMode: false, selected: [] }">
     <div class="bg-white md:border md:border-gray-200 md:rounded-xl md:shadow-sm overflow-hidden mb-8 border-b border-gray-200 md:border-b-0">
         {{-- Toolbar --}}
         <div class="px-4 md:px-6 py-5 border-b border-gray-100 bg-white">
@@ -33,7 +33,7 @@
                         <th class="text-center w-32">Semester</th>
                         <th class="text-center">Tanggal</th>
                         <th class="text-center w-28">Status</th>
-                        <th class="text-center w-48">Aksi</th>
+                        <x-table.action-header />
                     </tr>
                 </thead>
                 <tbody>
@@ -67,36 +67,38 @@
                                     <span class="badge badge-secondary">Nonaktif</span>
                                 @endif
                             </td>
-                            <td class="text-center">
-                                <div class="flex justify-center items-center gap-1">
-                                    @if(!$p->is_active)
-                                        <form action="{{ route('admin.periode-semester.setActive', $p->id) }}" method="POST" class="inline">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-icon btn-white text-emerald-600 hover:bg-emerald-50" title="Set Aktif">
-                                                <x-ui.icon name="power" size="16" />
-                                            </button>
-                                        </form>
-                                    @endif
-                                    <a href="{{ route('admin.periode-semester.tingkatKurikulum', $p->id) }}" class="btn btn-sm btn-icon btn-white text-violet-600 hover:bg-violet-50" title="Konfigurasi Kurikulum">
-                                        <x-ui.icon name="layers" size="16" />
-                                    </a>
-                                    <form action="{{ route('admin.periode-semester.generatePertemuan', $p->id) }}" method="POST" class="inline">
+                            <x-table.action-column :id="$p->id">
+                                @if(!$p->is_active)
+                                    <form action="{{ route('admin.periode-semester.setActive', $p->id) }}" method="POST">
                                         @csrf
-                                        <button type="submit" class="btn btn-sm btn-icon btn-white text-indigo-600 hover:bg-indigo-50" title="Generate Pertemuan">
-                                            <x-ui.icon name="refresh-cw" size="16" />
-                                        </button>
+                                        <x-table.action-item icon="power" type="submit" class="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50">
+                                            Set Aktif
+                                        </x-table.action-item>
                                     </form>
-                                    <a href="{{ route('admin.periode-semester.edit', $p->id) }}" class="btn btn-sm btn-icon btn-white text-amber-600 hover:bg-amber-50" title="Edit">
-                                        <x-ui.icon name="edit" size="16" />
-                                    </a>
-                                    <form action="{{ route('admin.periode-semester.destroy', $p->id) }}" method="POST" class="inline" onsubmit="return confirm('Yakin hapus?')">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-icon btn-white text-rose-600 hover:bg-rose-50" title="Hapus">
-                                            <x-ui.icon name="trash" size="16" />
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
+                                    <x-table.action-separator />
+                                @endif
+                                <x-table.action-item icon="layers" :href="route('admin.periode-semester.tingkatKurikulum', $p->id)" class="text-violet-600 hover:text-violet-700 hover:bg-violet-50">
+                                    Konfigurasi Kurikulum
+                                </x-table.action-item>
+                                <form action="{{ route('admin.periode-semester.generatePertemuan', $p->id) }}" method="POST">
+                                    @csrf
+                                    <x-table.action-item icon="refresh-cw" type="submit" class="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">
+                                        Generate Pertemuan
+                                    </x-table.action-item>
+                                </form>
+                                <x-table.action-separator />
+                                <x-table.action-item icon="edit" :href="route('admin.periode-semester.edit', $p->id)">
+                                    Edit
+                                </x-table.action-item>
+                                <x-table.action-separator />
+                                <form action="{{ route('admin.periode-semester.destroy', $p->id) }}" method="POST" onsubmit="return confirm('Yakin hapus periode ini?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <x-table.action-item icon="trash" type="submit" class="text-red-600 hover:text-red-700 hover:bg-red-50">
+                                        Hapus
+                                    </x-table.action-item>
+                                </form>
+                            </x-table.action-column>
                         </tr>
                     @empty
                         <tr>

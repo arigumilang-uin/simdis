@@ -154,7 +154,7 @@
                                                         :class="{ 'opacity-50': saving || loadingGuru }">
                                                     <option value="">-- Pilih Guru --</option>
                                                     <template x-for="g in guruOptions" :key="g.id">
-                                                        <option :value="g.id" x-text="g.nama + (g.is_primary ? ' ⭐' : '')"></option>
+                                                        <option :value="String(g.id)" x-text="g.nama + (g.is_primary ? ' ⭐' : '')"></option>
                                                     </template>
                                                     <template x-if="guruOptions.length === 0 && !loadingGuru && mapelId">
                                                         <option disabled>Tidak ada guru untuk mapel ini</option>
@@ -222,8 +222,9 @@ const guruCache = {};
 function jadwalRow(templateJamId, initialMapelId, initialGuruId) {
     return {
         templateJamId: templateJamId,
-        mapelId: initialMapelId || '',
-        guruId: initialGuruId || '',
+        mapelId: initialMapelId ? String(initialMapelId) : '',
+        guruId: '',
+        initialGuruId: initialGuruId ? String(initialGuruId) : '',
         guruOptions: [],
         saving: false,
         loadingGuru: false,
@@ -232,6 +233,10 @@ function jadwalRow(templateJamId, initialMapelId, initialGuruId) {
             // Load guru if mapel already selected
             if (this.mapelId) {
                 await this.loadGuruForMapel(this.mapelId);
+                // Set guruId after options are loaded
+                if (this.initialGuruId) {
+                    this.guruId = this.initialGuruId;
+                }
             }
         },
 
