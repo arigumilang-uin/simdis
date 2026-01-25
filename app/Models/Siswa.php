@@ -115,6 +115,24 @@ class Siswa extends Model
         return $this->hasMany(TindakLanjut::class, 'siswa_id')->latest();
     }
 
+    /**
+     * Relasi: SATU Siswa MEMILIKI BANYAK Absensi.
+     * (Foreign Key di tabel 'absensi': siswa_id)
+     */
+    public function absensi(): HasMany
+    {
+        return $this->hasMany(Absensi::class, 'siswa_id');
+    }
+
+    /**
+     * Relasi: SATU Siswa MEMILIKI BANYAK Pembinaan Status.
+     * (Foreign Key di tabel 'pembinaan_status': siswa_id)
+     */
+    public function pembinaanStatus(): HasMany
+    {
+        return $this->hasMany(PembinaanStatus::class, 'siswa_id');
+    }
+
     // =====================================================================
     // ----------------------- QUERY SCOPES -----------------------
     // =====================================================================

@@ -32,7 +32,7 @@ class RiwayatPelanggaran extends Model
             'created' => "{$userName} mencatat pelanggaran untuk {$siswaName}",
             'updated' => "{$userName} mengubah riwayat pelanggaran {$siswaName}",
             'deleted' => "{$userName} menghapus riwayat pelanggaran {$siswaName}",
-            default => parent::getActivityDescription($eventName),
+            default => "{$userName} melakukan {$eventName} pada Riwayat Pelanggaran {$siswaName}",
         };
     }
 

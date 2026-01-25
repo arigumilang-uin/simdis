@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\StatusPembinaan;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Pembinaan Status Model
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class PembinaanStatus extends Model
 {
+    use SoftDeletes;
     protected $table = 'pembinaan_status';
 
     protected $fillable = [

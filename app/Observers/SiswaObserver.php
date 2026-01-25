@@ -41,18 +41,28 @@ class SiswaObserver
     
     /**
      * Handle the Siswa "deleting" event.
-     * (Fired BEFORE Siswa is soft-deleted/deleted.)
+     * (Fired BEFORE Siswa is soft-deleted.)
      */
     public function deleting(Siswa $siswa): void
     {
-        // Soft-delete all riwayat pelanggaran terkait siswa ini
+        // 1. Soft-delete all riwayat pelanggaran
         $siswa->riwayatPelanggaran()->each(function ($riwayat) {
             $riwayat->delete();
         });
 
-        // Soft-delete all tindak lanjut (dan via cascade, surat_panggilan)
+        // 2. Soft-delete all tindak lanjut
         $siswa->tindakLanjut()->each(function ($tindak) {
             $tindak->delete();
+        });
+
+        // 3. Soft-delete all absensi
+        $siswa->absensi()->each(function ($absen) {
+            $absen->delete();
+        });
+
+        // 4. Soft-delete all pembinaan status
+        $siswa->pembinaanStatus()->each(function ($pembinaan) {
+            $pembinaan->delete();
         });
     }
 
@@ -65,11 +75,10 @@ class SiswaObserver
         if ($siswa->wali_murid_user_id) {
             $wali = User::find($siswa->wali_murid_user_id);
             if ($wali) {
-                // 1. Sync Nama (akan ambil next available ACTIVE sibling karena deleted_at not null)
+                // 1. Sync Nama
                 app(UserNameSyncObserver::class)->syncUserName($wali);
                 
-                // 2. Check Orphans (Soft Delete Logic: Nonaktifkan akun)
-                // We count only ACTIVE siswa. If 0 active siswa left, deactivate wali.
+                // 2. Check Orphans. If 0 active siswa left, deactivate wali.
                 $activeSiblingsCount = \App\Models\Siswa::where('wali_murid_user_id', $wali->id)->count();
                 
                 if ($activeSiblingsCount === 0) {
@@ -85,8 +94,7 @@ class SiswaObserver
      */
     public function restoring(Siswa $siswa): void
     {
-        // Logic: Keep relations deleted? Or restore them?
-        // Usually we keep them deleted to avoid confusion, unless needed.
+        // No action needed before restoring
     }
 
     /**
@@ -95,16 +103,29 @@ class SiswaObserver
      */
     public function restored(Siswa $siswa): void
     {
+        // 1. Restore History Data (Cascading Restore)
+        // Kita gunakan onlyTrashed() untuk mengambil data yang terhapus
+        // Dan memanggil restore() pada builder relations
+        
+        $siswa->riwayatPelanggaran()->onlyTrashed()->restore();
+        $siswa->tindakLanjut()->onlyTrashed()->restore();
+        $siswa->absensi()->onlyTrashed()->restore();
+        $siswa->pembinaanStatus()->onlyTrashed()->restore();
+
+        // 2. Handle Wali Murid Logic
         if ($siswa->wali_murid_user_id) {
-            $wali = User::find($siswa->wali_murid_user_id);
+            $wali = User::withTrashed()->find($siswa->wali_murid_user_id);
             if ($wali) {
-                // 1. Activate Wali if inactive
+                // Activate Wali if inactive
+                if ($wali->trashed()) {
+                    $wali->restore();
+                }
                 if (!$wali->is_active) {
                     $wali->updateQuietly(['is_active' => true]);
                     \Log::info("Wali Murid {$wali->username} reactivated because a connected siswa was restored.");
                 }
                 
-                // 2. Sync Nama (Ensure name is up to date, e.g. if this is now the first child)
+                // Sync Nama
                 app(UserNameSyncObserver::class)->syncUserName($wali);
             }
         }
@@ -116,11 +137,13 @@ class SiswaObserver
      */
     public function forceDeleting(Siswa $siswa): void
     {
-        // Hard-delete all riwayat pelanggaran
+        // Hard-delete manual untuk memicu event deletion pada child model (jika ada observer child)
+        // Meskipun DB Cascade akan menghapusnya, melakukan ini di level Eloquent lebih aman untuk side-effects lain (misal log file deletion)
+        
         $siswa->riwayatPelanggaran()->forceDelete();
-
-        // Hard-delete all tindak lanjut
         $siswa->tindakLanjut()->forceDelete();
+        $siswa->absensi()->forceDelete();
+        $siswa->pembinaanStatus()->forceDelete();
     }
 
     /**
@@ -132,7 +155,6 @@ class SiswaObserver
         if ($siswa->wali_murid_user_id) {
             $wali = User::find($siswa->wali_murid_user_id);
             if ($wali) {
-                // Check if any children exist (Active OR Soft Deleted)
                 // If NO children at all -> Force Delete Wali Account
                 $anyChild = \App\Models\Siswa::withTrashed()
                          ->where('wali_murid_user_id', $wali->id)
@@ -142,7 +164,6 @@ class SiswaObserver
                      $wali->forceDelete();
                      \Log::info("Wali Murid {$wali->username} force deleted because no connected siswa remain.");
                 } else {
-                     // Still has children (maybe soft deleted ones). Sync Name.
                      app(UserNameSyncObserver::class)->syncUserName($wali);
                 }
             }

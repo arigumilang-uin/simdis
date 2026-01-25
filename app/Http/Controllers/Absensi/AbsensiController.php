@@ -123,19 +123,27 @@ class AbsensiController extends Controller
             ->ordered()
             ->get();
         
-        // Get siswa di kelas ini
+        // Get siswa di kelas ini (Strict Soft Delete filtering applied by Default Scope)
         $siswaList = Siswa::where('kelas_id', $jadwal->kelas_id)
             ->orderBy('nama_siswa')
             ->get();
+            
+        $siswaIds = $siswaList->pluck('id');
         
         // Build absensi matrix [siswa_id][pertemuan_id] => Absensi
+        // STRICT FILTER: Only load absensi for currently visible students
+        // This prevents "ghost data" from deleted students leaking into the matrix
         $absensiMatrix = [];
         $allAbsensi = Absensi::where('jadwal_mengajar_id', $jadwalId)
+            ->whereIn('siswa_id', $siswaIds) 
             ->whereIn('pertemuan_id', $pertemuanList->pluck('id'))
             ->get();
         
         foreach ($allAbsensi as $absensi) {
-            $absensiMatrix[$absensi->siswa_id][$absensi->pertemuan_id] = $absensi;
+             // Double filtering map assignment
+             if ($siswaIds->contains($absensi->siswa_id)) {
+                 $absensiMatrix[$absensi->siswa_id][$absensi->pertemuan_id] = $absensi;
+             }
         }
 
         // Find today's pertemuan if any
@@ -165,10 +173,11 @@ class AbsensiController extends Controller
             $pertemuan = Pertemuan::with('jadwalMengajar')->findOrFail($validated['pertemuan_id']);
             
             if (empty($validated['status'])) {
-                // Delete existing absensi
-                Absensi::where('siswa_id', $validated['siswa_id'])
-                    ->where('pertemuan_id', $validated['pertemuan_id'])
-                    ->delete();
+                // Delete existing absensi safely via service (handles linked violations)
+                $this->absensiService->deleteAbsensiByKeys([
+                    'siswa_id' => $validated['siswa_id'],
+                    'pertemuan_id' => $validated['pertemuan_id']
+                ]);
             } else {
                 // Create or update
                 $absensi = $this->absensiService->recordAbsensiWithPertemuan(

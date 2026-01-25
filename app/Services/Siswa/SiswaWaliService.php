@@ -99,8 +99,8 @@ class SiswaWaliService
             $counter++;
         }
 
-        // Generate random password
-        $password = Str::random(8);
+        // Use phone number as password (easier for distribution)
+        $password = $phone;
 
         // Generate nama
         $nama = "Wali dari {$namaSiswa}";

@@ -378,10 +378,10 @@
                 <div class="view-mobile md:hidden bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
                     <div class="flex-1 overflow-auto relative custom-scrollbar">
                         <table class="grid-table w-full border-separate border-spacing-0">
-                            <thead class="bg-slate-50 sticky top-0 z-40">
+                            <thead class="bg-slate-50 sticky top-0 z-20">
                                 <tr>
-                                    <th class="sticky left-0 z-50 w-12 text-center bg-slate-50 border-b border-r border-gray-200 p-2 text-xs font-semibold text-gray-600">No</th>
-                                    <th class="sticky left-[48px] z-50 w-32 md:w-48 text-left bg-slate-50 border-b border-r border-gray-200 p-2 text-xs font-semibold text-gray-600 shadow-md">Nama Siswa</th>
+                                    <th class="sticky left-0 z-30 w-12 text-center bg-slate-50 border-b border-r border-gray-200 p-2 text-xs font-semibold text-gray-600">No</th>
+                                    <th class="sticky left-[48px] z-30 w-32 md:w-48 text-left bg-slate-50 border-b border-r border-gray-200 p-2 text-xs font-semibold text-gray-600 shadow-md">Nama Siswa</th>
                                     <th class="min-w-[100px] text-center bg-slate-50 border-b border-gray-200 p-2 text-xs font-semibold text-gray-600">NISN</th>
                                     @foreach($pertemuanList as $pertemuan)
                                         <th class="min-w-[50px] text-center bg-slate-50 border-b border-gray-200 p-2 text-xs font-semibold text-gray-600 group">
@@ -389,15 +389,15 @@
                                             <div class="text-[9px] font-normal text-emerald-600">{{ $pertemuan->tanggal->format('d/m') }}</div>
                                         </th>
                                     @endforeach
-                                    <th class="md:sticky md:right-[150px] z-40 bg-slate-50 border-b border-l border-gray-200 min-w-[60px] text-center text-xs font-semibold text-red-600">Jml<br>Absen</th>
-                                    <th class="md:sticky md:right-0 z-40 bg-slate-50 border-b border-gray-200 min-w-[150px] text-center text-xs font-semibold text-gray-600">Keterangan</th>
+                                    <th class="md:sticky md:right-[150px] z-20 bg-slate-50 border-b border-l border-gray-200 min-w-[60px] text-center text-xs font-semibold text-red-600">Jml<br>Absen</th>
+                                    <th class="md:sticky md:right-0 z-20 bg-slate-50 border-b border-gray-200 min-w-[150px] text-center text-xs font-semibold text-gray-600">Keterangan</th>
                                 </tr>
                             </thead>
                             <tbody id="main-grid-body">
                                 @foreach($siswaList as $index => $siswa)
                                     <tr class="hover:bg-slate-50 transition-colors group h-[44px]" data-siswa-id="{{ $siswa->id }}">
-                                        <td class="sticky left-0 z-20 bg-white group-hover:bg-slate-50 border-b border-r border-gray-100 text-center text-xs text-gray-500">{{ $index + 1 }}</td>
-                                        <td class="sticky left-[48px] z-20 bg-white group-hover:bg-slate-50 border-b border-r border-gray-100 p-2 shadow-md">
+                                        <td class="sticky left-0 z-10 bg-white group-hover:bg-slate-50 border-b border-r border-gray-100 text-center text-xs text-gray-500">{{ $index + 1 }}</td>
+                                        <td class="sticky left-[48px] z-10 bg-white group-hover:bg-slate-50 border-b border-r border-gray-100 p-2 shadow-md">
                                             <div class="font-medium text-gray-800 text-xs truncate w-28 md:w-44" title="{{ $siswa->nama_siswa }}">{{ $siswa->nama_siswa }}</div>
                                         </td>
                                         <td class="border-b border-gray-100 p-2 text-center text-xs text-gray-500 font-mono bg-white group-hover:bg-slate-50">{{ $siswa->nisn }}</td>
@@ -407,15 +407,32 @@
                                                 $absensi = $absensiMatrix[$siswa->id][$pertemuan->id] ?? null;
                                                 $currentStatus = $absensi?->status?->value ?? '';
                                                 $statusClass = strtolower($currentStatus);
+                                                
+                                                // Color Fallback Map
+                                                $bgColors = [
+                                                    'hadir' => '#d1fae5',
+                                                    'sakit' => '#fef3c7',
+                                                    'izin' => '#dbeafe',
+                                                    'alfa' => '#fee2e2',
+                                                ];
+                                                $bgColor = $bgColors[$statusClass] ?? 'transparent';
+                                                $textColor = match($statusClass) {
+                                                    'hadir' => '#065f46',
+                                                    'sakit' => '#92400e',
+                                                    'izin' => '#1e40af', 
+                                                    'alfa' => '#991b1b',
+                                                    default => '#374151'
+                                                };
                                             @endphp
                                             <td class="text-center border-b border-gray-100 p-1 bg-white group-hover:bg-slate-50">
                                                 @if($pertemuan->status === 'kosong')
                                                     <span class="text-gray-300">-</span>
                                                 @else
                                                     <select class="status-select {{ $statusClass }} rounded-md border-0 cursor-pointer"
+                                                            style="background-color: {{ $bgColor }}; color: {{ $textColor }};"
                                                             data-siswa-id="{{ $siswa->id }}"
                                                             data-pertemuan-id="{{ $pertemuan->id }}"
-                                                            onchange="updateAbsensiGrid(this)">
+                                                            onchange="updateAbsensiGrid(this)" autocomplete="off">
                                                         <option value="">-</option>
                                                         <option value="Hadir" {{ $currentStatus === 'Hadir' ? 'selected' : '' }}>H</option>
                                                         <option value="Sakit" {{ $currentStatus === 'Sakit' ? 'selected' : '' }}>S</option>
@@ -433,11 +450,11 @@
                                                 if ($abs && $abs->status->value !== 'Hadir') { $tidakHadir++; }
                                             }
                                         @endphp
-                                        <td class="js-tidak-hadir-count td-tidak-hadir md:sticky md:right-[150px] z-20 bg-white group-hover:bg-slate-50 border-b border-l border-gray-100 text-center font-bold text-lg {{ $tidakHadir > 0 ? 'text-red-600 bg-red-50' : 'text-gray-300' }}">
+                                        <td class="js-tidak-hadir-count td-tidak-hadir md:sticky md:right-[150px] z-10 bg-white group-hover:bg-slate-50 border-b border-l border-gray-100 text-center font-bold text-lg {{ $tidakHadir > 0 ? 'text-red-600 bg-red-50' : 'text-gray-300' }}">
                                             {{ $tidakHadir }}
                                         </td>
-                                        <td class="md:sticky md:right-0 z-20 bg-white group-hover:bg-slate-50 border-b border-gray-100 p-2">
-                                            <input type="text" class="w-full min-w-[120px] px-2 py-1 text-[11px] border border-gray-200 rounded focus:border-emerald-400 outline-none transition-all placeholder-gray-300" placeholder="Tambah keterangan...">
+                                        <td class="md:sticky md:right-0 z-10 bg-white group-hover:bg-slate-50 border-b border-gray-100 p-2">
+                                            <input type="text" class="w-full min-w-[120px] px-2 py-1 text-[11px] border border-gray-200 rounded focus:border-emerald-400 outline-none transition-all placeholder-gray-300" placeholder="Tambah keterangan..." autocomplete="off">
                                         </td>
                                     </tr>
                                 @endforeach
@@ -450,13 +467,13 @@
                 <div class="view-desktop hidden md:block bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden w-full">
                     <div class="flex w-full max-h-[70vh]">
                         <!-- Left Fixed: No, Nama, NISN (Fixed Width) -->
-                        <div class="w-[230px] flex-shrink-0 overflow-y-auto bg-white border-r border-gray-200" style="scrollbar-width: none;" id="desktop-left-panel">
+                        <div class="w-[260px] flex-shrink-0 overflow-y-auto bg-white border-r border-gray-200" style="scrollbar-width: none;" id="desktop-left-panel">
                             <table class="desktop-grid-table text-xs w-full">
                                 <thead class="sticky top-0 z-10">
                                     <tr style="height: 50px;">
                                         <th class="text-center !bg-slate-50 border-b border-gray-200 p-2 font-semibold text-gray-600 w-[50px]">No</th>
                                         <th class="text-left !bg-slate-50 border-b border-gray-200 p-2 font-semibold text-gray-600 w-[120px]">Nama Siswa</th>
-                                        <th class="text-center !bg-slate-50 border-b border-gray-200 p-2 font-semibold text-gray-600 w-[60px]">NISN</th>
+                                        <th class="text-center !bg-slate-50 border-b border-gray-200 p-2 font-semibold text-gray-600 w-[90px]">NISN</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -494,16 +511,32 @@
                                                     $absensi = $absensiMatrix[$siswa->id][$pertemuan->id] ?? null;
                                                     $currentStatus = $absensi?->status?->value ?? '';
                                                     $statusClass = strtolower($currentStatus);
+                                                    
+                                                    // Color Fallback Map
+                                                    $bgColors = [
+                                                        'hadir' => '#d1fae5',
+                                                        'sakit' => '#fef3c7',
+                                                        'izin' => '#dbeafe',
+                                                        'alfa' => '#fee2e2',
+                                                    ];
+                                                    $bgColor = $bgColors[$statusClass] ?? 'transparent';
+                                                    $textColor = match($statusClass) {
+                                                        'hadir' => '#065f46',
+                                                        'sakit' => '#92400e',
+                                                        'izin' => '#1e40af', 
+                                                        'alfa' => '#991b1b',
+                                                        default => '#374151'
+                                                    };
                                                 @endphp
                                                 <td class="text-center p-1 align-middle">
                                                     @if($pertemuan->status === 'kosong')
                                                         <span class="text-gray-300">-</span>
                                                     @else
                                                         <select class="status-select {{ $statusClass }} rounded border-gray-200 text-xs py-1 px-1 w-full text-center cursor-pointer focus:ring-1 focus:ring-emerald-500"
-                                                                style="height: 32px;"
+                                                                style="height: 32px; background-color: {{ $bgColor }}; color: {{ $textColor }};"
                                                                 data-siswa-id="{{ $siswa->id }}"
                                                                 data-pertemuan-id="{{ $pertemuan->id }}"
-                                                                onchange="updateAbsensiGrid(this)">
+                                                                onchange="updateAbsensiGrid(this)" autocomplete="off">
                                                             <option value="">-</option>
                                                             <option value="Hadir" {{ $currentStatus === 'Hadir' ? 'selected' : '' }}>H</option>
                                                             <option value="Sakit" {{ $currentStatus === 'Sakit' ? 'selected' : '' }}>S</option>
@@ -546,7 +579,7 @@
                                             <td class="text-center p-1 align-middle">
                                                 <input type="text" class="w-full px-2 py-1 text-[11px] border border-gray-200 rounded focus:border-emerald-400 outline-none transition-all placeholder-gray-300" 
                                                        style="height: 32px;"
-                                                       placeholder="Keterangan...">
+                                                       placeholder="Keterangan..." autocomplete="off">
                                             </td>
                                         </tr>
                                     @endforeach
@@ -647,23 +680,56 @@ function showToast(message, type = 'success') {
     }, 2000);
 }
 
-// Update Grid select dropdown for a specific siswa and pertemuan (targets ALL styling instances - mobile & desktop)
 function updateGridSelect(siswaId, pertemuanId, status) {
     const selects = document.querySelectorAll(`select[data-siswa-id="${siswaId}"][data-pertemuan-id="${pertemuanId}"]`);
+    
     selects.forEach(select => {
-        // Update selected value directly
-        select.value = status;
-        
-        // Manual fallback ensuring option is selected
+        // 1. Reset all options first to ensure clean state
+        Array.from(select.options).forEach(opt => opt.selected = false);
+
+        // 2. Find and select the correct option
+        let matched = false;
         for (let i = 0; i < select.options.length; i++) {
             if (select.options[i].value === status) {
+                select.options[i].selected = true;
                 select.selectedIndex = i;
+                select.value = status;
+                matched = true;
                 break;
             }
         }
         
-        // Update styling class
-        select.className = 'status-select rounded-md border-0 cursor-pointer ' + status.toLowerCase();
+        // If not matched (e.g. status empty), select the first/placeholder option
+        if (!matched && select.options.length > 0) {
+            select.options[0].selected = true;
+            select.selectedIndex = 0;
+            select.value = "";
+        }
+        
+        // 3. Update styling class
+        // Remove old status classes
+        select.classList.remove('hadir', 'sakit', 'izin', 'alfa');
+        if (status) {
+            select.classList.add(status.toLowerCase());
+        }
+        
+        // 4. Manual Style Update
+        // Ensure colorMap keys match the status values exactly
+        const colorMap = {
+            'Hadir': { bg: '#d1fae5', text: '#065f46' },
+            'Sakit': { bg: '#fef3c7', text: '#92400e' },
+            'Izin':  { bg: '#dbeafe', text: '#1e40af' },
+            'Alfa':  { bg: '#fee2e2', text: '#991b1b' },
+        };
+        
+        const style = colorMap[status];
+        if (style) {
+            select.style.backgroundColor = style.bg;
+            select.style.color = style.text;
+        } else {
+            select.style.backgroundColor = 'transparent';
+            select.style.color = '#374151';
+        }
     });
 }
 
@@ -798,6 +864,21 @@ function updateAbsensiGrid(selectElement) {
     
     selectElement.className = 'status-select rounded-md border-0 cursor-pointer ' + status.toLowerCase();
     
+    // Manual Style Update for consistency
+    const colorMap = {
+        'Hadir': { bg: '#d1fae5', text: '#065f46' },
+        'Sakit': { bg: '#fef3c7', text: '#92400e' },
+        'Izin':  { bg: '#dbeafe', text: '#1e40af' },
+        'Alfa':  { bg: '#fee2e2', text: '#991b1b' },
+    };
+    if (colorMap[status]) {
+        selectElement.style.backgroundColor = colorMap[status].bg;
+        selectElement.style.color = colorMap[status].text;
+    } else {
+        selectElement.style.backgroundColor = 'transparent';
+        selectElement.style.color = '#374151';
+    }
+    
     // Update absensiState and the "Tidak Hadir" count
     if (!absensiState[siswaId]) absensiState[siswaId] = {};
     absensiState[siswaId][pertemuanId] = status;
@@ -833,6 +914,21 @@ function setAllTodayGrid(status) {
         const siswaId = select.dataset.siswaId;
         select.value = status;
         select.className = 'status-select rounded-md border-0 cursor-pointer ' + status.toLowerCase();
+        
+        // Manual Style Update
+        const colorMap = {
+            'Hadir': { bg: '#d1fae5', text: '#065f46' },
+            'Sakit': { bg: '#fef3c7', text: '#92400e' },
+            'Izin':  { bg: '#dbeafe', text: '#1e40af' },
+            'Alfa':  { bg: '#fee2e2', text: '#991b1b' },
+        };
+        if (colorMap[status]) {
+            select.style.backgroundColor = colorMap[status].bg;
+            select.style.color = colorMap[status].text;
+        } else {
+            select.style.backgroundColor = 'transparent';
+            select.style.color = '#374151';
+        }
         
         // Update absensiState
         if (!absensiState[siswaId]) absensiState[siswaId] = {};

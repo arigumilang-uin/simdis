@@ -34,6 +34,9 @@ class AbsensiService
     /**
      * Catat absensi untuk satu siswa
      */
+    /**
+     * Catat absensi untuk satu siswa
+     */
     public function recordAbsensi(
         int $siswaId,
         int $jadwalMengajarId,
@@ -43,26 +46,44 @@ class AbsensiService
         ?string $keterangan = null
     ): Absensi {
         return DB::transaction(function() use ($siswaId, $jadwalMengajarId, $tanggal, $status, $pencatatId, $keterangan) {
-            // Hapus absensi existing jika ada (update)
-            Absensi::where('siswa_id', $siswaId)
+            // Cek apakah ada data (termasuk yang soft deleted)
+            $absensi = Absensi::withTrashed()
+                ->where('siswa_id', $siswaId)
                 ->where('jadwal_mengajar_id', $jadwalMengajarId)
                 ->whereDate('tanggal', $tanggal)
-                ->delete();
+                ->first();
 
-            // Buat absensi baru
-            $absensi = Absensi::create([
-                'siswa_id' => $siswaId,
-                'jadwal_mengajar_id' => $jadwalMengajarId,
-                'tanggal' => $tanggal,
-                'status' => $status,
-                'keterangan' => $keterangan,
-                'pencatat_user_id' => $pencatatId,
-                'absen_at' => now(),
-            ]);
+            if ($absensi) {
+                // Restore jika soft deleted
+                if ($absensi->trashed()) {
+                    $absensi->restore();
+                }
+                // Update properties
+                $absensi->update([
+                    'status' => $status,
+                    'keterangan' => $keterangan,
+                    'pencatat_user_id' => $pencatatId,
+                    'absen_at' => now(),
+                ]);
+            } else {
+                // Create baru jika belum ada sama sekali
+                $absensi = Absensi::create([
+                    'siswa_id' => $siswaId,
+                    'jadwal_mengajar_id' => $jadwalMengajarId,
+                    'tanggal' => $tanggal,
+                    'status' => $status,
+                    'keterangan' => $keterangan,
+                    'pencatat_user_id' => $pencatatId,
+                    'absen_at' => now(),
+                ]);
+            }
 
             // Jika status ALFA, otomatis catat sebagai pelanggaran
             if ($status === StatusAbsensi::Alfa) {
-                $this->recordAlfaAsPelanggaran($absensi, $pencatatId);
+                $this->recordAlfaAsPelanggaran($absensi, $pencatatId, $keterangan);
+            } elseif ($absensi->riwayat_pelanggaran_id) {
+                // Jika sebelumnya Alfa dan sekarang bukan, hapus pelanggarannya
+                $this->removeLinkedPelanggaran($absensi);
             }
 
             return $absensi;
@@ -82,26 +103,46 @@ class AbsensiService
         ?string $keterangan = null
     ): Absensi {
         return DB::transaction(function() use ($siswaId, $pertemuanId, $jadwalMengajarId, $tanggal, $status, $pencatatId, $keterangan) {
-            // Hapus absensi existing jika ada (update)
-            Absensi::where('siswa_id', $siswaId)
+            // Cek apakah ada data (termasuk yang soft deleted)
+            $absensi = Absensi::withTrashed()
+                ->where('siswa_id', $siswaId)
                 ->where('pertemuan_id', $pertemuanId)
-                ->delete();
+                ->first();
 
-            // Buat absensi baru
-            $absensi = Absensi::create([
-                'siswa_id' => $siswaId,
-                'pertemuan_id' => $pertemuanId,
-                'jadwal_mengajar_id' => $jadwalMengajarId,
-                'tanggal' => $tanggal,
-                'status' => $status,
-                'keterangan' => $keterangan,
-                'pencatat_user_id' => $pencatatId,
-                'absen_at' => now(),
-            ]);
+            if ($absensi) {
+                // Restore jika soft deleted
+                if ($absensi->trashed()) {
+                    $absensi->restore();
+                }
+                // Update properties
+                $absensi->update([
+                    'jadwal_mengajar_id' => $jadwalMengajarId, // ensure sync
+                    'tanggal' => $tanggal, // ensure sync
+                    'status' => $status,
+                    'keterangan' => $keterangan,
+                    'pencatat_user_id' => $pencatatId,
+                    'absen_at' => now(),
+                ]);
+            } else {
+                // Create baru
+                $absensi = Absensi::create([
+                    'siswa_id' => $siswaId,
+                    'pertemuan_id' => $pertemuanId,
+                    'jadwal_mengajar_id' => $jadwalMengajarId,
+                    'tanggal' => $tanggal,
+                    'status' => $status,
+                    'keterangan' => $keterangan,
+                    'pencatat_user_id' => $pencatatId,
+                    'absen_at' => now(),
+                ]);
+            }
 
             // Jika status ALFA, otomatis catat sebagai pelanggaran
             if ($status === StatusAbsensi::Alfa) {
-                $this->recordAlfaAsPelanggaran($absensi, $pencatatId);
+                $this->recordAlfaAsPelanggaran($absensi, $pencatatId, $keterangan);
+            } elseif ($absensi->riwayat_pelanggaran_id) {
+                // Jika sebelumnya Alfa dan sekarang bukan, hapus pelanggarannya
+                $this->removeLinkedPelanggaran($absensi);
             }
 
             return $absensi;
@@ -147,9 +188,36 @@ class AbsensiService
     }
 
     /**
+     * Delete absensi safely (including linked pelanggaran)
+     */
+    public function deleteAbsensi(int $id): bool
+    {
+        $absensi = Absensi::find($id);
+        if (!$absensi) return false;
+
+        return DB::transaction(function() use ($absensi) {
+            if ($absensi->riwayat_pelanggaran_id) {
+                $this->removeLinkedPelanggaran($absensi);
+            }
+            return $absensi->delete();
+        });
+    }
+
+    /**
+     * Delete absensi by keys safely
+     */
+    public function deleteAbsensiByKeys(array $criteria): bool
+    {
+        $absensi = Absensi::where($criteria)->first();
+        if (!$absensi) return false;
+
+        return $this->deleteAbsensi($absensi->id);
+    }
+
+    /**
      * Record Alfa as Pelanggaran (integrate with existing system)
      */
-    private function recordAlfaAsPelanggaran(Absensi $absensi, int $pencatatId): void
+    private function recordAlfaAsPelanggaran(Absensi $absensi, int $pencatatId, ?string $notes = null): void
     {
         try {
             $siswa = Siswa::with('kelas')->find($absensi->siswa_id);
@@ -159,8 +227,30 @@ class AbsensiService
             $tanggal = $absensi->tanggal->format('d/m/Y');
             
             $keterangan = "Alfa pada {$mapelName} tanggal {$tanggal}";
-            if ($absensi->keterangan) {
-                $keterangan .= " - Catatan: {$absensi->keterangan}";
+            
+            // Use explicit notes if provided, otherwise fallback to model
+            $userNote = $notes ?? $absensi->keterangan;
+            if ($userNote) {
+                $keterangan .= " - Catatan: {$userNote}";
+            }
+
+            // Jika sudah ada link pelanggaran, update saja
+            if ($absensi->riwayat_pelanggaran_id) {
+                $riwayat = RiwayatPelanggaran::withTrashed()->find($absensi->riwayat_pelanggaran_id);
+                if ($riwayat) {
+                    if ($riwayat->trashed()) {
+                        $riwayat->restore();
+                    }
+                    $riwayat->update([
+                        'tanggal_kejadian' => $absensi->absen_at ?? $absensi->tanggal,
+                        'guru_pencatat_user_id' => $pencatatId,
+                        'keterangan' => $keterangan,
+                    ]);
+                    
+                    Log::info("Alfa pelanggaran updated", ['id' => $riwayat->id]);
+                    return;
+                }
+                // If ID exists but record not found (force deleted?), create new
             }
 
             // Langsung buat RiwayatPelanggaran via model
@@ -168,7 +258,7 @@ class AbsensiService
                 'siswa_id' => $absensi->siswa_id,
                 'jenis_pelanggaran_id' => self::JENIS_PELANGGARAN_ALFA_ID,
                 'guru_pencatat_user_id' => $pencatatId,
-                'tanggal_kejadian' => $absensi->tanggal,
+                'tanggal_kejadian' => $absensi->absen_at ?? $absensi->tanggal,
                 'keterangan' => $keterangan,
             ]);
 
@@ -193,6 +283,34 @@ class AbsensiService
                 'error' => $e->getMessage(),
             ]);
             // Don't throw - absensi sudah tercatat, pelanggaran failed tapi tidak fatal
+        }
+    }
+
+    /**
+     * Remove linked pelanggaran when status changes from Alfa
+     */
+    private function removeLinkedPelanggaran(Absensi $absensi): void
+    {
+        if (!$absensi->riwayat_pelanggaran_id) return;
+
+        try {
+            $riwayat = RiwayatPelanggaran::find($absensi->riwayat_pelanggaran_id);
+            if ($riwayat) {
+                $riwayat->delete(); // Soft delete
+            }
+            
+            // Do NOT nullify the link. We want to keep it so we can restore it later if needed.
+            // $absensi->update(['riwayat_pelanggaran_id' => null]);
+            
+            Log::info("Linked Alfa pelanggaran soft-deleted", [
+                'absensi_id' => $absensi->id, 
+                'pelanggaran_id' => $absensi->riwayat_pelanggaran_id
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Failed to remove linked pelanggaran", [
+                'absensi_id' => $absensi->id,
+                'error' => $e->getMessage()
+            ]);
         }
     }
 

@@ -130,18 +130,9 @@ class SiswaArchiveService
             $siswa->keterangan_keluar = null;
             
             // Restore the siswa
+            // Observer will automatically restore related data (riwayat, tindak lanjut, absensi, pembinaan)
             $siswa->restore();
             $siswa->save();
-
-            // Restore related riwayat pelanggaran
-            \App\Models\RiwayatPelanggaran::onlyTrashed()
-                ->where('siswa_id', $siswaId)
-                ->restore();
-
-            // Restore related tindak lanjut
-            \App\Models\TindakLanjut::onlyTrashed()
-                ->where('siswa_id', $siswaId)
-                ->restore();
 
             // Check and restore wali murid if needed
             if ($siswa->wali_murid_id) {
@@ -191,20 +182,8 @@ class SiswaArchiveService
                 'nisn' => $siswa->nisn,
             ];
 
-            // Force delete related data
-            \App\Models\RiwayatPelanggaran::onlyTrashed()
-                ->where('siswa_id', $siswaId)
-                ->forceDelete();
-
-            \App\Models\TindakLanjut::onlyTrashed()
-                ->where('siswa_id', $siswaId)
-                ->forceDelete();
-
-            // Also delete any non-trashed related data (shouldn't exist, but safety)
-            \App\Models\RiwayatPelanggaran::where('siswa_id', $siswaId)->forceDelete();
-            \App\Models\TindakLanjut::where('siswa_id', $siswaId)->forceDelete();
-
             // Force delete siswa
+            // Observer will handle cascading force delete for related data (activity logs, etc)
             $siswa->forceDelete();
 
             DB::commit();

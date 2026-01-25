@@ -38,10 +38,10 @@
     @endif
     
     {{-- Right side: Search and Filter Group --}}
-    <div class="flex flex-col md:flex-row gap-3 items-stretch md:items-center relative z-20">
+    <div class="flex flex-row gap-3 items-center relative z-20">
         
         {{-- Search Input Wrapper --}}
-        <div class="relative grow md:grow-0">
+        <div class="relative grow md:grow-0 min-w-0">
             {{-- Search Icon (left) --}}
             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <x-ui.icon name="search" size="16" class="text-gray-400" />

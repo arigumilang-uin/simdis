@@ -62,7 +62,7 @@ class Absensi extends Model
             'created' => "{$userName} mencatat absensi {$this->status->value} untuk {$siswaName}",
             'updated' => "{$userName} mengubah status absensi {$siswaName}",
             'deleted' => "{$userName} menghapus absensi {$siswaName}",
-            default => parent::getActivityDescription($eventName),
+            default => "{$userName} melakukan {$eventName} pada Absensi {$siswaName}",
         };
     }
 

@@ -168,9 +168,9 @@ class SiswaService
             $siswa->save();
         }
 
-        // Soft delete related data
-        \App\Models\RiwayatPelanggaran::where('siswa_id', $siswaId)->delete();
-        \App\Models\TindakLanjut::where('siswa_id', $siswaId)->delete();
+        // Soft delete related data handled by Observer
+        // \App\Models\RiwayatPelanggaran::where('siswa_id', $siswaId)->delete();
+        // \App\Models\TindakLanjut::where('siswa_id', $siswaId)->delete();
 
         return $this->siswaRepository->delete($siswaId);
     }
