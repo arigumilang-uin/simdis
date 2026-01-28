@@ -150,7 +150,7 @@
                                 <input type="text" id="username" name="username" value="{{ old('username') }}" required autofocus 
                                     class="input-field text-[13px]"
                                     style="padding: 12px 12px 12px 44px; border: 1px solid #cbd5e1; background-color: #ffffff; border-radius: 10px;"
-                                    placeholder="NIP / NUPTK / No. HP"
+                                    placeholder="NIP / NUPTK / Username"
                                     :readonly="isLoading"
                                     :class="{ 'bg-slate-100 cursor-not-allowed': isLoading }">
                                 <div class="input-icon" style="left: 14px;">

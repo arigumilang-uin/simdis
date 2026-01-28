@@ -554,4 +554,32 @@ class UserController extends Controller
             ->back()
             ->with('success', 'Users berhasil diimport.');
     }
+    /**
+     * Check identity availability (NIP, NI PPPK, NUPTK).
+     */
+    public function checkIdentity(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $type = $request->input('type'); // nip, ni_pppk, nuptk
+        $value = $request->input('value');
+        $id = $request->input('id'); // exclude current user id for edit
+
+        if (!in_array($type, ['nip', 'ni_pppk', 'nuptk'])) {
+            return response()->json(['message' => 'Invalid type'], 400);
+        }
+
+        $query = \App\Models\User::where($type, $value);
+        
+        if ($id) {
+            $query->where('id', '!=', $id);
+        }
+
+        $exists = $query->exists();
+        $owner = $exists ? $query->first(['nama', 'username']) : null;
+
+        return response()->json([
+            'available' => !$exists,
+            'message' => $exists ? 'Sudah digunakan.' : 'Tersedia.',
+            'owner' => $owner ? ($owner->nama ?? $owner->username) : null
+        ]);
+    }
 }

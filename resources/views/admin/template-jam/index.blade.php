@@ -6,36 +6,20 @@
     <x-page-header 
         title="Template Jam Pelajaran" 
         subtitle="Konfigurasi slot waktu per periode semester dan per hari"
-        :total="$templateJams->count()" 
     />
 @endsection
 
 @section('content')
 <div class="space-y-6" x-data="templateJamManager()">
 
-    {{-- Alert --}}
-    @if(session('success'))
-        <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg">
-            {{ session('success') }}
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            {{ session('error') }}
-        </div>
-    @endif
-
-    {{-- Filter Card --}}
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Pilih Periode & Hari</h3>
-        </div>
-        <div class="card-body">
-            <form method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {{-- Periode --}}
-                <div class="form-group">
-                    <label class="form-label">Periode Semester</label>
-                    <select name="periode_id" class="form-input" onchange="this.form.submit()">
+    {{-- Filter Periode & Hari --}}
+    <div class="bg-white md:border md:border-slate-200 md:rounded-xl md:shadow-sm overflow-hidden">
+        <div class="px-4 md:px-6 py-4 border-b border-slate-100">
+            <form method="GET" class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                {{-- Periode Dropdown --}}
+                <div class="flex items-center gap-3">
+                    <label class="text-sm font-medium text-slate-600 whitespace-nowrap">Periode:</label>
+                    <select name="periode_id" class="form-input text-sm rounded-lg py-2" onchange="this.form.submit()">
                         @foreach($allPeriodes as $periode)
                             <option value="{{ $periode->id }}" {{ $selectedPeriode && $selectedPeriode->id == $periode->id ? 'selected' : '' }}>
                                 {{ $periode->display_name }} {{ $periode->is_active ? '(Aktif)' : '' }}
@@ -44,32 +28,31 @@
                     </select>
                 </div>
 
-                {{-- Hari Tabs --}}
-                <div class="form-group md:col-span-2">
-                    <label class="form-label">Hari</label>
-                    <div class="flex flex-wrap gap-2">
-                        @foreach($hariList as $h)
-                            <a href="{{ route('admin.template-jam.index', ['periode_id' => $selectedPeriode?->id, 'hari' => $h]) }}"
-                               class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $selectedHari == $h ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
-                                {{ $h }}
-                            </a>
-                        @endforeach
-                    </div>
+                {{-- Hari Pills --}}
+                <div class="flex flex-wrap items-center gap-2">
+                    @foreach($hariList as $h)
+                        <a href="{{ route('admin.template-jam.index', ['periode_id' => $selectedPeriode?->id, 'hari' => $h]) }}"
+                           class="px-4 py-1.5 rounded-lg text-sm font-medium transition-all border
+                                  {{ $selectedHari == $h 
+                                     ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' 
+                                     : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50' }}">
+                            {{ $h }}
+                        </a>
+                    @endforeach
                 </div>
             </form>
         </div>
     </div>
 
     @if($selectedPeriode)
-        {{-- Generate Default Template --}}
+        {{-- Empty State: Generate Default --}}
         @if($templateJams->count() == 0)
-            <div class="card border-2 border-dashed border-emerald-300 bg-emerald-50">
-                <div class="card-body text-center py-8">
-                    <div class="text-emerald-600 mb-4">
-                        <x-ui.icon name="clock" size="48" class="mx-auto" />
-                    </div>
-                    <h3 class="text-lg font-bold text-slate-800 mb-2">Belum Ada Template untuk {{ $selectedHari }}</h3>
-                    <p class="text-slate-600 mb-4">Generate template default dengan 15 slot jam pelajaran?</p>
+            <x-ui.empty-state 
+                title="Belum Ada Template untuk {{ $selectedHari }}"
+                description="Generate template default dengan 15 slot jam pelajaran?"
+                icon="clock"
+            >
+                <x-slot:action>
                     <form action="{{ route('admin.template-jam.generate') }}" method="POST" class="inline">
                         @csrf
                         <input type="hidden" name="periode_semester_id" value="{{ $selectedPeriode->id }}">
@@ -79,256 +62,279 @@
                             <span>Generate Template Default</span>
                         </button>
                     </form>
-                </div>
-            </div>
-        @endif
+                </x-slot:action>
+            </x-ui.empty-state>
 
-        {{-- Slots Table - Interactive --}}
-        @if($templateJams->count() > 0)
-            <div class="card">
-                <div class="card-header flex items-center justify-between">
-                    <h3 class="card-title">Template Jam - {{ $selectedHari }}</h3>
-                    <div class="flex items-center gap-2">
-                        <span class="text-sm text-slate-500">
-                            {{ $templateJams->where('tipe', 'pelajaran')->count() }} jam pelajaran
-                        </span>
-                        <form action="{{ route('admin.template-jam.addRow') }}" method="POST" class="flex items-center gap-2">
+            {{-- Copy From Other Period --}}
+            @if($allPeriodes->count() > 1)
+                <div class="bg-white md:border md:border-slate-200 md:rounded-xl md:shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-100">
+                        <h3 class="font-semibold text-slate-800">Salin dari Periode Lain</h3>
+                    </div>
+                    <div class="p-6">
+                        <form action="{{ route('admin.template-jam.copy') }}" method="POST" class="flex flex-col sm:flex-row items-end gap-4">
                             @csrf
-                            <input type="hidden" name="periode_semester_id" value="{{ $selectedPeriode->id }}">
-                            <input type="hidden" name="hari" value="{{ $selectedHari }}">
-                            
-                            <div class="flex items-center bg-white border border-slate-200 rounded-lg overflow-hidden">
-                                <input type="number" name="jumlah" value="1" min="1" max="20" 
-                                       class="w-16 h-9 text-center text-sm border-0 focus:ring-0 text-slate-700" 
-                                       placeholder="Jml" title="Jumlah baris yang ingin ditambahkan">
-                                <button type="submit" class="px-3 h-9 bg-emerald-600 text-white hover:bg-emerald-700 flex items-center gap-1 text-sm font-medium transition-colors">
-                                    <x-ui.icon name="plus" size="14" />
-                                    <span>Tambah</span>
-                                </button>
+                            <input type="hidden" name="to_periode_id" value="{{ $selectedPeriode->id }}">
+                            <div class="flex-1 w-full">
+                                <label class="block text-sm font-medium text-slate-600 mb-1.5">Periode Sumber</label>
+                                <select name="from_periode_id" class="form-input w-full" required>
+                                    <option value="">Pilih periode...</option>
+                                    @foreach($allPeriodes as $p)
+                                        @if($p->id != $selectedPeriode->id)
+                                            <option value="{{ $p->id }}">{{ $p->display_name }}</option>
+                                        @endif
+                                    @endforeach
+                                </select>
                             </div>
+                            <button type="submit" class="btn btn-secondary whitespace-nowrap">
+                                <x-ui.icon name="copy" size="16" />
+                                <span>Salin Template</span>
+                            </button>
                         </form>
                     </div>
                 </div>
-                <div class="card-body p-0">
-                    <div class="overflow-x-auto">
-                        <table class="table" id="template-jam-table">
-                            <thead class="bg-slate-50">
-                                <tr>
-                                    <th class="w-20 text-center">No</th>
-                                    <th class="w-24 text-center">Jam ke-</th>
-                                    <th class="w-28">Mulai</th>
-                                    <th class="w-28">Selesai</th>
-                                    <th class="w-36">Tipe</th>
-                                    <th class="w-24 text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @php
-                                    $jamKeCounter = 0;
-                                    $romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX'];
-                                @endphp
-                                @foreach($templateJams as $index => $slot)
-                                    @php
-                                        $isPelajaran = $slot->tipe === 'pelajaran';
-                                        if ($isPelajaran) {
-                                            $jamKeCounter++;
-                                        }
-                                        $jamKe = $isPelajaran ? ($romanNumerals[$jamKeCounter - 1] ?? $jamKeCounter) : '-';
-                                        $jamMulai = $slot->jam_mulai instanceof \DateTime ? $slot->jam_mulai->format('H:i') : ($slot->jam_mulai ?? '');
-                                        $jamSelesai = $slot->jam_selesai instanceof \DateTime ? $slot->jam_selesai->format('H:i') : ($slot->jam_selesai ?? '');
-                                        
-                                        // Row color based on type
-                                        $rowClass = match($slot->tipe) {
-                                            'pelajaran' => '',
-                                            'istirahat' => 'bg-amber-50',
-                                            'ishoma' => 'bg-orange-50',
-                                            'upacara' => 'bg-blue-50',
-                                            default => 'bg-slate-50',
-                                        };
-                                    @endphp
-                                    <tr class="{{ $rowClass }} hover:bg-slate-100 transition-colors" 
-                                        data-row-id="{{ $slot->id }}"
-                                        data-urutan="{{ $slot->urutan }}">
-                                        {{-- No (Urutan) --}}
-                                        <td class="text-center font-medium text-slate-500">
-                                            {{ $slot->urutan }}
-                                        </td>
-                                        
-                                        {{-- Jam ke- (Roman) --}}
-                                        <td class="text-center">
-                                            @if($isPelajaran)
-                                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 font-bold text-sm">
-                                                    {{ $jamKe }}
-                                                </span>
-                                            @else
-                                                <span class="text-slate-400">-</span>
-                                            @endif
-                                        </td>
-                                        
-                                        {{-- Jam Mulai --}}
-                                        <td>
-                                            <input type="text" 
-                                                   value="{{ $jamMulai }}"
-                                                   data-field="jam_mulai"
-                                                   data-id="{{ $slot->id }}"
-                                                   data-prev-row="{{ $index > 0 ? $templateJams[$index - 1]->id : '' }}"
-                                                   class="form-input text-sm w-full time-input text-center font-mono"
-                                                   placeholder="HH:MM"
-                                                   pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]"
-                                                   maxlength="5"
-                                                   @change="updateTime($event)"
-                                                   @input="formatTimeInput($event)">
-                                        </td>
-                                        
-                                        {{-- Jam Selesai --}}
-                                        <td>
-                                            <input type="text" 
-                                                   value="{{ $jamSelesai }}"
-                                                   data-field="jam_selesai"
-                                                   data-id="{{ $slot->id }}"
-                                                   data-next-row="{{ $index < $templateJams->count() - 1 ? $templateJams[$index + 1]->id : '' }}"
-                                                   class="form-input text-sm w-full time-input text-center font-mono"
-                                                   placeholder="HH:MM"
-                                                   pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]"
-                                                   maxlength="5"
-                                                   @change="updateTime($event)"
-                                                   @input="formatTimeInput($event)">
-                                        </td>
-                                        
-                                        {{-- Tipe --}}
-                                        <td x-data="{ isCustom: false }">
-                                            <select x-show="!isCustom"
-                                                    data-field="tipe"
-                                                    data-id="{{ $slot->id }}"
-                                                    class="form-input text-sm w-full tipe-select"
-                                                    @change="
-                                                        if ($el.value === 'lainnya') {
-                                                            isCustom = true;
-                                                            $nextTick(() => $refs.customInput.focus());
-                                                        } else {
-                                                            updateField($event);
-                                                        }
-                                                    ">
-                                                @foreach($tipeOptions as $val => $label)
-                                                    <option value="{{ $val }}" {{ $slot->tipe == $val ? 'selected' : '' }}>
-                                                        {{ $label }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                            
-                                            <input type="text" 
-                                                   x-ref="customInput"
-                                                   x-show="isCustom"
-                                                   data-field="tipe"
-                                                   data-id="{{ $slot->id }}"
-                                                   class="form-input text-sm w-full"
-                                                   placeholder="Nama tipe..."
-                                                   style="display: none;"
-                                                   @blur="
-                                                        if ($el.value && $el.value.trim() !== '') {
-                                                            updateField($event);
-                                                        } else {
-                                                            isCustom = false;
-                                                            // Reset helper logic if needed, but page reload will fix consistent state
-                                                            $el.previousElementSibling.value = '{{ $slot->tipe }}';
-                                                        }
-                                                   "
-                                                   @keydown.enter.prevent="$el.blur()"
-                                                   @keydown.escape="
-                                                        isCustom = false;
-                                                        $el.value = '';
-                                                        $el.previousElementSibling.value = '{{ $slot->tipe }}';
-                                                   "
-                                            >
-                                        </td>
-                                        
-                                        {{-- Aksi --}}
-                                        <td>
-                                            <div class="flex items-center justify-center gap-1">
-                                                <form action="{{ route('admin.template-jam.destroy', $slot->id) }}" 
-                                                      method="POST" 
-                                                      onsubmit="return confirm('Hapus baris ini?')">
-                                                    @csrf @method('DELETE')
-                                                    <button type="submit" 
-                                                            class="btn btn-sm btn-icon btn-white text-red-600 hover:text-red-700" 
-                                                            title="Hapus">
-                                                        <x-ui.icon name="trash" size="14" />
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Legend & Tips --}}
-            <div class="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                <h4 class="font-bold text-slate-700 mb-3">💡 Keterangan & Tips</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                        <p class="font-medium text-slate-700 mb-2">Warna Baris:</p>
-                        <div class="space-y-1">
-                            <div class="flex items-center gap-2">
-                                <span class="w-4 h-4 bg-white border border-slate-200 rounded"></span>
-                                <span>Pelajaran</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="w-4 h-4 bg-amber-50 border border-amber-200 rounded"></span>
-                                <span>Istirahat</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="w-4 h-4 bg-orange-50 border border-orange-200 rounded"></span>
-                                <span>Ishoma</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="w-4 h-4 bg-blue-50 border border-blue-200 rounded"></span>
-                                <span>Upacara</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <p class="font-medium text-slate-700 mb-2">Tips:</p>
-                        <ul class="list-disc list-inside text-slate-600 space-y-1">
-                            <li>Kolom "Jam ke-" otomatis hanya untuk tipe Pelajaran</li>
-                            <li>Ubah jam langsung di tabel, otomatis tersimpan</li>
-                            <li>Jam selesai akan menjadi jam mulai baris berikutnya</li>
-                            <li>Ubah tipe untuk mengubah kategori slot waktu</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+            @endif
         @endif
 
-        {{-- Copy From Other Period --}}
-        @if($allPeriodes->count() > 1 && $templateJams->count() == 0)
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Salin dari Periode Lain</h3>
-                </div>
-                <div class="card-body">
-                    <form action="{{ route('admin.template-jam.copy') }}" method="POST" class="flex items-end gap-4">
-                        @csrf
-                        <input type="hidden" name="to_periode_id" value="{{ $selectedPeriode->id }}">
-                        <div class="form-group flex-1">
-                            <label class="form-label">Periode Sumber</label>
-                            <select name="from_periode_id" class="form-input" required>
-                                <option value="">Pilih periode...</option>
-                                @foreach($allPeriodes as $p)
-                                    @if($p->id != $selectedPeriode->id)
-                                        <option value="{{ $p->id }}">{{ $p->display_name }}</option>
-                                    @endif
-                                @endforeach
-                            </select>
+        {{-- Slots Table --}}
+        @if($templateJams->count() > 0)
+            <div class="bg-white md:border md:border-slate-200 md:rounded-xl md:shadow-sm overflow-hidden"
+                 x-data="{ selectionMode: false, selected: [], selectAll: false }"
+                 @toggle-selection-mode.window="selectionMode = !selectionMode; if (!selectionMode) { selected = []; selectAll = false; }"
+                 @enter-selection.window="selectionMode = true; if (!selected.includes($event.detail.id)) selected.push($event.detail.id)"
+                 x-effect="selectAll ? selected = {{ json_encode($templateJams->pluck('id')->map(fn($id) => (string) $id)->toArray()) }} : null">
+                
+                {{-- Header --}}
+                <div class="px-4 md:px-6 py-4 border-b border-slate-100">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h3 class="font-semibold text-slate-800">Template Jam - {{ $selectedHari }}</h3>
+                            <p class="text-sm text-slate-500 mt-0.5">{{ $templateJams->where('tipe', 'pelajaran')->count() }} jam pelajaran</p>
                         </div>
-                        <button type="submit" class="btn btn-secondary">
-                            <x-ui.icon name="copy" size="16" />
-                            <span>Salin Template</span>
-                        </button>
-                    </form>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            {{-- Bulk Delete Button --}}
+                            <template x-if="selectionMode && selected.length > 0">
+                                <form action="{{ route('admin.template-jam.bulkDestroy') }}" method="POST" 
+                                      onsubmit="return confirm('Hapus ' + document.querySelectorAll('[name=\'ids[]\']:checked').length + ' baris?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <template x-for="id in selected" :key="id">
+                                        <input type="hidden" name="ids[]" :value="id">
+                                    </template>
+                                    <button type="submit" class="btn btn-sm bg-red-600 text-white hover:bg-red-700">
+                                        <x-ui.icon name="trash" size="14" />
+                                        <span>Hapus (<span x-text="selected.length"></span>)</span>
+                                    </button>
+                                </form>
+                            </template>
+
+                            {{-- Cancel Selection --}}
+                            <template x-if="selectionMode">
+                                <button @click="selectionMode = false; selected = []; selectAll = false" class="btn btn-sm btn-secondary">
+                                    <x-ui.icon name="x" size="14" />
+                                    <span class="hidden md:inline">Batal</span>
+                                </button>
+                            </template>
+
+                            {{-- Add Row Form --}}
+                            <form action="{{ route('admin.template-jam.addRow') }}" method="POST" class="flex items-center gap-2">
+                                @csrf
+                                <input type="hidden" name="periode_semester_id" value="{{ $selectedPeriode->id }}">
+                                <input type="hidden" name="hari" value="{{ $selectedHari }}">
+                                <div class="flex items-center bg-white border border-slate-200 rounded-lg overflow-hidden">
+                                    <input type="number" name="jumlah" value="1" min="1" max="20" 
+                                           class="w-12 h-9 text-center text-sm border-0 focus:ring-0 text-slate-700">
+                                    <button type="submit" class="px-3 h-9 bg-indigo-600 text-white hover:bg-indigo-700 flex items-center gap-1.5 text-sm font-medium transition-colors whitespace-nowrap">
+                                        <x-ui.icon name="plus" size="14" />
+                                        <span>Tambah Baris</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Desktop Table (hidden on mobile) --}}
+                <div class="hidden md:block table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <x-table.action-header />
+                                <th class="w-16 text-center">No</th>
+                                <th class="w-20 text-center">Jam</th>
+                                <th class="w-28">Mulai</th>
+                                <th class="w-28">Selesai</th>
+                                <th>Tipe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php
+                                $jamKeCounter = 0;
+                                $romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX'];
+                            @endphp
+                            @foreach($templateJams as $index => $slot)
+                                @php
+                                    $isPelajaran = $slot->tipe === 'pelajaran';
+                                    if ($isPelajaran) $jamKeCounter++;
+                                    $jamKe = $isPelajaran ? ($romanNumerals[$jamKeCounter - 1] ?? $jamKeCounter) : '-';
+                                    $jamMulai = $slot->jam_mulai instanceof \DateTime ? $slot->jam_mulai->format('H:i') : ($slot->jam_mulai ?? '');
+                                    $jamSelesai = $slot->jam_selesai instanceof \DateTime ? $slot->jam_selesai->format('H:i') : ($slot->jam_selesai ?? '');
+                                    
+                                    $rowClass = match($slot->tipe) {
+                                        'pelajaran' => '',
+                                        'istirahat' => 'bg-amber-50/50',
+                                        'ishoma' => 'bg-orange-50/50',
+                                        'upacara' => 'bg-blue-50/50',
+                                        default => 'bg-slate-50/50',
+                                    };
+                                @endphp
+                                <tr class="{{ $rowClass }}">
+                                    <x-table.action-column :id="$slot->id">
+                                        <form action="{{ route('admin.template-jam.destroy', $slot->id) }}" method="POST" onsubmit="return confirm('Hapus baris ini?')">
+                                            @csrf @method('DELETE')
+                                            <x-table.action-item icon="trash" type="submit" class="text-red-600 hover:text-red-700 hover:bg-red-50">
+                                                Hapus
+                                            </x-table.action-item>
+                                        </form>
+                                    </x-table.action-column>
+                                    <td class="text-center font-medium text-slate-500">{{ $slot->urutan }}</td>
+                                    <td class="text-center">
+                                        @if($isPelajaran)
+                                            <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 font-bold text-xs">{{ $jamKe }}</span>
+                                        @else
+                                            <span class="text-slate-400">-</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <input type="text" value="{{ $jamMulai }}" data-field="jam_mulai" data-id="{{ $slot->id }}"
+                                               data-prev-row="{{ $index > 0 ? $templateJams[$index - 1]->id : '' }}"
+                                               class="block w-full px-2 py-1.5 text-sm border border-slate-200 rounded-lg text-center font-mono focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                               placeholder="HH:MM" maxlength="5" @change="updateTime($event)" @input="formatTimeInput($event)">
+                                    </td>
+                                    <td>
+                                        <input type="text" value="{{ $jamSelesai }}" data-field="jam_selesai" data-id="{{ $slot->id }}"
+                                               data-next-row="{{ $index < $templateJams->count() - 1 ? $templateJams[$index + 1]->id : '' }}"
+                                               class="block w-full px-2 py-1.5 text-sm border border-slate-200 rounded-lg text-center font-mono focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                               placeholder="HH:MM" maxlength="5" @change="updateTime($event)" @input="formatTimeInput($event)">
+                                    </td>
+                                    <td x-data="{ isCustom: false }">
+                                        <select x-show="!isCustom" data-field="tipe" data-id="{{ $slot->id }}"
+                                                class="block w-full px-2 py-1.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                @change="if ($el.value === 'lainnya') { isCustom = true; $nextTick(() => $refs.customInput.focus()); } else { updateField($event); }">
+                                            @foreach($tipeOptions as $val => $label)
+                                                <option value="{{ $val }}" {{ $slot->tipe == $val ? 'selected' : '' }}>{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                        <input type="text" x-ref="customInput" x-show="isCustom" data-field="tipe" data-id="{{ $slot->id }}"
+                                               class="block w-full px-2 py-1.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                               placeholder="Nama tipe..." style="display: none;"
+                                               @blur="if ($el.value && $el.value.trim() !== '') { updateField($event); } else { isCustom = false; }"
+                                               @keydown.enter.prevent="$el.blur()" @keydown.escape="isCustom = false; $el.value = '';">
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                {{-- Mobile Cards (hidden on desktop) --}}
+                <div class="md:hidden">
+                    @php $jamKeCounter = 0; @endphp
+                    @foreach($templateJams as $index => $slot)
+                        @php
+                            $isPelajaran = $slot->tipe === 'pelajaran';
+                            if ($isPelajaran) $jamKeCounter++;
+                            $jamKe = $isPelajaran ? ($romanNumerals[$jamKeCounter - 1] ?? $jamKeCounter) : null;
+                            $jamMulai = $slot->jam_mulai instanceof \DateTime ? $slot->jam_mulai->format('H:i') : ($slot->jam_mulai ?? '');
+                            $jamSelesai = $slot->jam_selesai instanceof \DateTime ? $slot->jam_selesai->format('H:i') : ($slot->jam_selesai ?? '');
+                            
+                            $bgClass = match($slot->tipe) {
+                                'istirahat' => 'bg-amber-50 border-amber-100',
+                                'ishoma' => 'bg-orange-50 border-orange-100',
+                                'upacara' => 'bg-blue-50 border-blue-100',
+                                default => 'bg-white border-slate-100',
+                            };
+                        @endphp
+                        <div class="p-4 {{ $bgClass }} border-b">
+                            {{-- Header Row --}}
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    {{-- Selection Checkbox --}}
+                                    <template x-if="selectionMode">
+                                        <input type="checkbox" value="{{ $slot->id }}" x-model="selected" 
+                                               class="w-5 h-5 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500">
+                                    </template>
+                                    
+                                    <span class="text-sm font-bold text-slate-500">#{{ $slot->urutan }}</span>
+                                    @if($jamKe)
+                                        <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 font-bold text-sm">{{ $jamKe }}</span>
+                                    @endif
+                                </div>
+                                
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2.5 py-1 rounded-lg text-xs font-semibold
+                                        {{ $slot->tipe === 'pelajaran' ? 'bg-slate-200 text-slate-700' : '' }}
+                                        {{ $slot->tipe === 'istirahat' ? 'bg-amber-200 text-amber-800' : '' }}
+                                        {{ $slot->tipe === 'ishoma' ? 'bg-orange-200 text-orange-800' : '' }}
+                                        {{ $slot->tipe === 'upacara' ? 'bg-blue-200 text-blue-800' : '' }}">
+                                        {{ ucfirst($slot->tipe) }}
+                                    </span>
+                                    
+                                    <template x-if="!selectionMode">
+                                        <form action="{{ route('admin.template-jam.destroy', $slot->id) }}" method="POST" 
+                                              onsubmit="return confirm('Hapus baris ini?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
+                                                <x-ui.icon name="trash" size="16" />
+                                            </button>
+                                        </form>
+                                    </template>
+                                </div>
+                            </div>
+
+                            {{-- Time Inputs --}}
+                            <div class="flex items-center gap-3">
+                                <div class="flex-1">
+                                    <label class="block text-xs text-slate-500 mb-1">Mulai</label>
+                                    <input type="text" value="{{ $jamMulai }}" data-field="jam_mulai" data-id="{{ $slot->id }}"
+                                           data-prev-row="{{ $index > 0 ? $templateJams[$index - 1]->id : '' }}"
+                                           class="w-full px-3 py-2.5 text-base border border-slate-200 rounded-lg text-center font-mono focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                           placeholder="00:00" @change="updateTime($event)" @input="formatTimeInput($event)">
+                                </div>
+                                <div class="text-slate-300 text-xl font-light pt-5">→</div>
+                                <div class="flex-1">
+                                    <label class="block text-xs text-slate-500 mb-1">Selesai</label>
+                                    <input type="text" value="{{ $jamSelesai }}" data-field="jam_selesai" data-id="{{ $slot->id }}"
+                                           data-next-row="{{ $index < $templateJams->count() - 1 ? $templateJams[$index + 1]->id : '' }}"
+                                           class="w-full px-3 py-2.5 text-base border border-slate-200 rounded-lg text-center font-mono focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                           placeholder="00:00" @change="updateTime($event)" @input="formatTimeInput($event)">
+                                </div>
+                            </div>
+
+                            {{-- Type Select --}}
+                            <div class="mt-3">
+                                <label class="block text-xs text-slate-500 mb-1">Tipe</label>
+                                <select data-field="tipe" data-id="{{ $slot->id }}"
+                                        class="w-full px-3 py-2.5 text-base border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                        @change="updateField($event)">
+                                    @foreach($tipeOptions as $val => $label)
+                                        <option value="{{ $val }}" {{ $slot->tipe == $val ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                {{-- Legend (desktop only) --}}
+                <div class="hidden md:block px-4 md:px-6 py-3 bg-slate-50 border-t border-slate-100">
+                    <div class="flex flex-wrap items-center gap-4 text-xs text-slate-600">
+                        <span class="font-medium text-slate-700">Keterangan:</span>
+                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-white border border-slate-200 rounded"></span> Pelajaran</span>
+                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-amber-50 border border-amber-200 rounded"></span> Istirahat</span>
+                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-orange-50 border border-orange-200 rounded"></span> Ishoma</span>
+                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-blue-50 border border-blue-200 rounded"></span> Upacara</span>
+                    </div>
                 </div>
             </div>
         @endif
@@ -337,9 +343,14 @@
             icon="calendar"
             title="Belum Ada Periode Semester"
             description="Buat periode semester terlebih dahulu."
-            :actionUrl="route('admin.periode-semester.create')"
-            actionLabel="Buat Periode"
-        />
+        >
+            <x-slot:action>
+                <a href="{{ route('admin.periode-semester.create') }}" class="btn btn-primary">
+                    <x-ui.icon name="plus" size="16" />
+                    <span>Buat Periode</span>
+                </a>
+            </x-slot:action>
+        </x-ui.empty-state>
     @endif
 </div>
 
@@ -353,20 +364,16 @@ function templateJamManager() {
             const el = event.target;
             const id = el.dataset.id;
             const field = el.dataset.field;
-            let value = el.type === 'checkbox' ? (el.checked ? 1 : 0) : el.value;
+            let value = el.value;
 
-            // Simple validation
             if (!value || value.trim() === '') {
                  window.location.reload(); 
                  return;
             }
             
-            // Normalize value
             value = value.trim().toLowerCase();
-
             await this.saveField(id, field, value);
             
-            // If tipe changed, reload to recalculate Jam ke- and update dropdown options
             if (field === 'tipe') {
                 window.location.reload();
             }
@@ -380,7 +387,6 @@ function templateJamManager() {
 
             await this.saveField(id, field, value);
 
-            // Auto-sync: if jam_selesai changed, update next row's jam_mulai
             if (field === 'jam_selesai' && el.dataset.nextRow) {
                 const nextRowInput = document.querySelector(`input[data-id="${el.dataset.nextRow}"][data-field="jam_mulai"]`);
                 if (nextRowInput && nextRowInput.value !== value) {
@@ -389,7 +395,6 @@ function templateJamManager() {
                 }
             }
 
-            // Auto-sync: if jam_mulai changed, update prev row's jam_selesai
             if (field === 'jam_mulai' && el.dataset.prevRow) {
                 const prevRowInput = document.querySelector(`input[data-id="${el.dataset.prevRow}"][data-field="jam_selesai"]`);
                 if (prevRowInput && prevRowInput.value !== value) {
@@ -426,16 +431,13 @@ function templateJamManager() {
             }
         },
 
-        // Format time input to HH:MM (24-hour)
         formatTimeInput(event) {
             let value = event.target.value.replace(/[^0-9:]/g, '');
             
-            // Auto-add colon after 2 digits
             if (value.length === 2 && !value.includes(':')) {
                 value = value + ':';
             }
             
-            // Limit to 5 characters (HH:MM)
             if (value.length > 5) {
                 value = value.substring(0, 5);
             }

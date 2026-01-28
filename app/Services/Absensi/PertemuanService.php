@@ -99,6 +99,7 @@ class PertemuanService
     {
         // Use new schema: periode_semester_id
         $jadwalList = JadwalMengajar::forPeriode($periode->id)
+            ->with('templateJam') // Eager load to prevent LazyLoadingViolation
             ->active()
             ->get();
 

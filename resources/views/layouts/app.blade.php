@@ -41,6 +41,8 @@
     </script>
 </head>
 <body x-data="sidebar" class="antialiased">
+    {{-- Global Progress Bar --}}
+    <x-ui.global-progress />
     
     <div class="app-layout">
         <!-- Sidebar Overlay (Mobile) -->

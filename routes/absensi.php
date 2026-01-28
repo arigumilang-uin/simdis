@@ -111,6 +111,7 @@ Route::middleware(['auth', 'profile.completed'])->group(function () {
             Route::post('/', [TemplateJamController::class, 'store'])->name('store');
             Route::post('/generate', [TemplateJamController::class, 'generate'])->name('generate');
             Route::post('/add-row', [TemplateJamController::class, 'addRow'])->name('addRow');
+            Route::delete('/bulk-destroy', [TemplateJamController::class, 'bulkDestroy'])->name('bulkDestroy');
             Route::put('/{id}', [TemplateJamController::class, 'update'])->name('update');
             Route::patch('/{id}/update-field', [TemplateJamController::class, 'updateField'])->name('updateField');
             Route::delete('/{id}', [TemplateJamController::class, 'destroy'])->name('destroy');

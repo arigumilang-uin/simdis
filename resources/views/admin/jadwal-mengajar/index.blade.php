@@ -127,15 +127,15 @@
                                 <td>
                                     <span class="text-sm">Jam ke-{{ $jadwal->templateJam?->urutan ?? '-' }}</span>
                                     <span class="block text-xs text-slate-400">
-                                        {{ $jadwal->templateJam?->waktu_mulai }} - {{ $jadwal->templateJam?->waktu_selesai }}
+                                        {{ $jadwal->templateJam?->waktu ?? '-' }}
                                     </span>
                                 </td>
                                 <td>
                                     <span class="font-medium">{{ $jadwal->kelas?->nama_kelas }}</span>
                                 </td>
                                 <td>
-                                    <span class="font-medium">{{ $jadwal->mataPelajaran?->nama }}</span>
-                                    <span class="block text-xs text-slate-400">{{ $jadwal->mataPelajaran?->kode }}</span>
+                                    <span class="font-medium">{{ $jadwal->mataPelajaran?->nama_mapel }}</span>
+                                    <span class="block text-xs text-slate-400">{{ $jadwal->mataPelajaran?->kode_mapel }}</span>
                                 </td>
                                 <td>
                                     <span class="text-sm">{{ $jadwal->guru?->username ?? '-' }}</span>

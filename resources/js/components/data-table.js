@@ -8,10 +8,10 @@ export default (config) => ({
     selectionMode: false,
     selectAll: false,
     selected: [],
-    
+
     // Spread any custom state from config
     ...(config.customState || {}),
-    
+
     // Dependent dropdown config
     dependentDropdowns: config.dependentDropdowns || [],
     // Example: dependentDropdowns: [{ trigger: 'jurusan_id', target: 'kelas_id', url: '/api/kelas-by-jurusan', paramKey: 'jurusan_id' }]
@@ -20,7 +20,7 @@ export default (config) => ({
     init() {
         // Filters to exclude from auto-watch (handled manually, e.g., with @change)
         const excludeFromWatch = config.excludeFromWatch || [];
-        
+
         // Setup Auto-Watch untuk semua filter (kecuali yang di-exclude)
         Object.keys(this.filters).forEach(key => {
             if (!excludeFromWatch.includes(key)) {
@@ -53,7 +53,7 @@ export default (config) => ({
         window.addEventListener('popstate', (event) => {
             this.fetchData(window.location.href, false);
         });
-        
+
         // Call custom init if provided
         if (typeof config.onInit === 'function') {
             config.onInit.call(this);
@@ -61,7 +61,18 @@ export default (config) => ({
     },
 
     async fetchData(url = null, updatePushState = true) {
-        this.isLoading = true;
+        // Loading delay configuration (prevents flicker for fast operations)
+        const LOADING_DELAY_MS = 300;  // Show loading indicator after this delay
+        const MIN_DISPLAY_MS = 200;    // Minimum time to show loading once visible
+
+        let loadingTimeout = null;
+        const startTime = Date.now();
+
+        // Delayed loading indicator - only show if request takes > 300ms
+        loadingTimeout = setTimeout(() => {
+            this.isLoading = true;
+        }, LOADING_DELAY_MS);
+
         let fetchUrl = url;
 
         // Jika URL kosong, construct dari endpoint + filters
@@ -75,9 +86,9 @@ export default (config) => ({
 
             // Clean URL for Browser History (Tanpa render_partial)
             const cleanUrl = `${this.endpoint}?${params.toString()}`;
-            
+
             if (updatePushState) {
-                try { window.history.pushState({}, '', cleanUrl); } catch(e) {}
+                try { window.history.pushState({}, '', cleanUrl); } catch (e) { }
             }
 
             // URL for Fetching (With render_partial)
@@ -90,7 +101,7 @@ export default (config) => ({
             fetchUrl = urlObj.toString();
 
             if (updatePushState) {
-                try { window.history.pushState({}, '', url); } catch(e) {}
+                try { window.history.pushState({}, '', url); } catch (e) { }
             }
         }
 
@@ -107,7 +118,7 @@ export default (config) => ({
                 const container = document.getElementById(this.containerId);
                 if (container) {
                     container.innerHTML = html;
-                    
+
                     // Re-initialize any selection state if needed
                     // (Checkbox di table baru belum di-select)
                     if (this.selectAll) {
@@ -123,7 +134,17 @@ export default (config) => ({
         } catch (error) {
             console.error('Data table error:', error);
         } finally {
-            this.isLoading = false;
+            clearTimeout(loadingTimeout);
+            const elapsed = Date.now() - startTime;
+
+            // If loading was shown, ensure minimum display time for smooth UX
+            if (this.isLoading) {
+                const displayedFor = elapsed - LOADING_DELAY_MS;
+                const remainingDisplay = Math.max(0, MIN_DISPLAY_MS - displayedFor);
+                setTimeout(() => { this.isLoading = false; }, remainingDisplay);
+            } else {
+                this.isLoading = false;
+            }
         }
     },
 
@@ -131,7 +152,7 @@ export default (config) => ({
         Object.keys(this.filters).forEach(key => {
             this.filters[key] = '';
         });
-        
+
         // Call custom reset if provided
         if (typeof config.onReset === 'function') {
             config.onReset.call(this);
@@ -149,19 +170,19 @@ export default (config) => ({
 
         const checkboxes = container.querySelectorAll('input[type="checkbox"][value]');
         // Asumsi checkbox value adalah ID row
-        
+
         if (this.selectAll) {
             this.selected = Array.from(checkboxes).map(cb => cb.value);
         } else {
             this.selected = [];
         }
     },
-    
+
     // Helper untuk mengecek apakah ID tertentu terpilih (reaktif)
     isSelected(id) {
         return this.selected.includes(String(id));
     },
-    
+
     // Helper untuk dependent dropdown loading (fetch options dari API)
     async loadDependentOptions(url, targetListProperty) {
         try {

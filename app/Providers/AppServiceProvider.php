@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use App\Models\Siswa;
@@ -31,8 +32,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-    // Cek langsung hostname yang sedang diakses di browser
-    $host = request()->getHost();
+        // Prevent N+1 queries, missing attributes, and lazy loading in local
+        \Illuminate\Database\Eloquent\Model::shouldBeStrict(!app()->isProduction());
+
+        // PULSE AUTHORIZATION
+        // Hanya Developer dan Operator Sekolah yang bisa akses dashboard performa
+        Gate::define('viewPulse', function (User $user) {
+            return $user->hasRole('Developer') || $user->hasRole('Operator Sekolah');
+        });
+
+        // Cek langsung hostname yang sedang diakses di browser
+        $host = request()->getHost();
 
     // HANYA paksa HTTPS jika:
     // 1. Host mengandung 'trycloudflare.com' 

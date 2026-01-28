@@ -27,26 +27,7 @@
                     <th>Nama Pelanggaran</th>
                     <th class="w-[40%]">Rules (Frekuensi, Poin & Sanksi)</th>
                     <th class="text-center">Status</th>
-                    <th class="w-32 text-center cursor-pointer select-none hover:bg-gray-50 transition-colors group" @click="toggleSelectionMode()" title="Klik untuk memilih data">
-                        <div class="flex items-center justify-center">
-                            <template x-if="!selectionMode">
-                                <div class="flex items-center justify-center gap-2 text-gray-400 group-hover:text-indigo-600 transition-colors p-1">
-                                    <span class="text-[10px] font-bold uppercase tracking-wider">Pilih</span>
-                                    <x-ui.icon name="square" size="16" />
-                                </div>
-                            </template>
-                            <template x-if="selectionMode">
-                                <div class="flex items-center justify-center gap-1">
-                                    <input type="checkbox" x-model="selectAll" 
-                                        @change="selectAll ? selected = ['{{ $jenisPelanggaran->pluck('id')->implode("','") }}'] : selected = []" 
-                                        @click.stop class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer" title="Pilih Semua">
-                                    <button type="button" @click.stop="selectionMode = false" class="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors" title="Batalkan Pilih">
-                                        <x-ui.icon name="x" size="14" />
-                                    </button>
-                                </div>
-                            </template>
-                        </div>
-                    </th>
+                    <x-table.action-header />
                 </tr>
             </thead>
             <tbody>
@@ -127,123 +108,39 @@
                             @endif
                         </td>
 
-                    {{-- Actions --}}
-                    <td class="text-center relative">
-                        {{-- Selection Mode --}}
-                        <div x-show="selectionMode" style="display: none;">
-                            <input type="checkbox" value="{{ $jp->id }}" x-model="selected" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer">
-                        </div>
-
-                        {{-- Normal Mode --}}
-                        <div x-show="!selectionMode">
-                            {{-- Desktop --}}
-                             <div class="hidden md:hidden" style="display: none;">
-                                <a href="{{ route('frequency-rules.show', $jp->id) }}" class="btn btn-icon btn-outline" title="Kelola Rules">
-                                    <x-ui.icon name="settings" size="16" />
-                                </a>
-                                <a href="{{ route('jenis-pelanggaran.edit', $jp->id) }}" class="btn btn-icon btn-outline" title="Edit">
-                                    <x-ui.icon name="edit" size="16" />
-                                </a>
-                                <form action="{{ route('jenis-pelanggaran.destroy', $jp->id) }}" method="POST" class="inline" onsubmit="return confirm('Hapus jenis pelanggaran ini?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-icon btn-outline text-red-500 hover:bg-red-50" title="Hapus">
-                                        <x-ui.icon name="trash" size="16" />
-                                    </button>
-                                </form>
-                            </div>
-                            
-                            {{-- Mobile: Dropdown with Teleport --}}
-                            <div class="relative inline-block text-left"
-                                 x-data="{
-                                     open: false,
-                                     timer: null,
-                                     isLongPress: false,
-                                     
-                                     startPress() {
-                                         this.isLongPress = false;
-                                         this.timer = setTimeout(() => {
-                                             this.isLongPress = true;
-                                             this.toggleSelectionMode();
-                                             if (!this.selected.includes('{{ $jp->id }}')) {
-                                                 this.selected.push('{{ $jp->id }}');
-                                             }
-                                             if (navigator.vibrate) navigator.vibrate(50);
-                                         }, 500);
-                                     },
-                                     
-                                     endPress() {
-                                         clearTimeout(this.timer);
-                                     },
-                                     
-                                     toggle() {
-                                         if (this.isLongPress) return;
-                                         if (this.open) { this.open = false; return; }
-                                         this.open = true;
-                                         this.$nextTick(() => {
-                                             const trigger = this.$refs.trigger.getBoundingClientRect();
-                                             const menu = this.$refs.menu;
-                                             // Position menu to the left of trigger
-                                             let left = trigger.right - menu.offsetWidth;
-                                             let top = trigger.bottom + 2; 
-                                             
-                                             // Check bottom overflow
-                                             if (window.innerHeight - trigger.bottom < menu.offsetHeight + 20) {
-                                                 top = trigger.top - menu.offsetHeight - 2;
-                                             }
-                                             menu.style.top = `${top}px`;
-                                             menu.style.left = `${left}px`;
-                                         });
-                                     }
-                                 }"
-                                 @scroll.window="open = false"
-                                 @resize.window="open = false"
+                        {{-- Actions --}}
+                        <x-table.action-column :id="$jp->id">
+                            <x-table.action-item 
+                                icon="settings" 
+                                href="{{ route('frequency-rules.show', $jp->id) }}"
                             >
-                                <button 
-                                    x-ref="trigger" 
-                                    @click="toggle()"
-                                    @mousedown="startPress()"
-                                    @touchstart="startPress()"
-                                    @mouseup="endPress()"
-                                    @mouseleave="endPress()"
-                                    @touchend="endPress()"
-                                    class="p-1.5 text-gray-400 rounded-lg hover:bg-gray-100 hover:text-gray-600 transition-colors"
-                                >
-                                    <x-ui.icon name="more-horizontal" size="18" />
-                                </button>
-
-                                <template x-teleport="body">
-                                    <div x-show="open" 
-                                         x-ref="menu"
-                                         @click.outside="open = false"
-                                         style="position: fixed; z-index: 9999; display: none;"
-                                         x-transition:enter="transition ease-out duration-100"
-                                         class="w-48 origin-top-right rounded-xl bg-white shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none border border-gray-100"
-                                    >
-                                        <div class="py-1">
-                                            <a href="{{ route('frequency-rules.show', $jp->id) }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-indigo-600 transition-colors">
-                                                <x-ui.icon name="settings" size="14" />
-                                                Kelola Rules
-                                            </a>
-                                            <a href="{{ route('jenis-pelanggaran.edit', $jp->id) }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-indigo-600 transition-colors">
-                                                <x-ui.icon name="edit" size="14" />
-                                                Edit
-                                            </a>
-                                            <div class="border-t border-gray-100 my-1"></div>
-                                            <form action="{{ route('jenis-pelanggaran.destroy', $jp->id) }}" method="POST" onsubmit="return confirm('Hapus jenis pelanggaran ini?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                    <x-ui.icon name="trash" size="14" />
-                                                    Hapus
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-                    </td>
+                                Kelola Rules
+                            </x-table.action-item>
+                            
+                            <x-table.action-item 
+                                icon="edit" 
+                                href="{{ route('jenis-pelanggaran.edit', $jp->id) }}"
+                            >
+                                Edit
+                            </x-table.action-item>
+                            
+                            <x-table.action-separator />
+                            
+                            <x-table.action-item 
+                                icon="trash" 
+                                class="text-red-600 hover:bg-red-50 hover:text-red-700"
+                                @click="open = false; if(confirm('Hapus jenis pelanggaran ini?')) { document.getElementById('delete-form-{{ $jp->id }}').submit(); }"
+                            >
+                                Hapus
+                            </x-table.action-item>
+                        </x-table.action-column>
                     </tr>
+                    
+                    {{-- Hidden Delete Form --}}
+                    <form id="delete-form-{{ $jp->id }}" action="{{ route('jenis-pelanggaran.destroy', $jp->id) }}" method="POST" class="hidden">
+                        @csrf
+                        @method('DELETE')
+                    </form>
                 @empty
                     <tr>
                         <td colspan="5">

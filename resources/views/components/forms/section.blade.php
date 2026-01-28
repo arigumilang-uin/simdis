@@ -44,15 +44,50 @@ $variants = [
         'title' => 'text-rose-800',
         'icon' => 'text-rose-500',
     ],
+    'card' => [
+        'bg' => 'bg-white shadow-sm transition-shadow hover:shadow-md',
+        'border' => 'border-slate-200',
+        'title' => 'text-slate-800',
+        'icon' => 'bg-slate-50 text-slate-500 rounded-lg p-2.5 w-10 h-10 flex items-center justify-center', 
+        'header' => 'px-6 py-5 md:px-8 border-b border-slate-100 flex items-center justify-between', // Added flex layout back
+    ],
 ];
 $style = $variants[$variant] ?? $variants['default'];
 @endphp
 
 <div 
-    {{ $attributes->merge(['class' => "p-4 {$style['bg']} rounded-xl border {$style['border']} space-y-4"]) }}
+    {{ $attributes->merge(['class' => $variant === 'card' 
+        ? "{$style['bg']} rounded-xl border {$style['border']} overflow-hidden relative" 
+        : "p-4 {$style['bg']} rounded-xl border {$style['border']} space-y-4"
+    ]) }}
     @if($collapsible) x-data="{ open: {{ $collapsed ? 'false' : 'true' }} }" @endif
 >
-    @if($title)
+    @if($title && $variant === 'card')
+        {{-- Header (Full Width) --}}
+        <div class="{{ $style['header'] }}">
+            <div class="flex items-center gap-4">
+                    @if($icon)
+                    <div class="{{ $style['icon'] }}">
+                        <x-ui.icon :name="$icon" size="20" stroke-width="2" />
+                    </div>
+                @endif
+                <div>
+                    <h3 class="text-base font-bold {{ $style['title'] }}">{{ $title }}</h3>
+                        @if(isset($description))
+                        <p class="text-xs text-slate-500 mt-0.5">{{ $description }}</p>
+                    @endif
+                </div>
+            </div>
+                @if(isset($actions))
+                {{ $actions }}
+            @endif
+        </div>
+        
+        {{-- Body (Padded) --}}
+        <div class="p-6 md:p-8" @if($collapsible) x-show="open" x-collapse @endif>
+                {{ $slot }}
+        </div>
+    @elseif($title)
     <div 
         class="flex items-center justify-between gap-2 {{ $collapsible ? 'cursor-pointer select-none' : '' }}"
         @if($collapsible) @click="open = !open" @endif
@@ -67,9 +102,13 @@ $style = $variants[$variant] ?? $variants['default'];
             <x-ui.icon name="chevron-down" size="18" class="text-gray-400 transition-transform" ::class="{ 'rotate-180': open }" />
         @endif
     </div>
-    @endif
     
     <div @if($collapsible) x-show="open" x-collapse @endif>
         {{ $slot }}
     </div>
+    @else
+        <div @if($collapsible) x-show="open" x-collapse @endif>
+            {{ $slot }}
+        </div>
+    @endif
 </div>

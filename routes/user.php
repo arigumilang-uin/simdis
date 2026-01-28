@@ -52,6 +52,10 @@ Route::middleware(['auth', 'profile.completed'])->group(function () {
         Route::post('/import', [UserController::class, 'import'])
             ->name('import');
 
+        // Validation Checks
+        Route::get('/check-identity', [UserController::class, 'checkIdentity'])
+            ->name('check-identity');
+
         // Password reset (by admin)
         Route::get('/{id}/reset-password', [UserController::class, 'resetPasswordForm'])
             ->name('reset-password.form');

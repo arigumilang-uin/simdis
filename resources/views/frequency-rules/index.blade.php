@@ -27,7 +27,11 @@
     ];
 @endphp
 
-<div class="space-y-4" x-data='dataTable(@json($tableConfig))'>
+<div class="space-y-4" x-data='dataTable(@json($tableConfig))'
+    x-init="$watch('selectAll', () => toggleSelectAll())"
+    @toggle-selection-mode.window="selectionMode = $event.detail !== undefined ? $event.detail : !selectionMode"
+    @enter-selection.window="selectionMode = true; if (!selected.includes(String($event.detail.id))) selected.push(String($event.detail.id))"
+>
     
     <div class="bg-white md:border md:border-gray-200 md:rounded-xl md:shadow-sm overflow-hidden mb-8 border-b border-gray-200 md:border-b-0">
         {{-- Toolbar --}}

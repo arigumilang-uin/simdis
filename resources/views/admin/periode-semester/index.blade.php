@@ -80,10 +80,17 @@
                                 <x-table.action-item icon="layers" :href="route('admin.periode-semester.tingkatKurikulum', $p->id)" class="text-violet-600 hover:text-violet-700 hover:bg-violet-50">
                                     Konfigurasi Kurikulum
                                 </x-table.action-item>
-                                <form action="{{ route('admin.periode-semester.generatePertemuan', $p->id) }}" method="POST">
+                                <form action="{{ route('admin.periode-semester.generatePertemuan', $p->id) }}" method="POST"
+                                      x-data="{ submitting: false }"
+                                      @submit="submitting = true; $dispatch('form-submitting')">
                                     @csrf
-                                    <x-table.action-item icon="refresh-cw" type="submit" class="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">
-                                        Generate Pertemuan
+                                    <x-table.action-item icon="refresh-cw" type="submit" 
+                                        class="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                                        ::class="{ 'opacity-50 pointer-events-none': submitting }">
+                                        <span x-show="!submitting">Generate Pertemuan</span>
+                                        <span x-show="submitting" class="flex items-center gap-1">
+                                            <x-ui.loading-spinner size="xs" /> Generating...
+                                        </span>
                                     </x-table.action-item>
                                 </form>
                                 <x-table.action-separator />

@@ -17,7 +17,8 @@
     $inputId = $id ?? $name;
     $hasError = $errors->has($name);
     $errorClass = $hasError ? 'error' : '';
-    $inputClasses = "form-input form-select {$errorClass}";
+    // Removed form-input to avoid conflict with form-select (arrow icon positioning)
+    $inputClasses = "form-select w-full border-slate-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500/10 {$errorClass}";
     $selectedValue = old($name, $value);
 @endphp
 

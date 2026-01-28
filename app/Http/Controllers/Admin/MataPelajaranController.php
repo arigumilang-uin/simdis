@@ -57,6 +57,7 @@ class MataPelajaranController extends Controller
 
         // Query mata pelajaran
         $mataPelajaran = collect();
+        $kelompokCounts = [];
         if ($selectedKurikulum) {
             $query = MataPelajaran::with(['kurikulum', 'guruPengampu'])
                 ->forKurikulum($selectedKurikulum->id)
@@ -64,6 +65,13 @@ class MataPelajaranController extends Controller
                 ->search($search);
             
             $mataPelajaran = $query->orderBy('nama_mapel')->get();
+            
+            // Count mapels per kelompok (single query to avoid N+1)
+            $kelompokCounts = MataPelajaran::forKurikulum($selectedKurikulum->id)
+                ->selectRaw('kelompok, COUNT(*) as count')
+                ->groupBy('kelompok')
+                ->pluck('count', 'kelompok')
+                ->toArray();
         }
 
         return view('admin.mata-pelajaran.index', [
@@ -73,6 +81,7 @@ class MataPelajaranController extends Controller
             'kurikulumId' => $kurikulumId,
             'kelompok' => $kelompok,
             'kelompokOptions' => $this->kelompokOptions,
+            'kelompokCounts' => $kelompokCounts,
             'search' => $search,
         ]);
     }

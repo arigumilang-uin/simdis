@@ -358,6 +358,53 @@ class TemplateJamController extends Controller
     }
 
     /**
+     * Bulk delete template jams
+     */
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'exists:template_jam,id',
+        ]);
+
+        $ids = $validated['ids'];
+        
+        // Get first item to determine periode and hari for redirect
+        $firstItem = TemplateJam::find($ids[0]);
+        $periodeId = $firstItem?->periode_semester_id;
+        $hari = $firstItem?->hari->value ?? $firstItem?->hari ?? 'Senin';
+
+        // Check if any slot is used in jadwal
+        $usedCount = TemplateJam::whereIn('id', $ids)
+            ->whereHas('jadwalMengajar')
+            ->count();
+        
+        if ($usedCount > 0) {
+            return redirect()
+                ->route('admin.template-jam.index', [
+                    'periode_id' => $periodeId,
+                    'hari' => $hari,
+                ])
+                ->with('error', "Tidak dapat menghapus: {$usedCount} slot sudah digunakan di jadwal mengajar.");
+        }
+
+        // Delete all selected
+        $deletedCount = TemplateJam::whereIn('id', $ids)->delete();
+
+        // Reorder remaining slots
+        if ($periodeId && $hari) {
+            $this->reorderSlots($periodeId, $hari);
+        }
+
+        return redirect()
+            ->route('admin.template-jam.index', [
+                'periode_id' => $periodeId,
+                'hari' => $hari,
+            ])
+            ->with('success', "{$deletedCount} slot waktu berhasil dihapus.");
+    }
+
+    /**
      * Reorder slot (move up/down)
      */
     public function reorder(Request $request, int $id): RedirectResponse
